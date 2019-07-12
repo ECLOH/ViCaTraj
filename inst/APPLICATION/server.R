@@ -165,18 +165,7 @@ return(data)
   })
   
   ##### ADD ROW #####
-  # shiny::eventReactive(input$addROW, {
-  #  ###### DEFINE THE NEW LINE ON INPUT######
-  #   req(the.df())
-  #   req(THE_VAR())
-  #  
-  #   ###### RBIND ######
-  #    rbind(DF_subset_initial,  vecto)
-  #         
-  # })
   
-  
-  ####
 
   newEntry <- observeEvent(input$addROW, {
     
@@ -223,15 +212,6 @@ return(data)
     #  isolate(values$df <- rbind(values$df, newLine))
     })
 
-  ####
-  # observeEvent(input$addROW, {
-  #   
-  #  
-  #   
-  #   addRow(proxy = proxy.TABLE_POUR_SELECTION, data = vecto)
-  #   
-  # })
-  #output$table1 <- renderTable({values$df})
   
   output$TABLE_POUR_SELECTION<-DT::renderDataTable(
     values$DF_subset_initial,
@@ -242,42 +222,10 @@ return(data)
                     #disable = list(columns = c(1, 2))
                     )
   )
-  #proxy.TABLE_POUR_SELECTION = DT::dataTableProxy('TABLE_POUR_SELECTION')
-  #output$VIEW_PROXY<- shiny::renderText(proxy.TABLE_POUR_SELECTION()  ) 
-  
-  # observeEvent(input$TABLE_POUR_SELECTION_cell_edit, {
-  #   info = input$x1_cell_edit
-  #   str(info)
-  #   i = info$row
-  #   j = info$col
-  #   v = info$value
-  #   x[i, j] <<- DT::coerceValue(v, x[i, j])
-  #   replaceData(proxy, x, resetPaging = FALSE)  # important
-  # })
-
-  ###### DEFINTION DES VARS ET DES MODALITES ####
-  #### SELECT DF DATE ####
-  
- 
-  
-  ### SUBSET ON CONDITIONS
-  # shiny::reactive({
-  #   #mtcars[input[["dt_rows_all"]], ]
-  #   
-  # INDICES <- input$TABLE_POUR_SELECTION_rows_all
-  # proxy.TABLE_POUR_SELECTION()[INDICES , ]->upddated_datas
-  # upddated_datas
-  # })->DATA_OF_SUBSET
-  # 
-  # output$DATA_OF_SUBSET_CONTROL<-renderDT({ DATA_OF_SUBSET() })
-  # 
-  # output$INDEXES_CONTROL<-
   
   shiny::reactive({
     req(  values$DF_subset_initial )
      data_of_subset <-  values$DF_subset_initial
-     #data_of_subset[-c(1) , ]->data_of_subset
-     #cat(input$overallSummary_rows_all)
 
       string_for_sub<-sapply(1:nrow(data_of_subset), function(i){
         paste("BIGLIST()$", data_of_subset$DATE[i], sep="" )->dfvar
@@ -347,25 +295,9 @@ return(data)
     subset(bi, bi[ , INDVAR()]%in%INDIVIDUELS())
     })
     })->SUBSETTED_LIST
+  
   output$LENGTH_IND_SUBS<-renderText({ length( INDIVIDUELS() )    }) 
   
-# output$SUBSET_OUTPUT<-renderTable(STRING_FOR_SUB())
-# reactive({
-#   req(STRING_FOR_SUB())
-#   lapply(unique(STRING_FOR_SUB()$PAQUET), function(pi){
-#   paste("(", paste(STRING_FOR_SUB()[STRING_FOR_SUB()$PAQUET==pi ,"string_for_sub"], collapse = "|" ), ")")
-#   })
-# })->SUBSET_BY_PAQUET
-# output$SUBSET_BY_PAQUET_OUTPUT<-renderPrint(print(SUBSET_BY_PAQUET() ))
-# reactive({
-#   req(SUBSET_BY_PAQUET())
-#   paste( SUBSET_BY_PAQUET() , collapse = "&" )
-# })->SUBSET_G
-# output$SUBSET_G_OUTPUT<-renderPrint(print(SUBSET_G() ))
-
-  
-  
- # shiny::eventReactive(input$APPLICATE_SUBSET, {
  
   #### Chargement des données ####
  
