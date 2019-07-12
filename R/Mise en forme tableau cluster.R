@@ -106,8 +106,6 @@ tableau_cluster<-function(indicateurs){
   
 }
 
-#' @examples
-
-#tableau_cluster(indicateur$dataFrame)->tabForme
+#' @examples tableau_cluster(indicateur$dataFrame)->tabForme
 
 

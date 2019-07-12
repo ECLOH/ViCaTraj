@@ -8,6 +8,365 @@
 
 #### SERVER ####
 server <- function(input, output, session) {
+  #### CR2EATION JEU DE DONNEES
+  BIGLIST<-reactive({
+  if ( is.null(input$LIST_SOURCE_BIG_DF)) return(NULL)
+  inFile <- input$LIST_SOURCE_BIG_DF
+  file <- inFile$datapath
+  # load the file into new environment and get it from there
+  e = new.env()
+  name <- load(file, envir = e)
+  data <- e[[name]]
+  #
+ temp.lenght<-length(data)
+# b1<-names(temp.lenght)[1]
+# b.max<-names(temp.lenght)[temp.lenght]
+return(data)
+  })
+  observe({updateSelectInput(session = session, inputId = "MINTIMEBIG", 
+                                 choices = names(BIGLIST() ) , 
+                                selected= names(BIGLIST() )[1]
+  )
+                                                
+                                })#"names(BIGLIST() ), selected =  names(BIGLIST() )) })
+  observe({updateSelectInput(session = session, inputId = "MAXTIMEBIG", 
+                             choices = names(BIGLIST() ) , 
+                             selected= names(BIGLIST() )[length(  names(BIGLIST() )  )]
+  )
+  })#"names(BIGLIST() ), selected =  names(BIGLIST() )) })
+  output$CONTROLNAMES<-renderText({print(names(BIGLIST() ))})
+  output$SLIDERTEXT<-renderText({
+    req( BIGLIST() )
+    which(names(BIGLIST() )==input$MINTIMEBIG)->base
+    which(names(BIGLIST() )==input$MAXTIMEBIG)->top
+    if(length(base)!=1){
+      base<-1
+    }
+    if(length(top)!=1){
+      top<-1
+    }
+    seq(from=base, to = top, by=input$PAS_TEMPS_BIGDATA)->SEQ
+    print( names(BIGLIST())[SEQ]  )
+    })
+  
+  #### CONDITIONS ON INDIDIVUS
+ ##### DEFINE DF #####
+
+  values <- reactiveValues()
+  values$DF_subset_initial <- data.frame("PAQUET"="", "DATE"="", "VARIABLE"="", "TYPE"="", 
+                                         "TEXT_PATTERN"="","FACTOR_LEVELS"="", "min"="",  "max"="")
+  
+##### DEFINE INPUTS #####
+  output$UI_PAQUET_SELECT<-renderUI({
+    shiny::numericInput(inputId="PAQUET_FOR_SELECT", value=1, label = "Paquet : ", min = 1, step = 1)
+  })
+  
+  output$UI_DATE_SELECT<-renderUI({
+    #reactive({
+    names(BIGLIST())->names.pick
+    shiny::selectInput(inputId = "DATE_FOR_SELECT", label = "Date pour sélection:",
+                       choices = names.pick, multiple = FALSE)
+  })
+  #### SELECT VAR et MODLITE ####
+  reactive({BIGLIST()[[input$DATE_FOR_SELECT]]})->the.df
+  
+ output$UI_INDVAR_CHOOSE<-renderUI({
+   lapply(BIGLIST(), function(bi){
+     names(bi)
+   })->lina
+   unique(unlist(lina))->glona
+   selectInput(inputId = "INDVAR", label = "Variable pour identifiant individuel: ", 
+               choices = glona, multiple = FALSE)
+ })
+ INDVAR<-reactive({input$INDVAR})
+  
+  output$UI_VAR_SELECT<-renderUI({
+    req(the.df())
+    #mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = list_csv(), FUN = names))), 
+    #                         use.names = FALSE))
+    selectInput(inputId = "VAR_FOR_SELECT", label = "Variable pour sélection", 
+                choices = names(the.df()), multiple = FALSE)
+  })
+  
+  THE_VAR<-reactive({
+    req( the.df() )
+    the.df()[ , input$VAR_FOR_SELECT]->the.var
+    the.var
+  })
+  
+  output$UI_CLASS_SELECT<-renderUI({
+    req(THE_VAR() )
+    class(THE_VAR())->CLASS_VAR
+    shiny::selectInput(inputId = "classSelect", label = "Contrôle de la classe", 
+                       choices =  c("factor", "character", "numeric", "Date", "integer"), 
+                       selected = CLASS_VAR)
+  })
+  
+  output$UI_MOD_SELECT<-renderUI({
+    req(THE_VAR() )
+    req(input$classSelect)
+    
+    
+    if(input$classSelect%in%c("numeric", "integer")){
+      
+      as.numeric(THE_VAR())->temp.num.var
+      
+      minis <- min(temp.num.var, 
+                   na.rm = TRUE)
+      maxis <- max(temp.num.var, 
+                   na.rm = TRUE)
+      
+      
+      shiny::sliderInput(inputId = "NumSelect", label = "Valeurs sélectionnées", 
+                         min = minis, max = maxis, 
+                         value = c(minis, maxis))
+    } else {
+      if(input$classSelect=="factor"){#, "character") ){
+        if(length(unique(THE_VAR()))>100){
+          table(THE_VAR())->tab
+          tab[order(tab, decreasing = TRUE)]->tab
+          tab[1:25]->tab
+        } else {tab<-unique(THE_VAR() )}
+        shiny::selectInput(inputId = "FactSelect", label="Valeurs sélectionnées", 
+                           choices = tab  , multiple = TRUE)
+      } else {
+        if(input$classSelect=="character"){#, "character") ){
+          shiny::textInput(inputId = "CharPatSelect", label="'Paterns' à rechercher (sep by '/'", value = ""
+          )
+        } else  {
+          if(input$classSelect=="Date" ){
+            list(
+              shiny::textInput(inputId = "DATEformat", label = "Format d'origine", value = "" ),
+              shiny::dateRangeInput(inputId = "DATE_RANGE", label = "Bornes des dates : ")#, format = input$DATEformat)
+            )
+          }
+        }
+      }
+    }
+  })
+  
+  observe({
+   req(THE_VAR())
+    req(input$DATEformat)
+    print(THE_VAR())
+    as.Date(THE_VAR(), format=input$DATEformat)->THE_VAR_DATE
+    print(THE_VAR_DATE)
+    min(THE_VAR_DATE)->mindate
+    max(THE_VAR_DATE)->maxdate
+    shiny::updateDateRangeInput(session = session, inputId = "DATE_RANGE", min = mindate, max=maxdate )
+  })
+  
+  output$UI_VIEW_VAR<-renderText({
+    req(THE_VAR() )
+    req(input$classSelect)
+    req(the.df())
+    THE_VAR()[!is.na(THE_VAR())]->the.var2
+    print(head(the.var2, 20))
+  })
+  
+  ##### ADD ROW #####
+  # shiny::eventReactive(input$addROW, {
+  #  ###### DEFINE THE NEW LINE ON INPUT######
+  #   req(the.df())
+  #   req(THE_VAR())
+  #  
+  #   ###### RBIND ######
+  #    rbind(DF_subset_initial,  vecto)
+  #         
+  # })
+  
+  
+  ####
+
+  newEntry <- observeEvent(input$addROW, {
+    
+    factor_levels<-NA
+    text_pattern<-NA
+    minus<-NA
+    maxus<-NA
+    
+    if(input$classSelect=="factor"){
+      
+      paste("'", paste(isolate(input$FactSelect), collapse = "','"), "'", sep="")->choix
+      paste("c(", choix, ")" )->factor_levels
+      
+    } else {
+      if(isolate(input$classSelect)=="character"){
+        isolate(input$CharPatSelect)->text_pattern
+      } else {
+        if(input$classSelect=="Date"){
+          isolate(input$DATE_RANGE)->choix
+          choix[1]->minus
+          choix[2]->maxus
+        } else {
+          if(input$classSelect%in%c("numeric", "integer")){
+            isolate(input$NumSelect)->choix
+            choix[1]->minus
+            choix[2]->maxus
+          }
+        }
+      }
+    }
+    
+    data.frame("PAQUET"=isolate(input$PAQUET_FOR_SELECT),
+               "DATE"=isolate(input$DATE_FOR_SELECT),
+               "VARIABLE"=isolate(input$VAR_FOR_SELECT), 
+               "TYPE"=isolate(input$classSelect),
+               "TEXT_PATTERN"=text_pattern,
+               "FACTOR_LEVELS"=factor_levels,
+               "min"=minus,
+               "max"=maxus
+    )->vecto 
+    isolate(values$DF_subset_initial <- rbind(values$DF_subset_initial , vecto))
+    
+    #  newLine <- isolate(c(input$text1, input$text2))
+    #  isolate(values$df <- rbind(values$df, newLine))
+    })
+
+  ####
+  # observeEvent(input$addROW, {
+  #   
+  #  
+  #   
+  #   addRow(proxy = proxy.TABLE_POUR_SELECTION, data = vecto)
+  #   
+  # })
+  #output$table1 <- renderTable({values$df})
+  
+  output$TABLE_POUR_SELECTION<-DT::renderDataTable(
+    values$DF_subset_initial,
+#    server = FALSE,
+    rownames = FALSE,
+    filter = "none",
+    editable = list(target = "row"
+                    #disable = list(columns = c(1, 2))
+                    )
+  )
+  #proxy.TABLE_POUR_SELECTION = DT::dataTableProxy('TABLE_POUR_SELECTION')
+  #output$VIEW_PROXY<- shiny::renderText(proxy.TABLE_POUR_SELECTION()  ) 
+  
+  # observeEvent(input$TABLE_POUR_SELECTION_cell_edit, {
+  #   info = input$x1_cell_edit
+  #   str(info)
+  #   i = info$row
+  #   j = info$col
+  #   v = info$value
+  #   x[i, j] <<- DT::coerceValue(v, x[i, j])
+  #   replaceData(proxy, x, resetPaging = FALSE)  # important
+  # })
+
+  ###### DEFINTION DES VARS ET DES MODALITES ####
+  #### SELECT DF DATE ####
+  
+ 
+  
+  ### SUBSET ON CONDITIONS
+  # shiny::reactive({
+  #   #mtcars[input[["dt_rows_all"]], ]
+  #   
+  # INDICES <- input$TABLE_POUR_SELECTION_rows_all
+  # proxy.TABLE_POUR_SELECTION()[INDICES , ]->upddated_datas
+  # upddated_datas
+  # })->DATA_OF_SUBSET
+  # 
+  # output$DATA_OF_SUBSET_CONTROL<-renderDT({ DATA_OF_SUBSET() })
+  # 
+  # output$INDEXES_CONTROL<-
+  
+  shiny::reactive({
+    req(  values$DF_subset_initial )
+     data_of_subset <-  values$DF_subset_initial
+     #data_of_subset[-c(1) , ]->data_of_subset
+     #cat(input$overallSummary_rows_all)
+
+      string_for_sub<-sapply(1:nrow(data_of_subset), function(i){
+        paste("BIGLIST()$", data_of_subset$DATE[i], sep="" )->dfvar
+      if(data_of_subset$TYPE[i]=="factor"){
+        paste( dfvar, "$", data_of_subset$VARIABLE[i], 
+               "%in%",  data_of_subset$FACTOR_LEVELS[i], sep = "")
+      } else {
+        if(data_of_subset$TYPE[i]=="character"){
+          paste("grepl('",  data_of_subset$TEXT_PATTERN[i],"'", 
+                ", ", dfvar, "$", data_of_subset$VARIABLE[i], ", fixed=TRUE)", sep = "")
+        } else {
+          if(data_of_subset$TYPE[i]%in%c("numeric", "integer") ){
+            paste("(", 
+            paste(dfvar, "$", data_of_subset$VARIABLE[i], ">=", data_of_subset$min[i]),
+            "&",
+            paste(dfvar, "$", data_of_subset$VARIABLE[i], "<=", data_of_subset$max[i]),
+            ")", sep="")
+          } else {
+            if(data_of_subset$TYPE[i]=="Date" ){
+              
+              paste("(", 
+                    paste( "as.Date(",   dfvar, "$", data_of_subset$VARIABLE[i], ",",
+                           "format=", input$DATEformat, ")",
+                           ">=", 
+                           "as.Date(" ,  data_of_subset$min[i], ",",
+                           "format=", input$DATEformat, ")"
+                           ),
+                    "&",
+                    paste( "as.Date(" ,  dfvar, "$", data_of_subset$VARIABLE[i], ",",
+                           "format=", input$DATEformat, ")",
+                           ">=", 
+                           "as.Date(" ,  data_of_subset$max[i], ",",
+                           "format=", input$DATEformat, ")"
+                    ), sep="")
+              
+              
+        }
+      }
+      }
+        }
+        })
+    data.frame("PAQUET"=data_of_subset$PAQUET, DATE=data_of_subset$DATE, "string_for_sub"=string_for_sub, 
+               stringsAsFactors = FALSE)
+    })->STRING_FOR_SUB
+  INDIVIDUELS<-reactive({
+    req(STRING_FOR_SUB() )
+    print(STRING_FOR_SUB())
+    
+    req(INDVAR())
+    list.of.inf.by.cond<-lapply(1:nrow(STRING_FOR_SUB() ), function(i){
+      subset(BIGLIST()[[STRING_FOR_SUB()$DATE[i]]], 
+             eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
+    })
+    output$CONTROL_LIST.OF.INF<-renderText({unlist(list.of.inf.by.cond)})
+    lapply(unique(STRING_FOR_SUB()$PAQUET), function(pi){
+      which(STRING_FOR_SUB()$PAQUET==pi)->indexes.pi
+      unique(unlist(list.of.inf.by.cond[indexes.pi]))
+    })->ind.by.paq
+    
+    Reduce(intersect, ind.by.paq)->ind.all.paq
+    ind.all.paq
+  })
+  reactive({
+    req(BIGLIST() )
+    req(INDIVIDUELS())
+    lapply(BIGLIST(), FUN = function(bi){
+    subset(bi, bi[ , INDVAR()]%in%INDIVIDUELS())
+    })
+    })->SUBSETTED_LIST
+  output$LENGTH_IND_SUBS<-renderText({ length( INDIVIDUELS() )    }) 
+  
+# output$SUBSET_OUTPUT<-renderTable(STRING_FOR_SUB())
+# reactive({
+#   req(STRING_FOR_SUB())
+#   lapply(unique(STRING_FOR_SUB()$PAQUET), function(pi){
+#   paste("(", paste(STRING_FOR_SUB()[STRING_FOR_SUB()$PAQUET==pi ,"string_for_sub"], collapse = "|" ), ")")
+#   })
+# })->SUBSET_BY_PAQUET
+# output$SUBSET_BY_PAQUET_OUTPUT<-renderPrint(print(SUBSET_BY_PAQUET() ))
+# reactive({
+#   req(SUBSET_BY_PAQUET())
+#   paste( SUBSET_BY_PAQUET() , collapse = "&" )
+# })->SUBSET_G
+# output$SUBSET_G_OUTPUT<-renderPrint(print(SUBSET_G() ))
+
+  
+  
+ # shiny::eventReactive(input$APPLICATE_SUBSET, {
+ 
   #### Chargement des données ####
  
       trajs <- reactiveValues(df = NULL, dataSource = NULL)

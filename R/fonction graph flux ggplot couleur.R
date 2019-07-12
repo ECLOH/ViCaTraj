@@ -202,8 +202,5 @@ graph_flux<-function(data, seq_data, col_periode) {
   
 }
 
-#' @examples
-
-# g<-graph_flux(data = contrat,seq_data = seq.contrat,col_periode=c("T2.2013","X2013.octobre"))
-#  win.graph()
-#  g
+#' @examples g<-graph_flux(data = contrat,seq_data = seq.contrat,col_periode=c("T2.2013","X2013.octobre"))
+#' win.graph()

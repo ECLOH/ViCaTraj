@@ -7,7 +7,6 @@
 #'
 #' @return un data frame avec en dernière colonne les groupes
 #' @export
-#' 
 data_cluster<-function(tabl_ind,data,nb_groupe){
   if (floor(nb_groupe)!=nb_groupe){
     stop(" 'nb_groupe' doit être un nombre entier ")
@@ -34,6 +33,4 @@ data_cluster<-function(tabl_ind,data,nb_groupe){
   return(dataCopy)
 }
 
-#' @examples
-#' 
-#data_cluster(tabl_ind=indicateur,data=contrat,nb_groupe=4)->dTest
+#' @examples data_cluster(tabl_ind=indicateur,data=contrat,nb_groupe=4)->dTest

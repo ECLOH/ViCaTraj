@@ -23,6 +23,3 @@ vect.sous.seq<-function(data){
   return(vect.sous.seq)
 }
 
-
-#' @examples
-

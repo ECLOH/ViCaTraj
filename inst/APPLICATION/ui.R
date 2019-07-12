@@ -28,6 +28,59 @@ options(shiny.maxRequestSize=700*1024^2)
 #### UI ####
 
 ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,theme=shinytheme("flatly"),#fluidPage(theme = shinytheme("flatly"),
+                         tabPanel("Création d'un jeu de données", 
+                                  sidebarPanel(
+                                    h3("Sélection de l'objet source:"), 
+                                    width = 6,
+                                    shiny::fileInput(inputId = "LIST_SOURCE_BIG_DF", 
+                                                     label = "Objet Rdata à charger:", 
+                                                     multiple = FALSE ),
+                                    shiny::column(width = 6,
+                                    shiny::selectInput( inputId = "MINTIMEBIG", label = "Borne temporelle inférieure:", 
+                                                        multiple = FALSE, choices = "" , width = '100%')),
+                                    shiny::column(width = 6,
+                                    shiny::selectInput( inputId = "MAXTIMEBIG", label = "Borne temporelle supérieure:", 
+                                                        multiple = FALSE , choices = "", width = '100%')),
+                                    shiny::numericInput(inputId = "PAS_TEMPS_BIGDATA", label = "Pas de temps pour les données:", 
+                                                        value = 1, min = 1, step = 1, width = '20%'),
+                                    textOutput("CONTROLNAMES"),
+                                    textOutput("SLIDERTEXT")
+                                    
+                                  ),
+                                  sidebarPanel(
+                                    h3("Sélection des individus:"), 
+                                    uiOutput("UI_INDVAR_CHOOSE"),
+                                    width = 6,
+                                    shiny::column(width=6, 
+                                    uiOutput("UI_PAQUET_SELECT")
+                                    ), 
+                                    shiny::column(width=6, 
+                                                  uiOutput("UI_DATE_SELECT")
+                                    ), 
+                                    uiOutput("UI_VAR_SELECT"), 
+                                    uiOutput("UI_CLASS_SELECT"),
+                                    uiOutput("UI_MOD_SELECT"),
+                                    h3("CONTROL_LIST.OF.INF:"),
+                                    uiOutput("CONTROL_LIST.OF.INF"),
+                                    h3("UI_VIEW_VAR:"),
+                                    uiOutput("UI_VIEW_VAR"),
+                                    
+                                    
+                                   # uiOutput("UI_MOD_SELECT2"),
+                                    
+                                    actionButton(inputId="addROW", label = "Ajouter la condition"),
+                                    #uiOutput("UI_SELECT_DF_TO_SUBSET"),
+                                    #filterDataUI(id = "ex"),
+                                    #actionButton(inputId="FILTER", label = "Appliquer les filtres"),
+                                    hr(),
+                                    DT::DTOutput("TABLE_POUR_SELECTION"),
+                                   actionButton(inputId="APPLICATE_SUBSET", label = "Appliquer les conditions"),
+                                   #tableOutput("SUBSET_OUTPUT"),
+                                   #textOutput("SUBSET_BY_PAQUET_OUTPUT"),
+                                   #textOutput("SUBSET_G_OUTPUT"),
+                                   #DTOutput("DATA_OF_SUBSET_CONTROL")
+                                   textOutput("LENGTH_IND_SUBS")
+                                    )),
                          tabPanel("Paramètres de la session",
                                   #tabsetPanel(id = "tabpan",
                                   #            tabPanel(title = "Paramètres de la session: ",

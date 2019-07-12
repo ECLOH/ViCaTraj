@@ -24,6 +24,3 @@ if (nb_grp>2){
 }
 return(vect)
 }
-
-
-#' @examples

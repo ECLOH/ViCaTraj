@@ -1,12 +1,9 @@
 # http://olivier.godechot.free.fr/hoparticle.php?id_art=465
 # https://stackoverflow.com/questions/39757897/using-formattable-in-r-with-dynamic-column-headers
-
 #' Title
-#'
 #' @param data data frame
 #' @param var_grp variable contenant la classification
 #' @param var variable étudiée
-#'
 #' @return un data frame mis en forme
 #' @export
 
@@ -105,7 +102,3 @@ tableau_ligne<-function(data,var_grp,var){
   
   return(tab)
 }
-
-#' @examples
-
-

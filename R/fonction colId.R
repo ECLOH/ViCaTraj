@@ -5,7 +5,6 @@
 #'
 #' @return les indices de colonnes pouvant être des identifiants
 #' @export
-
 colId <- function(df){
   idcol=NULL
   for (i in 1:dim(df)[2]){
@@ -16,5 +15,3 @@ colId <- function(df){
   idcol<-idcol[!is.na(idcol)]
   return(idcol)
 }
-
-#' @examples
