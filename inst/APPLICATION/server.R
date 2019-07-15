@@ -137,7 +137,8 @@ return(data)
           if(input$classSelect=="Date" ){
             list(
               shiny::textInput(inputId = "DATEformat", label = "Format d'origine", value = "" ),
-              shiny::dateRangeInput(inputId = "DATE_RANGE", label = "Bornes des dates : ")#, format = input$DATEformat)
+              shiny::dateRangeInput(inputId = "DATE_RANGE", 
+                                    label = "Bornes des dates : ")#, format = "%d/%m/%Y" )#, format = input$DATEformat)
             )
           }
         }
@@ -146,14 +147,18 @@ return(data)
   })
   
   observe({
-   req(THE_VAR())
-    req(input$DATEformat)
+  req(THE_VAR())
+  req(input$DATEformat)
     print(THE_VAR())
-    as.Date(THE_VAR(), format=input$DATEformat)->THE_VAR_DATE
+    print(as.character(input$DATEformat))
+    as.Date(THE_VAR(), format=as.character(input$DATEformat) )->THE_VAR_DATE
     print(THE_VAR_DATE)
-    min(THE_VAR_DATE)->mindate
-    max(THE_VAR_DATE)->maxdate
-    shiny::updateDateRangeInput(session = session, inputId = "DATE_RANGE", min = mindate, max=maxdate )
+    class(THE_VAR_DATE)
+    min(THE_VAR_DATE, na.rm = TRUE)->mindate
+    print(mindate)
+    max(THE_VAR_DATE, na.rm = TRUE)->maxdate
+    print(maxdate)
+    shiny::updateDateRangeInput(session = session, inputId = "DATE_RANGE", start = mindate, end=maxdate )
   })
   
   output$UI_VIEW_VAR<-renderText({
@@ -248,18 +253,19 @@ return(data)
               
               paste("(", 
                     paste( "as.Date(",   dfvar, "$", data_of_subset$VARIABLE[i], ",",
-                           "format=", input$DATEformat, ")",
+                           "format=", "'", input$DATEformat, "')",
                            ">=", 
-                           "as.Date(" ,  data_of_subset$min[i], ",",
-                           "format=", input$DATEformat, ")"
+                           "as.Date('" ,  data_of_subset$min[i], "',",
+                           "format=", "'", "%Y-%m-%d", "')", sep=""
                            ),
                     "&",
                     paste( "as.Date(" ,  dfvar, "$", data_of_subset$VARIABLE[i], ",",
-                           "format=", input$DATEformat, ")",
-                           ">=", 
-                           "as.Date(" ,  data_of_subset$max[i], ",",
-                           "format=", input$DATEformat, ")"
-                    ), sep="")
+                           "format=", "'", input$DATEformat, "')",
+                           "<=", 
+                           "as.Date('" ,  data_of_subset$max[i], "',",
+                           "format=", "'", "%Y-%m-%d", "')", sep=""
+                    ),
+                    ")", sep="")
               
               
         }
@@ -270,6 +276,7 @@ return(data)
     data.frame("PAQUET"=data_of_subset$PAQUET, DATE=data_of_subset$DATE, "string_for_sub"=string_for_sub, 
                stringsAsFactors = FALSE)
     })->STRING_FOR_SUB
+  
   INDIVIDUELS<-reactive({
     req(STRING_FOR_SUB() )
     print(STRING_FOR_SUB())
@@ -288,6 +295,7 @@ return(data)
     Reduce(intersect, ind.by.paq)->ind.all.paq
     ind.all.paq
   })
+  
   reactive({
     req(BIGLIST() )
     req(INDIVIDUELS())
@@ -297,8 +305,15 @@ return(data)
     })->SUBSETTED_LIST
   
   output$LENGTH_IND_SUBS<-renderText({ length( INDIVIDUELS() )    }) 
+  output$LENGTH_SUBSETTED<-renderText({ length( SUBSETTED_LIST() )    }) 
   
- 
+  observe({
+    SUBSETTED_LIST()->data.to.save 
+  output$downlist <- shiny::downloadHandler(filename = "mes_datas.RData", 
+                        content =  function(file) {
+                          save(data.to.save, file = file)
+                        } )
+  })
   #### Chargement des données ####
  
       trajs <- reactiveValues(df = NULL, dataSource = NULL)
