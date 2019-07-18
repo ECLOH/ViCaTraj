@@ -31,17 +31,20 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                          tabPanel("Les données",
                                   tabsetPanel(
                                     #### SUB-PANEL: PARAMETRAGE ####
-                                             #tabsetPanel(id = "tabpan",
-                                             #            tabPanel(title = "Paramètres de la session: ",
+                                             tabsetPanel(id = "tabpan",
+                                                         tabPanel(title = "Import et formattage des données : ",
                                              #### CHARGEMENT FICHIER ####
                                              sidebarPanel(
                                                h3("Chargement du fichier"), 
                                                width = 12,
+                                               shiny::column(width = 6,
                                                shiny::selectInput(inputId = "DataType", label = "Choix du type de données", 
                                                                   choices = c("Un objet RData contenant de multiples data.frame"="objet", 
                                                                               "Un seul fichier.csv contenant des données prêtes à l'emploi"="fichier"), 
                                                                   multiple = FALSE, selected = "fichier")
                                                ),
+                                               shiny::column(width = 6,
+                                                             
                                                conditionalPanel(
                                                  condition = "input.DataType == 'fichier'",
                                                  
@@ -52,22 +55,20 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                  ), 
                                                conditionalPanel(
                                                  condition = "input.DataType == 'objet'",
-                                                 h5("INFO: pour des raisons de sécurité il n'est pas possible de charger directement un dossier dans un navigateur web."),
-                                                 h5("Vous pouvez utiliser la fonction LIST_MULTIPLE_CSV du package ViCaTraj pour créer l'objet RData à partir de mulitples fichiers .csv"),
+                                                 h5("INFO: pour des raisons de sécurité il n'est pas possible de charger directement un dossier dans un navigateur web. Vous pouvez utiliser la fonction LIST_MULTIPLE_CSV du package ViCaTraj pour créer l'objet RData à partir de mulitples fichiers .csv"),
                                                  fileInput(inputId="LIST_SOURCE_BIG_DF", 
                                                            label="Sélectionner l'objet .RData contenant les multiples data.frame", 
-                                                           multiple = FALSE, accept = NULL, width = NULL),
-                                                 h3("Sélection des individus:"), 
-                                                 hr(),
-                                                 uiOutput("UI_INDVAR_CHOOSE"),
-                                                 hr()
+                                                           multiple = FALSE, accept = NULL, width = NULL)
+                                      
+                                                 #hr()
                                                  #shiny::textOutput("CONTROLDATA"))
-                                               ),
-                                             hr(),
+                                               ))),
+                                             #hr(),
                                              #### FORMAT DONNNEES ####
                                              
                                              sidebarPanel( h3("Format des données"), 
                                                            width = 12,
+                                                           #### condition = "input.DataType == 'fichier'"  ####
                                                  conditionalPanel(
                                                    condition = "input.DataType == 'fichier'",
                                                  shiny::selectInput(inputId="sepcol", label= "Separateur de colonnes", choices=c("Virgule" = ",","Point-Virgule" = ";","Tabulation" = "\t"), selected=","),
@@ -81,39 +82,55 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                       choices = "", multiple = FALSE,selected = NULL, selectize = TRUE)),
                                                  shiny::selectInput(inputId = "na", label = "Codage des valeurs manquantes", choices = c("Vide" , "Espace" = " ", "NA" = "NA"), selected = "NA", multiple = TRUE, selectize = TRUE)
                                                  ),
+                                                 #### condition = "input.DataType == 'objet'"  ####
+                                                 
                                                  conditionalPanel(
                                                    condition = "input.DataType == 'objet'",
                                                    hr(),
-                                                   shiny::column(width = 6,
+                                                   shiny::column(width = 4,
                                                                  shiny::selectInput( inputId = "MINTIMEBIG", label = "Borne temporelle inférieure:", 
                                                                                      multiple = FALSE, choices = "" , width = '100%')),
-                                                   shiny::column(width = 6,
+                                                   shiny::column(width = 4,
                                                                  shiny::selectInput( inputId = "MAXTIMEBIG", label = "Borne temporelle supérieure:", 
                                                                                      multiple = FALSE , choices = "", width = '100%')),
+                                                   shiny::column(width = 4,
                                                    shiny::numericInput(inputId = "PAS_TEMPS_BIGDATA", label = "Pas de temps pour les données:", 
-                                                                       value = 1, min = 1, step = 1, width = '20%'),
-                                                   textOutput("CONTROLNAMES"),
-                                                   textOutput("SLIDERTEXT"),
-                                                   hr()
+                                                                       value = 1, min = 1, step = 1, width = '100%')),
+                                                   shiny::column(width = 6, "Noms des data.frame présents dans la base : "),  shiny::column(width = 6, textOutput("CONTROLNAMES")),
+                                                   shiny::column(width = 6, "Noms des data.frame sélectionnés : "),  shiny::column(width = 6, textOutput("SLIDERTEXT"))
+                                                   )
                                                  ),
+                                                 hr(),
+                                                 
+                                                 #### condition = "input.DataType == 'objet'"  ####
+                                                 
                                                  conditionalPanel(
                                                    condition = "input.DataType == 'objet'",
+                                                   sidebarPanel( h3("Sélection des individus:"), 
+                                                                 width = 12,
+                                                                 uiOutput("UI_INDVAR_CHOOSE"),#,
                                                    hr(),
-                                                   h3("Sélection d'individus dans la base de données : "),
-                                                   shiny::column(width=6, 
-                                                                 uiOutput("UI_PAQUET_SELECT")
-                                                   ), 
-                                                   shiny::column(width=6, 
+                                                   #shiny::column(width=6, 
+                                                                 uiOutput("UI_PAQUET_SELECT"),
+                                                   h5("INFO: "),
+                                                   h5("toutes les conditions ajoutées dans le même paquet ne sont pas additives (utilisation de l'opérateur logique 'ou' ('|')."),
+                                                   h5("toutes les conditions ajoutées dans des paquets différents sont additives (utilisation de l'opérateur logique 'et' entre les paquets de conditions ('&'))."),
+                                                   
+                                                   #), 
+                                                   
+                                                   shiny::column(width=4, 
                                                                  uiOutput("UI_DATE_SELECT")
                                                    ), 
-                                                   hr(),
-                                                   uiOutput("UI_VAR_SELECT"), 
-                                                   uiOutput("UI_CLASS_SELECT"),
+                                                   #hr(),
+                                                   shiny::column(width=4, 
+                                                   uiOutput("UI_VAR_SELECT")), 
+                                                   shiny::column(width=4, 
+                                                   uiOutput("UI_CLASS_SELECT")),
                                                    uiOutput("UI_MOD_SELECT"),
                                                    hr(),
                                                    
-                                                   actionButton(inputId="addROW", label = "Ajouter la condition")
-                                                 ),
+                                                   actionButton(inputId="addROW", label = "Ajouter la condition"),
+                                                 #),
                                                  DT::DTOutput("TABLE_POUR_SELECTION"),
                                                  actionButton(inputId="APPLICATE_SUBSET", label = "Appliquer les conditions"),
                                                  
@@ -124,19 +141,37 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                  textOutput("LENGTH_IND_SUBS"),
                                                  textOutput("LENGTH_SUBSETTED"),
                                                  shiny::downloadButton(outputId = "downlist", label = "Enregistrer le jeu de données sur le disque (pour réutilisation ultérieure)")
-     
-                                             ),
+                                                 ))
+                                                         ),
+                                             tabPanel(title = " Construction des trajectoires ",
+                                             #),
                                              sidebarPanel(
                                                h3("Paramétrage des trajectoires"),
                                                width = 12,
                                                shiny::selectInput(inputId = "timecol", label = "Variables temporelles (mettre dans l'ordre chronologique)", choices = "", selected = "PrestationRSA.SituationDossierRSA.EtatDossierRSA.ETATDOSRSA", multiple = TRUE, selectize = TRUE),
                                                shiny::uiOutput("DATA_UI"),
+                                               shiny::textInput(inputId = "TEXT_GAP", label = "Label pour les 'gaps' : ", value = "GAP"),
+                                               shiny::textInput(inputId = "TEXT_RIGHT", label = "Label pour les censures à droite : ", value = "CENSURE"),
+                                               shiny::textInput(inputId = "TEXT_LEFT", label = "Label pour les départs tardifs : ", value = "LEFT"),
                                                shiny::numericInput(inputId = "criterNb", label = "Critère de sortie : nombre de mois consécutifs",value = 3, min = 1, max = 36, step = 1),
+                                               uiOutput("CONTROL_DUPLICATED_ID"),
                                                shiny::actionButton(inputId = "ValidParametres", label = "Je valide ces paramètres")
-                                            )
-                                             ,
+                                            ),
+                                            shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : "),
+                                            
+                                            sidebarPanel(
+                                              width = 12,
+                                              
+                                              h3("Résumé des trajectoires:"),
+                                              #textOutput("CLASS_TRAJ_OBS"),
+                                              textOutput("DES_TRAJ_OBJ"),
+                                              uiOutput("ATTR_TRAJ_OBJ")
+                                            ),
+                                             
                                              mainPanel(
                                                shiny::dataTableOutput("contenu")
+                                             )
+                                             )
                                              )
                                     )
                          ),
@@ -174,7 +209,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                         conditionalPanel(condition="input.plottype=='I' ",
                                                                                          shiny::radioButtons(inputId = "TapisSorted",label="Trier selon : ",choices = c("Le début"="from.start","La fin"="from.end"),selected = "from.start")),
                                                                         
-                                                                        shiny::selectInput(inputId = "souspop1", label = "Sous-Population", choices = "", selected = "", multiple = FALSE),
+                                                                        shiny::selectInput(inputId = "souspop1", label = "Sous-Population", choices = "Aucune", selected = "Aucune", multiple = FALSE),
                                                                         shiny::uiOutput(outputId= "slider1"),
                                                                         shiny::uiOutput(outputId= "modalite1"),
                                                                         conditionalPanel(condition="input.plottype=='flux'",
@@ -264,7 +299,8 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                            h4("Coûts de substitution :" ),
                                                                            uiOutput("PRINTSUBST") %>% withSpinner(color="#0dc5c1")
                                                                          )
-                                                        )
+                                                        ),
+                                                        uiOutput("ATTR_TRAJ_FORCLASS")
                                                         # shiny::conditionalPanel(condition = "input.classtype=='OM'",
                                                         #                         shiny::sliderInput(label = "Coûts de substitution: rapport aux coûts indel", inputId = "subst_ratio", min = 0.1, max = 5, step = 0.1, value = 1, width = "80%")
                                                         # )
