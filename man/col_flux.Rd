@@ -4,7 +4,7 @@
 \alias{col_flux}
 \title{Fonction col_flux}
 \usage{
-col_flux(data, seq.data)
+col_flux(data, seq.data, palette = "Paired")
 }
 \arguments{
 \item{data}{}

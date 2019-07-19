@@ -116,12 +116,18 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                  hr(),
                                                  
                                                  #### condition = "input.DataType == 'objet'"  ####
-                                                 
+                                             sidebarPanel( h3("Sélection des individus:"), 
+                                                           width = 12,
+                                             conditionalPanel(
+                                               condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
+                                               
+                                                             uiOutput("UI_INDVAR_CHOOSE")
+                                             ),
                                                  conditionalPanel(
                                                    condition = "input.DataType == 'objet'",
-                                                   sidebarPanel( h3("Sélection des individus:"), 
+                                                   sidebarPanel( #h3("Sélection des individus:"), 
                                                                  width = 12,
-                                                                 uiOutput("UI_INDVAR_CHOOSE"),#,
+                                                                 #uiOutput("UI_INDVAR_CHOOSE"),#,
                                                    hr(),
                                                    #shiny::column(width=6, 
                                                                  uiOutput("UI_PAQUET_SELECT"),
@@ -154,7 +160,10 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                  textOutput("LENGTH_IND_SUBS"),
                                                  textOutput("LENGTH_SUBSETTED"),
                                                  shiny::downloadButton(outputId = "downlist", label = "Enregistrer le jeu de données sur le disque (pour réutilisation ultérieure)")
-                                                 ))
+                                                 )
+                                                 )
+                                             )
+                                                 
                                                          ),
                                              tabPanel(title = " Construction des trajectoires ",
                                              #),
@@ -213,6 +222,9 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                tabPanel(title = "Représentation des trajectoires",
                                                         fluidRow(useShinyjs(),
                                                                  column(2,
+                                                                        hr(),
+                                                                        shiny::actionButton(inputId = "COMPUTE_GRAPH", label = "Actualiser le graphique"),
+                                                                        hr(),
                                                                         shiny::selectInput(inputId = "plottype", label = "Quel graphique voulez-vous représenter? ", choices = c("Chronogramme"="d", "Séquences les plus fréquentes"="f", "Tapis"="I", "Etat modal"="ms", "Durée moyenne dans chaque état"="mt","Graphique d'entropie"="Ht", "Séquences représentatives"="r","Graphique de flux"="flux","Sous-séquences triées selon leur support"="sous.seq","Sous-séquences choisies"="sous.seq.ch"), selected = "d", multiple = FALSE),
                                                                         conditionalPanel(condition="input.plottype=='sous.seq.ch'",
                                                                                          wellPanel(shiny::selectInput(inputId = "par.sous.seq1",label = "Etat 1",choices = "",multiple = FALSE),
@@ -272,10 +284,11 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                  hr(),
                                                                  conditionalPanel(condition="input.selection_rows=='Sample'",
                                                                                   shiny::numericInput(inputId = "sample_prop", label = "Taille de l'échantillon", value = 0.1, min = 0.05, max = 0.95, step = 0.05),
-                                                                                  shiny::selectInput(inputId = "sample_var",
-                                                                                                     label = "Variables utilisées pour la représentativité",
-                                                                                                     choices = c("Territoire de l'Isère", "Sexe"), multiple = TRUE, selected = NULL)),
-                                                                 shiny::uiOutput("TEXT_NB_SELECTED_TRAJS") %>% withSpinner(color="#0dc5c1")
+                                                                                  shiny::uiOutput("UI_SAMPLE_VAR")
+                                                                 ),
+                
+                                                                 shiny::uiOutput("TEXT_NB_SELECTED_TRAJS") %>% withSpinner(color="#0dc5c1"),
+                                                                 textOutput("CONTROL_ID_MATCHING")
                                                           ),
                                                           column(4,
                                                                  h4("Type de distance :"),
@@ -302,9 +315,9 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                  uiOutput("PRINTTIMEDIST") %>% withSpinner(color="#0dc5c1"),
                                                                  hr(),
                                                                  shiny::actionButton(inputId = "calculDist", label = "Calcul de la matrice de distance"),
-                                                                 conditionalPanel(condition = "input.calculDist",
+                                                                 #conditionalPanel(condition = "input.calculDist",
                                                                                   uiOutput("PRINTSEQDIST") %>% withSpinner(color="#0dc5c1")
-                                                                 )
+                                                                 #)
                                                           )
                                                         ),
                                                         conditionalPanel(condition = "input.type_distance=='edit'",
@@ -347,8 +360,6 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                   br(),br(),
                                                                   shiny::actionButton(inputId = "calculCLUST", label = "Calcul de la classification")
                                                            )),
-                                                         uiOutput("classif"),
-                                                         uiOutput("tabind"),
                                                          fluidRow(useShinyjs(),
                                                                   uiOutput("classif_grp"),
                                                                   column(2,
@@ -361,7 +372,10 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                   ),
                                                                   column(4,
                                                                          shiny::uiOutput("TexteClassif"))
-                                                         )
+                                                         ),
+                                                         uiOutput("classif"),
+                                                         uiOutput("tabind")
+                       
                                                ),
                                                tabPanel(title="Visualisation des groupes",
                                                         

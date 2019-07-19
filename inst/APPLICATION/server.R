@@ -56,7 +56,7 @@ return(data)
   OBJSEQ_COMPLEMENT<-reactive({
     req( LIST_OBJSEQ())
     req(CLASS_LIST_OBJSEQ())
-    LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<10)]]->df.pour.seq
+    LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<1)]]->df.pour.seq
   })
 
 
@@ -109,13 +109,26 @@ return(data)
   reactive({BIGLIST()[[input$DATE_FOR_SELECT]]})->the.df
   
  output$UI_INDVAR_CHOOSE<-renderUI({
+   if(input$DataType=="objet"){
    lapply(BIGLIST(), function(bi){
      names(bi)
    })->lina
    unique(unlist(lina))->glona
+   message<-h5("Renseignez la variable dans les données qui identifie des individus uniques et qui sera utilisée comme paramètre 'id' de seqdata()")
+   
+   } else {
+     if(input$DataType=="objseq"){
+       names( OBJSEQ_COMPLEMENT() )->glona
+       message<-h5("Renseignez la variable dans les données complémentaires qui correspond à l'attribut row.names de l'objet seqdata")
+     }
+   }
+   list(
+     message,
    selectInput(inputId = "INDVAR", label = "Variable pour identifiant individuel: ", 
                choices = glona, multiple = FALSE)
+   )
  })
+ 
  INDVAR<-reactive({input$INDVAR})
   
   output$UI_VAR_SELECT<-renderUI({
@@ -128,6 +141,7 @@ return(data)
   
   THE_VAR<-reactive({
     req( the.df() )
+    req( input$VAR_FOR_SELECT)
     the.df()[ , input$VAR_FOR_SELECT]->the.var
     the.var
   })
@@ -515,7 +529,6 @@ return(data)
   
   
   
-  
   output$CONTROL_DUPLICATED_ID<-renderUI({
     req( DR_POUR_SEQ_OBJ())
     req(input$INDVAR)
@@ -637,6 +650,22 @@ return(data)
     
   })
   
+  
+  INDVAR_UNI<-reactive({
+    req(data.seq())
+    if(input$DataType=="objet"|input$DataType=="objseq"){
+      req(input$INDVAR)
+      input$INDVAR->idvar
+    } else {
+      if(input$DataType=="fichier"){
+        req(input$rownames_par)
+        input$rownames_par->idvar
+      }
+    }
+    idvar
+  })
+  
+  
   # output$WARNINGS.UNIQUE.ID<-renderText({
   #   if(!is.null(data.seq())){
   #   "OK: la variable d'identifiant individuel sélectionnée est unique"
@@ -694,6 +723,9 @@ data2<-reactive({
     }
   }
 })
+
+observe({print(head(data2()))})
+
 
 #### STATISTIQUES DESCRIPTIVES ####
 
@@ -1163,6 +1195,7 @@ observeEvent(eventExpr = data.seq(),{
     }
   }
   ####### Graphiques des statistiques descriptives/ visualisation des trajectoires ###
+  observeEvent(input$COMPUTE_GRAPH, {
   output$PLOT3<- renderUI({
     if (req(input$plottype) %in% c("sous.seq","sous.seq.ch")){
       output$PLOT<-renderPlot({
@@ -1219,6 +1252,7 @@ observeEvent(eventExpr = data.seq(),{
       return(plotOutput("PLOT",height = tailleGraph$height))
     }
     
+  })
   })
   
   ### Titre rappelant la selection choisie #####
@@ -1490,21 +1524,48 @@ observeEvent(eventExpr = data.seq(),{
     seqdist.args[[input$type_distance]][[input$classtype]]->arg2
     seqdist.inputs[names(seqdist.inputs)%in%arg2]
   })->output$SEQDIST_INPUTS
+  
   ###trajs.forclass  ####
-  trajs.forclass<-reactive({#shiny::eventReactive(eventExpr = input$selection_rows, {
+  
+  output$UI_SAMPLE_VAR<-renderUI({
     req(data.seq())
+    shiny::selectInput(inputId = "sample_var",
+                       label = "Variables utilisées pour la représentativité",
+                       choices = names(data2()), multiple = TRUE, selected = NULL)
+    
+  })
+  
+  MATCH_SEQ_DATA_C0NTROL<-reactive({
+    if(sum(attributes(data.seq())$row.names!=data2()[ , INDVAR_UNI()])==0){
+      1 
+    } else {
+        0
+      }
+  })
+  output$CONTROL_ID_MATCHING<-renderPrint({ MATCH_SEQ_DATA_C0NTROL() })
+  
+  trajs.forclass<-reactive({
+    req(MATCH_SEQ_DATA_C0NTROL())
+    if(MATCH_SEQ_DATA_C0NTROL()==1){
     if(input$selection_rows=="Sample"){
-      ###sample ####
-      sample(x = 1:nrow(data.seq()), size = input$sample_prop*nrow(data.seq()), replace = FALSE)->vec.sample
-      seqdef(data.seq()[vec.sample , ], 
-             left = input$TEXT_LEFT, 
-             right = input$TEXT_RIGHT, 
-             gaps = input$TEXT_GAP, nr = "RMA",
-             id = row.names(data.seq()[vec.sample , ]))
+      if(#input$sample_var==""|
+        is.null(input$sample_var)#|length(input$sample_var)<1
+        ){
+        REPRESENTED_SAMPLE(data = data2(), interact.var = NULL, SIZE = input$sample_prop*nrow(data.seq()), id.var = INDVAR_UNI())->vec.sample
+      } else {
+        REPRESENTED_SAMPLE(data = data2(), 
+                           interact.var = input$sample_var, 
+                           SIZE = input$sample_prop*nrow( data2() ), id.var=INDVAR_UNI())->vec.sample
+      }
+      seqdef(data.seq()[row.names(data.seq())%in%vec.sample , ], 
+             left = "DEL",#input$TEXT_LEFT, 
+             right = "DEL",#input$TEXT_RIGHT, 
+             gaps = "DEL",#input$TEXT_GAP, nr = "RMA",
+             id = row.names( data.seq()[row.names(data.seq())%in%vec.sample , ] ))
+      
     } else {
       if(input$selection_rows=="unique.traj"){
         #### unique.traj ####
-
         rev(wesanderson::wes_palette(name = "Darjeeling1", n = length(alphabet(data.seq())), type = "continuous"))->cpal.seq
         #cpal(seqdata = data.seq())<-cpal.seq
         #seqtab(data.seq()[ , ], idxs = 0, format = "STS")->unique.trajs
@@ -1516,12 +1577,13 @@ observeEvent(eventExpr = data.seq(),{
                left = input$TEXT_LEFT,nr = "RMA")->unique.trajs.seq
         unique.trajs.seq
       } else {
-        #### all ####
-        data.seq()
+        if(input$selection_rows=="all"){
+          data.seq()
+        }
       }
     }
+    }
   })
-  
   
   output$ATTR_TRAJ_FORCLASS<-renderUI({
     attributes(trajs.forclass() )->list.attr
@@ -1545,7 +1607,7 @@ observeEvent(eventExpr = data.seq(),{
              cval = input$subst_ratio,
              time.varying=input$time_varying_substitution_costs,
              transition=input$transition_substitution_costs,
-             lag=input$lag_subst_cost, weighted = TRUE)
+             lag=input$lag_subst_cost, weighted = TRUE, with.missing = FALSE)
    })
 #
 #    #### PRINT COSTS ####
@@ -1612,11 +1674,14 @@ observeEvent(eventExpr = data.seq(),{
              expcost = input$expcost_seqdist, context=input$context_seqdist, weighted = TRUE, with.missing = FALSE)
    })
 #
-   output$PRINTSEQDIST<-renderUI({
-     req(SEQDIST())
- renderText(paste("Création d'un objet 'dist' comportant", length(SEQDIST()), "élements. /n La distance minimale est de", min(SEQDIST()), "la distance maximale de", max(SEQDIST()), "et la distance moyenne de", round(sum(SEQDIST())/length(SEQDIST()), 2), sep = " "))->output$cc
-     textOutput("cc") %>% withSpinner(color="#0dc5c1")
-   })
+observeEvent(input$calculDist, {
+  output$PRINTSEQDIST<-renderUI({
+    req(SEQDIST())
+    renderText(paste("Création d'un objet 'dist' comportant", length(SEQDIST()), "élements. La distance minimale est de", min(SEQDIST()), "la distance maximale de", max(SEQDIST()), "et la distance moyenne de", round(sum(SEQDIST())/length(SEQDIST()), 2), sep = " "))->output$cc
+    textOutput("cc") #%>% withSpinner(color="#0dc5c1")
+  })
+})
+
    ### CLASSIFICATION ####
    SEQCLASS<-eventReactive(eventExpr = input$calculCLUST, {
      req(SEQDIST())
