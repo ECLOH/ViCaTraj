@@ -10,7 +10,7 @@ col_flux<-function(data,seq.data){
   which(colnames(data) %in% col_nom)->col_contrat
   vect_levels<-NULL
   for (i in col_contrat){
-    rbind(vect_levels,cbind(levels(data[,i])))->vect_levels
+    rbind(vect_levels,cbind(levels(as.factor(data[,i]) )))->vect_levels
   }
   nom<-unique(vect_levels)
   

@@ -40,7 +40,9 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                shiny::column(width = 6,
                                                shiny::selectInput(inputId = "DataType", label = "Choix du type de données", 
                                                                   choices = c("Un objet RData contenant de multiples data.frame"="objet", 
-                                                                              "Un seul fichier.csv contenant des données prêtes à l'emploi"="fichier"), 
+                                                                              "Un objet RData contenant un objet seqdata"="objseq",
+                                                                              "Un seul fichier.csv contenant des données prêtes à l'emploi"="fichier" 
+                                                                              ), 
                                                                   multiple = FALSE, selected = "fichier")
                                                ),
                                                shiny::column(width = 6,
@@ -62,7 +64,18 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                       
                                                  #hr()
                                                  #shiny::textOutput("CONTROLDATA"))
-                                               ))),
+                                               ),
+                                               conditionalPanel(
+                                                 condition = "input.DataType == 'objseq'",
+                                                 h5("INFO: vous pouvez charger un objet .RData contenant une liste d'objet, dont au moins un objet de type seqdata, et éventuellement un ou des data.frames complémentaires"),
+                                                 fileInput(inputId="LIST_SEQ", 
+                                                           label="Sélectionner l'objet .RData contenant l'objet seqdata", 
+                                                           multiple = FALSE, accept = NULL, width = NULL)
+                                                 
+                                                 #hr()
+                                                 #shiny::textOutput("CONTROLDATA"))
+                                               )
+                                               )),
                                              #hr(),
                                              #### FORMAT DONNNEES ####
                                              
@@ -145,7 +158,11 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                          ),
                                              tabPanel(title = " Construction des trajectoires ",
                                              #),
+                                             conditionalPanel(
+                                               condition = "input.DataType != 'objseq'", 
+                                               
                                              sidebarPanel(
+                                               
                                                h3("Paramétrage des trajectoires"),
                                                width = 12,
                                                shiny::selectInput(inputId = "timecol", label = "Variables temporelles (mettre dans l'ordre chronologique)", choices = "", selected = "PrestationRSA.SituationDossierRSA.EtatDossierRSA.ETATDOSRSA", multiple = TRUE, selectize = TRUE),
@@ -154,10 +171,11 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                shiny::textInput(inputId = "TEXT_RIGHT", label = "Label pour les censures à droite : ", value = "CENSURE"),
                                                shiny::textInput(inputId = "TEXT_LEFT", label = "Label pour les départs tardifs : ", value = "LEFT"),
                                                shiny::numericInput(inputId = "criterNb", label = "Critère de sortie : nombre de mois consécutifs",value = 3, min = 1, max = 36, step = 1),
-                                               uiOutput("CONTROL_DUPLICATED_ID"),
-                                               shiny::actionButton(inputId = "ValidParametres", label = "Je valide ces paramètres")
-                                            ),
-                                            shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : "),
+                                               uiOutput("CONTROL_DUPLICATED_ID")
+                                               )),
+                                               shiny::actionButton(inputId = "ValidParametres", label = "Je valide ces trajectoires"),
+                                            shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : " ),
+                                            
                                             
                                             sidebarPanel(
                                               width = 12,

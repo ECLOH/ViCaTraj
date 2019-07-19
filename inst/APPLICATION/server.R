@@ -23,6 +23,44 @@ server <- function(input, output, session) {
 # b.max<-names(temp.lenght)[temp.lenght]
 return(data)
   })
+  
+  LIST_OBJSEQ<-reactive({
+    if ( is.null(input$LIST_SEQ)) return(NULL)
+    inFile <- input$LIST_SEQ
+    file <- inFile$datapath
+    # load the file into new environment and get it from there
+    e = new.env()
+    name <- load(file, envir = e)
+    data <- e[[name]]
+    #
+    temp.lenght<-length(data)
+    # b1<-names(temp.lenght)[1]
+    # b.max<-names(temp.lenght)[temp.lenght]
+    return(data)
+  })
+  
+  CLASS_LIST_OBJSEQ<-reactive({
+    req( LIST_OBJSEQ())
+    lapply(LIST_OBJSEQ(), class)->class.listSEQ
+    print(class.listSEQ)
+    lapply(class.listSEQ, function(xi){sum(grepl(pattern = "stslist", x = xi))})->li2
+    li2
+  })
+  
+  OBJSEQ<-reactive({
+    req( LIST_OBJSEQ())
+    req(CLASS_LIST_OBJSEQ())
+    LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()>0)]]
+  })
+  
+  OBJSEQ_COMPLEMENT<-reactive({
+    req( LIST_OBJSEQ())
+    req(CLASS_LIST_OBJSEQ())
+    LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<10)]]->df.pour.seq
+  })
+
+
+  
   observe({updateSelectInput(session = session, inputId = "MINTIMEBIG", 
                                  choices = names(BIGLIST() ) , 
                                 selected= names(BIGLIST() )[1]
@@ -479,6 +517,8 @@ return(data)
   
   
   output$CONTROL_DUPLICATED_ID<-renderUI({
+    req( DR_POUR_SEQ_OBJ())
+    req(input$INDVAR)
     if(sum(duplicated(x = DR_POUR_SEQ_OBJ()[ , input$INDVAR]))>1){
       list(
       h3("ATTENTION: la variable d'identifiant individuel sélectionnée comporte des doublons."),
@@ -492,6 +532,8 @@ return(data)
   
   
   DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS<-reactive({
+    req( DR_POUR_SEQ_OBJ())
+    req(input$INDVAR)
     if(sum(duplicated(x = DR_POUR_SEQ_OBJ()[ , input$INDVAR]))>1){
       if(input$ELIMINATE_DOUBLONS==TRUE){
         drpourseq<-DR_POUR_SEQ_OBJ()[!duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR]) , ]
@@ -523,7 +565,7 @@ return(data)
   }
   else   {
     # updateNumericInput(session=session, inputId = "PAStrate",value=1)
-    s<-seqdef(data()[,input$timecol],cpal = NULL,
+    s<-seqdef(df.pour.seq[,input$timecol],cpal = NULL,
               gaps = input$TEXT_GAP,
               right = input$TEXT_RIGHT,
               left = input$TEXT_LEFT,nr = "RMA")
@@ -535,6 +577,7 @@ return(data)
       #### SI OBJET ####
       
     if(input$DataType=="objet"){
+      DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()->df.pour.seq
       if(!is.null(DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS())){
         seqdef(id = DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()[ , input$INDVAR], 
                data = DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()))&names(DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS())!=input$INDVAR],
@@ -549,10 +592,17 @@ return(data)
                #gaps = "GAP", 
         )->s
       } else {s<-NULL}
+    } else {
+      #### SI OBJSEQ####
+      if(input$DataType=="objseq"){
+        req(OBJSEQ())
+        df.pour.seq<-OBJSEQ_COMPLEMENT()
+        s<-OBJSEQ()
+      }
     }
   }
 
-      
+
       
       
       
@@ -577,7 +627,6 @@ return(data)
         #   )->s
     
     if (!is.null(s)){
-      DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()->df.pour.seq
       if (length(alphabet(s))<=12&!is.null(s)){
         #permet d'avoir les mêmes couleurs que pour les graphiques de flux
         a<-col_flux(data = df.pour.seq, seq.data = s)
@@ -638,6 +687,10 @@ data2<-reactive({
   } else {
     if(input$DataType=="objet"){ 
       DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()
+    } else {
+      if(input$DataType=="objseq"){
+        OBJSEQ_COMPLEMENT()
+      }
     }
   }
 })
