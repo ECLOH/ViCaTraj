@@ -2560,34 +2560,34 @@ observeEvent(input$calculDist, {
              
              lapply(1:length(input$souspop_modalite2), FUN=function(i){
                paste0('SEQPLOT', i)->id.output
-               output[[id.output]] <- renderPlot({  plot(x=1:100, y=1:100) }) ####
-                 # req(seq.select2(),
-                 #     ordre()
-                 #     )
-                 # if(req(input$plottypeG) %in% c("d", "f", "I", "ms", "mt", "r","Ht")){
-                 #   
-                 #   if(input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ){
-                 #     if(i<=length(input$souspop_modalite2)){
-                 #       tailleGraph$height<-dim(ordre())[1]*400
-                 #       print(tailleGraph$height)
-                 #       if(req(input$plottypeG)=="I"){
-                 #         #seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),], 
-                 #        #         type = input$plottypeG, 
-                 #        #         group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],
-                 #        #         main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]),sortv=input$TapisSortedG)
-                 #         plot(x=1:100, y=1:100)
-                 #       }else{
-                 #         # seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),], 
-                 #         #         type = input$plottypeG, 
-                 #         #         group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],
-                 #         #         main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]))
-                 #         plot(x=1:100, y=1:100)
-                 #         
-                 #       }
-                 #     }
-                 #   }
-                 # } 
-                 # },height = haut(),width = 1300)
+               output[[id.output]] <- renderPlot({  #plot(x=1:100, y=1:100) }) ####
+                 req(seq.select2(),
+                     ordre()
+                     )
+                 if(req(input$plottypeG) %in% c("d", "f", "I", "ms", "mt", "r","Ht")){
+
+                   if(input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ){
+                     if(i<=length(input$souspop_modalite2)){
+                       tailleGraph$height<-dim(ordre())[1]*400
+                       print(tailleGraph$height)
+                       if(req(input$plottypeG)=="I"){
+                        seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),],
+                                type = input$plottypeG,
+                                group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],
+                                main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]),sortv=input$TapisSortedG)
+                         #plot(x=1:100, y=1:100)
+                       }else{
+                         seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),],
+                                 type = input$plottypeG,
+                                 group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],
+                                 main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]))
+                         #plot(x=1:100, y=1:100)
+
+                       }
+                     }
+                   }
+                 }
+                 },height = haut(),width = 1300)
              })
            
            }
