@@ -381,6 +381,15 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                        
                                                ),
                                                tabPanel(title="Visualisation des groupes",
+                                                        textOutput("VERIF_SELECT2"),
+                                                        #textOutput("VERIF_SELECT2_PRINTVAR"),
+                                                        textOutput("VISUAL_CONTROL_VAR2"),
+                                                        textOutput( "LENTH_MOD2"),
+                                                        textOutput("ENCODING_MOD2"),
+                                                        plotOutput("SEQPLOT1"),
+                                                        plotOutput("SEQPLOT2"),
+                                                        plotOutput("SEQPLOT3"),
+                                                        textOutput("DIM_SELECTED_2"),
                                                         
                                                         fluidRow(
                                                           column(2,
@@ -401,6 +410,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                  shiny::selectInput(inputId = "souspop2", label = "Sous-population", choices = "", selected = "", multiple = FALSE),
                                                                  shiny::uiOutput(outputId= "slider2"),
                                                                  shiny::uiOutput(outputId= "modalite2"),
+                                                                 
                                                                  
                                                                  conditionalPanel(condition="input.plottypeG=='flux'",
                                                                                   shiny::selectInput(inputId = "timeseq2", label = "Pas de temps", choices = "", selected = "", multiple = TRUE, selectize = TRUE),

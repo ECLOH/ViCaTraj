@@ -109,6 +109,7 @@ return(data)
   reactive({BIGLIST()[[input$DATE_FOR_SELECT]]})->the.df
   
  output$UI_INDVAR_CHOOSE<-renderUI({
+   if(input$DataType!="fichier"){
    if(input$DataType=="objet"){
    lapply(BIGLIST(), function(bi){
      names(bi)
@@ -127,6 +128,7 @@ return(data)
    selectInput(inputId = "INDVAR", label = "Variable pour identifiant individuel: ", 
                choices = glona, multiple = FALSE)
    )
+   }
  })
  
  INDVAR<-reactive({input$INDVAR})
@@ -1840,9 +1842,13 @@ observeEvent(input$calculDist, {
        clusterCAH.class<-factor(clusterCAH,labels = paste0("G",1:input$nb_cluster))
        
        if(input$selection_rows=="Sample"){
+         
          data2()[data2()[ , INDVAR_UNI()]%in%row.names(trajs.forclass()) , ]->dataCopieCAH
+         
          data.frame("ID"=row.names(trajs.forclass()), "Clustering"=clusterCAH.class)->df
+         
          merge(dataCopieCAH, df, by.x=INDVAR_UNI(), by.y="ID", all.x=TRUE)->dataCopieCAH
+         
        } else {
          if(input$selection_rows=="all"){
            data2()->dataCopieCAH
@@ -1863,6 +1869,13 @@ observeEvent(input$calculDist, {
            }
          }
        }
+       
+       data.frame(dataCopieCAH, stringsAsFactors = TRUE)->dataCopieCAH
+       # dataCopieCAH<-data.frame(lapply(dataCopieCAH, FUN = function(x){
+       #   if(is.character(x)|is.factor(x)){
+       #     as.factor(as.character(x))
+       #   } else {x}
+       # }))
        
        return(dataCopieCAH)
        
@@ -1922,7 +1935,7 @@ observeEvent(input$calculDist, {
      updateSelectInput(session = session, inputId = "timeseq2", choices = input$timecol)
      #sous population
      colsouspop2<-colnames(dataCluster())[!(colnames(dataCluster()) %in% input$timecol)]
-     updateSelectInput(session = session, inputId = "souspop2", choices = c("Aucune",colsouspop2))
+     updateSelectInput(session = session, inputId = "souspop2", choices = c("Aucune",colsouspop2), selected = "Aucune")
    })
    
    observeEvent(input$souspop2,{
@@ -1941,23 +1954,25 @@ observeEvent(input$calculDist, {
        }
      }
    })
+   
    output$modalite2<- renderUI({
      if(input$souspop2!="Aucune"){
-       if (is.factor(dataCluster()[,input$souspop2])){
-         selectInput(inputId = "souspop_modalite2",label="Modalité", choices = levels(dataCluster()[,input$souspop2]),selected="",multiple = TRUE)
-       }
+       #if (is.factor(dataCluster()[,input$souspop2])){
+         selectInput(inputId = "souspop_modalite2",label="Modalité", choices = unique(dataCluster()[,input$souspop2]), multiple=TRUE, selectize = TRUE)#   levels(dataCluster()[,input$souspop2]),selected="",multiple = TRUE)
+       #}
      }
    })
 
    
       #### Selection de la sous population ####
+      #### ATTENTION: FAIRE POUR DATE
    data.select2<-reactive({
      req(input$souspop2,dataCluster())
        if (input$souspop2=="Aucune" || input$souspop2==""){
          data.selectG<-dataCluster()
        }else{
          
-         if (is.factor(dataCluster()[,input$souspop2])){
+         if (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])){
            req(input$souspop_modalite2)
            data.selectG<-dataCluster()[which(dataCluster()[,input$souspop2] %in% c(input$souspop_modalite2)),]
          }
@@ -1968,28 +1983,41 @@ observeEvent(input$calculDist, {
          }
          
        }
+     
+     if(!is.null(data.selectG)){
+       
        return(data.selectG)
+     }
    })
-   
+   #### ATTENTION: FAIRE POUR DATE
    seq.select2<-reactive({
      req(input$souspop2)
-     
+     req(trajs.forclass())
      if (input$souspop2=="Aucune" || input$souspop2==""){
-       seq.selectG<-data.seq()
+       seq.selectG<-trajs.forclass()
      }else{
        
-       if (is.factor(dataCluster()[,input$souspop2])){
+       if (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])){
          req(input$souspop_modalite2)
-         seq.selectG<-data.seq()[which(dataCluster()[,input$souspop2] %in% c(input$souspop_modalite2)),]
+         seq.selectG<-trajs.forclass()[which(dataCluster()[,input$souspop2] %in% c(input$souspop_modalite2) ),]
        }
-       if (is.numeric(dataCluster()[,input$souspop2])){
+       if (is.numeric(dataCluster()[,input$souspop2])|is.integer(dataCluster()[,input$souspop2])){
          req(input$sous_pop_num2)
-         seq.selectG<-data.seq()[which(dataCluster()[,input$souspop2]<= max(input$sous_pop_num2,na.rm=TRUE) & dataCluster()[,input$souspop2]>= min(input$sous_pop_num2,na.rm=TRUE)),]
+         seq.selectG<-trajs.forclass()[which(dataCluster()[,input$souspop2]<= max(input$sous_pop_num2,na.rm=TRUE) & dataCluster()[,input$souspop2]>= min(input$sous_pop_num2,na.rm=TRUE)),]
          
+       } else {
+         if(class(dataCluster()[,input$souspop2])=="Date"){
+           seq.selectG<-NULL
+         } else {           seq.selectG<-NULL
+}
        }
      }
      
+     if(!is.null(seq.selectG)){
+     
      return(seq.selectG)
+       
+     }
      
    })
    
@@ -2021,7 +2049,7 @@ observeEvent(input$calculDist, {
    
    observeEvent(input$graph2,{
        if(input$plottypeG=="flux"){
-         if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+         if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
            req(ordre())
            tailleGraph$height<-dim(ordre())[1]*400
            lapply(1:length(input$souspop_modalite2), FUN=function(j){
@@ -2029,7 +2057,7 @@ observeEvent(input$calculDist, {
              output[[id.output]] <- renderPlot({
               input$graph2
                isolate({
-                 if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+                 if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
                    req(data.select2(),seq.select2(),col_periode2(),input$var_grp,input$souspop2,input$souspop_modalite2)
                    return(marrangeGrob(lapply(1:length(input$var_grp), FUN=function(i){
                      dat<-data.select2()[data.select2()[,"Clustering"]==input$var_grp[i],]
@@ -2082,7 +2110,7 @@ observeEvent(input$calculDist, {
        if (req(input$plottypeG) == "Pearson.ch"){
          req(seq.select2(),dataCluster(),valuesG$df)
          if(nrow(valuesG$df)>0){
-           unique(c(levels(valuesG$df[,1]),levels(valuesG$df[,2]),levels(valuesG$df[,3])))->valCh
+           unique(c(unique(valuesG$df[,1]),unique(valuesG$df[,2]),unique(valuesG$df[,3])))->valCh
            valCh[valCh!="Aucun"]->valCh
            seqecreate(seq.select2(), tevent="state", use.labels=FALSE)->seqGlobal22
            
@@ -2129,14 +2157,14 @@ observeEvent(input$calculDist, {
      req(seq.select2(),dataCluster(),ordre())
      if (req(input$plottypeG) == "Pearson"){
        #Pour la comparaison des sous-populations, on met les graphiques dans une liste#
-       if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+       if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
          req(input$souspop_modalite2)
          tailleGraph$height<-dim(ordre())[1]*400
          lapply(1:length(input$souspop_modalite2), FUN=function(i){
            paste0('SEQPLOTPEARSON', i)->id.output
            output[[id.output]] <- renderPlot({
              if (req(input$plottypeG) == "Pearson"){
-               if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+               if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
                  if(i<=length(input$souspop_modalite2)){
                    req(input$nbAffiche)
                    seq.select2()[data.select2()[,input$souspop2]==input$souspop_modalite2[i],]->seqSouspop2
@@ -2170,16 +2198,16 @@ observeEvent(input$calculDist, {
          req(valuesG$df)
          #condition d'un data.frame values non vide pour exécuter la suite du code afin de ne pas avoir d'erreur quand la data.frame est vide
          if(nrow(valuesG$df)>0){
-           unique(c(levels(valuesG$df[,1]),levels(valuesG$df[,2]),levels(valuesG$df[,3])))->valCh
+           unique(c(unique(valuesG$df[,1]),unique(valuesG$df[,2]),unique(valuesG$df[,3])))->valCh
            valCh[valCh!="Aucun"]->valCh
-           if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+           if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
              req(input$souspop_modalite2)
              tailleGraph$height<-dim(ordre())[1]*400
              lapply(1:length(input$souspop_modalite2), FUN=function(i){
                paste0('SEQPLOTPEARSONCH', i)->id.output
                output[[id.output]] <- renderPlot({
                  if (req(input$plottypeG) == "Pearson.ch"){
-                   if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+                   if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
                      if(i<=length(input$souspop_modalite2)){
                        seq.select2()[data.select2()[,input$souspop2]==input$souspop_modalite2[i],]->seqSouspop2
                        seqecreate(seqSouspop2, tevent="state", use.labels=FALSE)->seqGlobal2
@@ -2288,7 +2316,7 @@ observeEvent(input$calculDist, {
            req(input$var_grp)     
            return(taille_graph_flux(length(input$var_grp)))
          })
-       }else ({
+       } else ({
          req(grp())     
          return(taille_graph_flux(length(grp())))
        })
@@ -2305,7 +2333,7 @@ observeEvent(input$calculDist, {
          if (req(input$plottypeG)=="flux"){
            input$graph2
            isolate({
-             if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+             if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
                req(input$souspop_modalite2,col_periode2(),input$var_grp)
                return(lapply(1:length(input$souspop_modalite2), function(i) {
                  tagList(plotOutput(paste0('SEQPLOTFLUX', i),height = tailleGraph$height),
@@ -2337,7 +2365,7 @@ observeEvent(input$calculDist, {
          }
 
        if (req(input$plottypeG) == "Pearson"){
-         if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+         if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
              return(lapply(1:length(input$souspop_modalite2), function(i) {
                tagList(plotOutput(paste0('SEQPLOTPEARSON', i),height = tailleGraph$height),
                        fluidRow(column(2,
@@ -2362,7 +2390,7 @@ observeEvent(input$calculDist, {
          }
        }
        if (req(input$plottypeG) == "Pearson.ch"){
-         if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+         if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
            return(lapply(1:length(input$souspop_modalite2), function(i) {
              tagList(plotOutput(paste0('SEQPLOTPEARSONCH', i),height = tailleGraph$height),
                      fluidRow(column(2,
@@ -2398,8 +2426,8 @@ observeEvent(input$calculDist, {
                           )
                           )
                       ))
-         }else{
-          if (is.factor(dataCluster()[,input$souspop2])) {
+         } else{
+          if ((is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
             req(input$souspop_modalite2)
           
               return(lapply(1:length(input$souspop_modalite2), function(i) {
@@ -2432,8 +2460,79 @@ observeEvent(input$calculDist, {
        }
      })
      ### Création des renderplots pour les graphiques seqplot ###
+     
+     varlog<-reactive({
+       req( dataCluster() )
+       req( input$souspop2 )
+       
+       input$souspop2%in%names(dataCluster())
+       
+     })
     
+     
+     modlog<-reactive({
+       req( dataCluster() )
+       
+       req( input$souspop2 )
+       
+
+       #if(varlog()==TRUE){
+         sum(enc2utf8(as.character(input$souspop_modalite2))%in%enc2utf8(as.character(dataCluster()[,input$souspop2])) )->modlog
+      # } else {modlog<-"ERROR1"}
+       return(modlog)
+     })
+     
+     
+     output$LENTH_MOD2<-renderText({
+       length(input$souspop_modalite2)
+     })
+       
+     output$ENCODING_MOD2<-renderText({
+      paste("modalite2 :", Encoding(as.character(input$souspop_modalite2)), "|| dataCluster()[,input$souspop2] :", Encoding(as.character(dataCluster()[,input$souspop2])), sep="")   
+     })
+       
+     output$VERIF_SELECT2<-renderText({
+       req( dataCluster() )
+       req( input$souspop2 )
+       req(varlog() )
+       #req(modlog() )
+       
+       
+       return(paste("varlog :", varlog(), "| modlog : ", modlog() , sep=""))
+       
+     })
+     
+     
+     output$VISUAL_CONTROL_VAR2<-renderText({
+       req( dataCluster() )
+       req( input$souspop2 )
+       req(varlog() )
+       return(paste( "modalite2 :", paste(input$souspop_modalite2, collapse = "/"), "   || unique(dataCluster()[,input$souspop2]) :", paste(unique(dataCluster()[,input$souspop2]), collapse = "/"), sep=""))
+     })
+     
+     output$VERIF_SELECT2_PRINTVAR<-renderPrint({
+       
+       req( dataCluster() )
+       req( input$souspop2 )
+       
+       return(print(dataCluster()[,input$souspop2]))
+       
+     })
+     
+     output$DIM_SELECTED_2<-renderPrint({
+     list(
+       dim(seq.select2()),
+     dim(data.selectG())
+     )
+     })
+     
      observe({
+       
+       req( dataCluster() )
+       req( input$souspop2 )
+       
+       #print(dataCluster()[,input$souspop2])
+       
        req(seq.select2())
        if(req(input$plottypeG) %in% c("d", "f", "I", "ms", "mt", "r","Ht")){
          if(input$souspop2=="Aucune"){
@@ -2450,27 +2549,45 @@ observeEvent(input$calculDist, {
                }
              } 
            },height = haut(),width = 1300)
-         }else{
-           if (is.factor(dataCluster()[,input$souspop2])) {
-             req(input$souspop_modalite2)
+         } else {
+           print(dataCluster()[,input$souspop2])
+           
+           if ((is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
+           
+            req(input$souspop_modalite2)
+             print(input$souspop_modalite2)
+             print(dataCluster()[,input$souspop2])
              
              lapply(1:length(input$souspop_modalite2), FUN=function(i){
                paste0('SEQPLOT', i)->id.output
-               output[[id.output]] <- renderPlot({
-                 req(seq.select2(),ordre())
-                 if(req(input$plottypeG) %in% c("d", "f", "I", "ms", "mt", "r","Ht")){
-                   if(input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])){
-                     if(i<=length(input$souspop_modalite2)){
-                       tailleGraph$height<-dim(ordre())[1]*400
-                       if(req(input$plottypeG)=="I"){
-                         seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),], type = input$plottypeG, group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]),sortv=input$TapisSortedG)
-                       }else{
-                         seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),], type = input$plottypeG, group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]))
-                       }
-                     }
-                   }
-                 } 
-                 },height = haut(),width = 1300)
+               output[[id.output]] <- renderPlot({  plot(x=1:100, y=1:100) }) ####
+                 # req(seq.select2(),
+                 #     ordre()
+                 #     )
+                 # if(req(input$plottypeG) %in% c("d", "f", "I", "ms", "mt", "r","Ht")){
+                 #   
+                 #   if(input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ){
+                 #     if(i<=length(input$souspop_modalite2)){
+                 #       tailleGraph$height<-dim(ordre())[1]*400
+                 #       print(tailleGraph$height)
+                 #       if(req(input$plottypeG)=="I"){
+                 #         #seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),], 
+                 #        #         type = input$plottypeG, 
+                 #        #         group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],
+                 #        #         main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]),sortv=input$TapisSortedG)
+                 #         plot(x=1:100, y=1:100)
+                 #       }else{
+                 #         # seqplot(seqdata = seq.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),], 
+                 #         #         type = input$plottypeG, 
+                 #         #         group = data.select2()[which(data.select2()[,input$souspop2]==input$souspop_modalite2[i]),"Clustering"],
+                 #         #         main = paste("Graphique de la variable",input$souspop2,"avec la modalité",input$souspop_modalite2[i]))
+                 #         plot(x=1:100, y=1:100)
+                 #         
+                 #       }
+                 #     }
+                 #   }
+                 # } 
+                 # },height = haut(),width = 1300)
              })
            
            }
@@ -2500,7 +2617,7 @@ observeEvent(input$calculDist, {
      observe({
        if(req(input$plottypeG) %in% c("d", "f", "I", "ms", "mt", "r","Ht")){
          req(input$souspop2,seq.select2(),data.select2(),ordre())
-         if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+         if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
            lapply(1:length(input$souspop_modalite2), FUN=function(i){
              if(i<=length(input$souspop_modalite2)){
                fonctionseqplot<-function(){
@@ -2580,7 +2697,7 @@ observeEvent(input$calculDist, {
      observe({
        if(input$plottypeG=="flux"){
          req(input$souspop2,seq.select2(),data.select2(),ordre())
-         if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+         if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
            req(input$souspop_modalite2,input$souspop2,seq.select2(),data.select2(),ordre())
            lapply(1:length(input$souspop_modalite2), FUN=function(j){
              fonctionflux<-function(){
@@ -2648,7 +2765,7 @@ observeEvent(input$calculDist, {
      observe({
        req(seq.select2(),dataCluster(),ordre())
        if (req(input$plottypeG) == "Pearson"){
-         if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+         if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
            req(input$souspop_modalite2)
            lapply(1:length(input$souspop_modalite2), FUN=function(i){
                   if(i<=length(input$souspop_modalite2)){
@@ -2711,9 +2828,9 @@ observeEvent(input$calculDist, {
          if (req(input$plottypeG) == "Pearson.ch"){
            req(valuesG$df)
            if(nrow(valuesG$df)>0){
-             unique(c(levels(valuesG$df[,1]),levels(valuesG$df[,2]),levels(valuesG$df[,3])))->valCh
+             unique(c(unique(valuesG$df[,1]),unique(valuesG$df[,2]),unique(valuesG$df[,3])))->valCh
              valCh[valCh!="Aucun"]->valCh
-             if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+             if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
                req(input$souspop_modalite2)
                lapply(1:length(input$souspop_modalite2), FUN=function(i){
                        if(i<=length(input$souspop_modalite2)){
@@ -2797,7 +2914,7 @@ observeEvent(input$calculDist, {
          onevent("mouseleave",'DownGraphGrp', hide("texteGraphGrp"))
          onevent("mouseenter", 'DownGraphGrp', show("texteGraphGrp"))
        }
-       if (input$souspop2!="Aucune" && is.factor(dataCluster()[,input$souspop2])) {
+       if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ) {
          lapply(1:length(input$souspop_modalite2), function(i) {
            onevent("mouseleave", paste0('DownGraphGrp',i), hide(paste0("texteGraphGrp",i)))
            onevent("mouseenter", paste0('DownGraphGrp',i), show(paste0("texteGraphGrp",i)))
@@ -2816,7 +2933,7 @@ observeEvent(input$calculDist, {
              return(paste(p,"et aucune sous population"))
            }else{
              
-             if (is.factor(dataCluster()[,input$souspop2])){
+             if ((is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ){
                req(input$souspop_modalite2)
                return(paste(p,"et la sous population",input$souspop2, "avec les modalités",paste(input$souspop_modalite2,collapse = ", ")))
              }
@@ -2834,7 +2951,7 @@ observeEvent(input$calculDist, {
            return("Vous avez selectionné aucune sous population")
          }else{
            
-           if (is.factor(dataCluster()[,input$souspop2])){
+           if ((is.factor(dataCluster()[,input$souspop2])|is.character(dataCluster()[,input$souspop2])) ){
              req(input$souspop_modalite2)
              return(paste("Vous avez selectionné la sous population",input$souspop2, "avec les modalités",paste(input$souspop_modalite2,collapse = ", ")))
            }
@@ -3255,7 +3372,7 @@ observeEvent(input$calculDist, {
          return(tableau_ligne(data = dataClusterDisc,var_grp = "Clustering",var = "DiscVarNum")$x$data[,1:length(unique(BreaksClassInterval()$brks))])
        }
        if (input$souspop2StatDesc!="Aucune" && is.factor(dataCluster()[,input$souspop2StatDesc])){
-         return(tableau_ligne(data = dataCluster(),var_grp = "Clustering",var = input$souspop2StatDesc)$x$data[,1:length(levels(dataCluster()[,input$souspop2StatDesc]))+1])
+         return(tableau_ligne(data = dataCluster(),var_grp = "Clustering",var = input$souspop2StatDesc)$x$data[,1:length(unique(dataCluster()[,input$souspop2StatDesc]))+1])
        }
      }
      
@@ -3285,5 +3402,23 @@ observeEvent(input$calculDist, {
      #Graphique effectif
      onevent("mouseleave", 'DownGraphStatDesc', hide("texteDownloadEffGraph"))
      onevent("mouseenter", 'DownGraphStatDesc', show("texteDownloadEffGraph"))
+     
+     
+     #outputOptions(session, 'my_tab1_table', suspendWhenHidden=FALSE)
+     
+     
+    # observe( print(reactiveValuesToList(output)) )
+     
+     
+     #outs <- outputOptions(output)
+     #l#apply(names(outs), function(name) {
+    #   outputOptions(output, name, suspendWhenHidden = FALSE) 
+    # })
+     
+     
+     # observe({
+     #   outulist_of_outputs<-renderUI({
+     #     renderPrint(print(names(output)))
+     #   })
      
 }
