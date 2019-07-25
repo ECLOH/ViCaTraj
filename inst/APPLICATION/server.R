@@ -1588,6 +1588,7 @@ observeEvent(eventExpr = data.seq(),{
     }
   })
   
+  
   output$ATTR_TRAJ_FORCLASS<-renderUI({
     attributes(trajs.forclass() )->list.attr
     print(list.attr)
@@ -1831,11 +1832,30 @@ observeEvent(input$calculDist, {
    
    
    dataCluster<-eventReactive(eventExpr = input$Bouton_Clustering,{
+  
      req(SEQCLASS())
+     
+     
+     if(input$selection_rows=="Sample"){
+       
+       data2()[data2()[ , INDVAR_UNI()]%in%row.names(trajs.forclass()) , ]->df_pour_class
+       
+     } else {data2()->df_pour_class}
+     
      if (input$cluster_type=="CAHPAM"){
-       indicateur<-Creation_indicateur(nb_cluster_min=min(input$SliderGrp,na.rm=TRUE),nb_cluster_max=max(input$SliderGrp,na.rm=TRUE),mat_dist=SEQDIST(),intialclust=SEQCLASS())
-       return(data_cluster(indicateur,data2(),input$nb_cluster))
-     }
+       
+       
+       
+       
+       indicateur<-Creation_indicateur(nb_cluster_min=min(input$SliderGrp,na.rm=TRUE),
+                                       nb_cluster_max=max(input$SliderGrp,na.rm=TRUE)
+                                       ,mat_dist=SEQDIST(),
+                                       intialclust=SEQCLASS())
+       #return(
+       data_cluster(indicateur,
+                           df_pour_class,#data2(),
+                           input$nb_cluster)->res_def
+     } else {
      if(input$cluster_type=="CAH"){
        
        clusterCAH<-as.factor(cutree(SEQCLASS(),k = input$nb_cluster))
@@ -1843,15 +1863,13 @@ observeEvent(input$calculDist, {
        
        if(input$selection_rows=="Sample"){
          
-         data2()[data2()[ , INDVAR_UNI()]%in%row.names(trajs.forclass()) , ]->dataCopieCAH
-         
          data.frame("ID"=row.names(trajs.forclass()), "Clustering"=clusterCAH.class)->df
          
-         merge(dataCopieCAH, df, by.x=INDVAR_UNI(), by.y="ID", all.x=TRUE)->dataCopieCAH
+         merge(df_pour_class, df, by.x=INDVAR_UNI(), by.y="ID", all.x=TRUE)->dataCopieCAH
          
        } else {
          if(input$selection_rows=="all"){
-           data2()->dataCopieCAH
+           df_pour_class->dataCopieCAH
            dataCopieCAH[,"Clustering"]<-clusterCAH.class
          } else {
            if(input$selection_rows=="unique.traj"){
@@ -1865,21 +1883,24 @@ observeEvent(input$calculDist, {
              
              merge(df2, df, by.x="ID", by.y="ID")->df3
              
-             merge(data2(), df3, by.x=INDVAR_UNI(), by.y="IDVAR")->dataCopieCAH
+             merge(df_pour_class, df3, by.x=INDVAR_UNI(), by.y="IDVAR")->dataCopieCAH
            }
          }
        }
-       
-       data.frame(dataCopieCAH, stringsAsFactors = TRUE)->dataCopieCAH
-       # dataCopieCAH<-data.frame(lapply(dataCopieCAH, FUN = function(x){
-       #   if(is.character(x)|is.factor(x)){
-       #     as.factor(as.character(x))
-       #   } else {x}
-       # }))
-       
-       return(dataCopieCAH)
-       
+       dataCopieCAH->res_def
      }
+       
+      
+     }
+     data.frame(lapply(res_def, function(x){if(is.character(x)){as.factor(x)} else {x}}))->res_def
+     #as.data.frame(dataCopieCAH, stringsAsFactors = TRUE)->dataCopieCAH
+     #dataCopieCAH<-data.frame(lapply(dataCopieCAH, FUN = function(x){
+     #   if(is.character(x)|is.factor(x)){
+     #     as.factor(as.character(x))
+     #   } else {x}
+     # }))
+     return(res_def)
+     #return(dataCopieCAH)
    })
 
    
@@ -2005,7 +2026,7 @@ observeEvent(input$calculDist, {
        if (is.factor(dataCluster()[,input$souspop2])){#|is.character(dataCluster()[,input$souspop2])){
          req(input$souspop_modalite2)
          seq.selectG<-trajs.forclass()[which(dataCluster()[,input$souspop2] %in% c(input$souspop_modalite2) ),]
-       }
+       } else {
        if (is.numeric(dataCluster()[,input$souspop2])|is.integer(dataCluster()[,input$souspop2])){
          req(input$sous_pop_num2)
          seq.selectG<-trajs.forclass()[which(dataCluster()[,input$souspop2]<= max(input$sous_pop_num2,na.rm=TRUE) & dataCluster()[,input$souspop2]>= min(input$sous_pop_num2,na.rm=TRUE)),]
@@ -2013,17 +2034,14 @@ observeEvent(input$calculDist, {
        } else {
          if(class(dataCluster()[,input$souspop2])=="Date"){
            seq.selectG<-NULL
-         } else {           seq.selectG<-NULL
-}
+         } else { seq.selectG<-NULL
+         }
+       }
        }
      }
-     
      if(!is.null(seq.selectG)){
-     
-     return(seq.selectG)
-       
+       return(seq.selectG)
      }
-     
    })
    
    
@@ -2338,7 +2356,7 @@ observeEvent(input$calculDist, {
          if (req(input$plottypeG)=="flux"){
            input$graph2
            isolate({
-             if (input$souspop2!="Aucune" && (is.factor(dataCluster()[,input$souspop2]))){#|is.character(dataCluster()[,input$souspop2])) ) {
+             if (input$souspop2!="Aucune" & (is.factor(dataCluster()[,input$souspop2]))){#|is.character(dataCluster()[,input$souspop2])) ) {
                req(input$souspop_modalite2,col_periode2(),input$var_grp)
                return(lapply(1:length(input$souspop_modalite2), function(i) {
                  tagList(plotOutput(paste0('SEQPLOTFLUX', i),height = tailleGraph$height),
@@ -2432,7 +2450,7 @@ observeEvent(input$calculDist, {
                           )
                       ))
          } else{
-          if ((is.factor(dataCluster()[,input$souspop2]))){#|is.character(dataCluster()[,input$souspop2])) ) {
+          if (is.factor(dataCluster()[,input$souspop2])){#|is.character(dataCluster()[,input$souspop2])) ) {
             req(input$souspop_modalite2)
           
               return(lapply(1:length(input$souspop_modalite2), function(i) {
@@ -2529,7 +2547,10 @@ observeEvent(input$calculDist, {
        return(print(dataCluster()[,input$souspop2]))
        
      })
-     
+     observe({
+       print(head(data.select2()))
+       print(head(seq.select2()))
+     })
      output$DIM_SELECTED_2<-renderPrint({
        req( seq.select2() )
        req( data.select2() )
@@ -2538,6 +2559,13 @@ observeEvent(input$calculDist, {
      dim(data.select2())
      )
      })
+     
+     output$CLASS_SELECT2<-renderPrint({
+       req(dataCluster(), input$souspop2)
+       
+       class(dataCluster()[,input$souspop2])
+       
+       })
      
      observe({
        
