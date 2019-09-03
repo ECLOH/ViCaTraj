@@ -23,6 +23,7 @@ library(shinyjs)
 library(classInt)
 library(shinyBS)
 library(forcats)
+library(ggthemes)
 options(shiny.maxRequestSize=700*1024^2)
 
 #### UI ####
@@ -225,7 +226,15 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                         hr(),
                                                                         shiny::actionButton(inputId = "COMPUTE_GRAPH", label = "Actualiser le graphique"),
                                                                         hr(),
-                                                                        shiny::selectInput(inputId = "plottype", label = "Quel graphique voulez-vous représenter? ", choices = c("Chronogramme"="d", "Séquences les plus fréquentes"="f", "Tapis"="I", "Etat modal"="ms", "Durée moyenne dans chaque état"="mt","Graphique d'entropie"="Ht", "Séquences représentatives"="r","Graphique de flux"="flux","Sous-séquences triées selon leur support"="sous.seq","Sous-séquences choisies"="sous.seq.ch"), selected = "d", multiple = FALSE),
+                                                                        shiny::selectInput(inputId = "plottype", label = "Quel graphique voulez-vous représenter? ", 
+                                                                                           choices = c("Chronogramme"="d", "Séquences les plus fréquentes"="f", 
+                                                                                                       "Tapis"="I", "Etat modal"="ms", 
+                                                                                                       "Durée moyenne dans chaque état"="mt",
+                                                                                                       "Graphique d'entropie"="Ht", 
+                                                                                                       "Séquences représentatives"="r",
+                                                                                                       "Graphique de flux"="flux",
+                                                                                                       "Sous-séquences triées selon leur support"="sous.seq",
+                                                                                                       "Sous-séquences choisies"="sous.seq.ch"), selected = "d", multiple = FALSE),
                                                                         conditionalPanel(condition="input.plottype=='sous.seq.ch'",
                                                                                          wellPanel(shiny::selectInput(inputId = "par.sous.seq1",label = "Etat 1",choices = "",multiple = FALSE),
                                                                                                    shiny::selectInput(inputId = "par.sous.seq2",label = "Etat 2",choices = "",multiple = FALSE),
@@ -257,7 +266,10 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                         tags$p("Pour visualiser les mêmes graphiques pour des groupes, allez dans", tags$em("Classification des trajectoires"), "puis faire la" , tags$em("Matrice de distance"), "et la",tags$em("Classification."),"Les graphiques seront dans l'onglet",tags$em("Visualisation des groupes.")),
                                                                         uiOutput("txtAjoutSeq"),
                                                                         uiOutput("h4_fluxGlobal"),
-                                                                        uiOutput("PLOT3")%>% withSpinner(color="#0dc5c1"),
+                                                                        uiOutput("PLOT_DES")%>% withSpinner(color="#0dc5c1"),
+                                                                        uiOutput("TAB_DES")%>% withSpinner(color="#0dc5c1"),
+                                                                        
+                                                                        #uiOutput("PLOT3")%>% withSpinner(color="#0dc5c1"),
                                                                         downloadButton(outputId="DownGraphGlobal",label="Télécharger le graphique"),
                                                                         hidden(p(id="TexteDownloadGraph","Si l'application n'est pas ouverte dans un navigateur internet, il faut ajouter manuellement l'extension du fichier (.png). Pour ouvrir l'application avec un navigateur internet, il faut mettre Run External avant de lancer l'application ou appuyer sur Open in Browser en haut de l'application.")),
                                                                         textOutput("TexteGraph")
@@ -346,7 +358,8 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                   br(),
                                                                   shiny::uiOutput("InfobulleClassif"),
                                                                   # Quelle méthode voulez-vous utiliser pour regrouper les séquences ? partir de la matrice de dissemblance?
-                                                                  shiny::selectInput(inputId = "cluster_type", label = NULL, choices = c("Hierarchical Clustering"="CAH", "FAST Hierarchical Clustering"="fastCAH", "Partitionning Around Medoid"="PAM","Combinaison de la CAH et de PAM"="CAHPAM"), selected = "CAHPAM", multiple = FALSE)),
+                                                                  shiny::selectInput(inputId = "cluster_type", label = NULL, 
+                                                                                     choices = c("Hierarchical Clustering"="CAH", "FAST Hierarchical Clustering"="fastCAH", "Partitionning Around Medoid"="PAM","Combinaison de la CAH et de PAM"="CAHPAM"), selected = "CAHPAM", multiple = FALSE)),
                                                            column(4,br(),
                                                                   conditionalPanel(condition = "input.cluster_type=='CAH' | input.cluster_type=='CAHPAM'",
                                                                                    shiny::uiOutput("InfobulleClassifCAH"),

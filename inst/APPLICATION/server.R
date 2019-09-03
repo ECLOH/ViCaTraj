@@ -1023,13 +1023,23 @@ observeEvent(eventExpr = data.seq(),{
             seqecreate(seqSouspop, tevent="state", use.labels=FALSE)->seqGlobal
             titre<-paste("Graphique des sous-séquneces \n pour la variable",input$souspop1,"\n avec la modalité",input$souspop_modalite1[i])
             sousTitre<-paste("Il y a",nrow(seqSouspop),"individus")
-            seqefsub(seqGlobal,pmin.support=input$pmin1)->p
-            return(graph_sous_sequences(p)+ggtitle(titre,subtitle = sousTitre))
+            seqefsub(seqGlobal,pmin.support=input$pmin1)->datas
+            p<-graph_sous_sequences(datas)+ggtitle(titre,subtitle = sousTitre)
+            
+            res<-list("p"=p, "data"=datas)
+            
+            return(res)
           })
         }   
       } else {
         seqecreate(seq.select1(), tevent="state", use.labels=FALSE)->seqGlobal
-        return(list(graph_sous_sequences(seqefsub(seqGlobal,pmin.support=input$pmin1))))
+        seqefsub(seqGlobal,pmin.support=input$pmin1)->datas
+        p<-graph_sous_sequences(datas)
+        
+        res<-list("p"=p, "data"=datas)
+        
+        return(res)
+        #return(list(graph_sous_sequences(seqefsub(seqGlobal,pmin.support=input$pmin1))))
       }
     }else{
       ## Cas où l'utilisateur choisi les sous-séquences ##
@@ -1044,10 +1054,19 @@ observeEvent(eventExpr = data.seq(),{
                 seq.select1()[data.select1()[,input$souspop1]==input$souspop_modalite1[i],]->seqSouspop
                 seqecreate(seqSouspop, tevent="state", use.labels=FALSE)->seqGlobal
                 vectSeq<-vect.sous.seq(data = values$df)
-                seqefsub(seqGlobal,str.subseq=vectSeq)->p
+                seqefsub(seqGlobal,str.subseq=vectSeq)->datas
                 titre<-paste("Graphique des sous-séquneces \n pour la variable",input$souspop1,"\n avec la modalité",input$souspop_modalite1[i])
                 sousTitre<-paste("Il y a",nrow(seqSouspop),"individus")
-                return(graph_sous_sequences(p[order(p$data$Support,decreasing = TRUE),])+ggtitle(titre,subtitle = sousTitre))
+                
+                p<-graph_sous_sequences(datas[order(datas$data$Support,decreasing = TRUE),])+
+                  ggtitle(titre,subtitle = sousTitre)
+                
+                res<-list("p"=p, "data"=datas)
+                
+                return(res)
+                
+                
+                #return(graph_sous_sequences(p[order(p$data$Support,decreasing = TRUE),])+ggtitle(titre,subtitle = sousTitre))
                 
               })
             }   
@@ -1055,9 +1074,13 @@ observeEvent(eventExpr = data.seq(),{
             
             seqecreate(seq.select1(), tevent="state", use.labels=FALSE)->seqGlobal
             vectSeq<-vect.sous.seq(data = values$df)
-            seqefsub(seqGlobal,str.subseq=vectSeq)->p
-            return(list(graph_sous_sequences(p[order(p$data$Support,decreasing = TRUE),])))
+            seqefsub(seqGlobal,str.subseq=vectSeq)->datas
+            p<-graph_sous_sequences(datas[order(datas$data$Support,decreasing = TRUE),])
             
+            res<-list("p"=p, "data"=datas)
+            
+            return(res)
+
           }
         }
       }
@@ -1198,65 +1221,246 @@ observeEvent(eventExpr = data.seq(),{
     }
   }
   ####### Graphiques des statistiques descriptives/ visualisation des trajectoires ###
+  
   observeEvent(input$COMPUTE_GRAPH, {
-  output$PLOT3<- renderUI({
-    if (req(input$plottype) %in% c("sous.seq","sous.seq.ch")){
-      output$PLOT<-renderPlot({
-        if (req(input$plottype) %in% c("sous.seq","sous.seq.ch")){
-          req(sousSeqPlot(),ordre1())
-          tailleGraph$height<-dim(ordre1())[1]*1000
-          return(marrangeGrob(sousSeqPlot(), layout_matrix=ordre1()))
-        }
-      },width = large(),height = haut1())
-      return(plotOutput("PLOT",height = tailleGraph$height))
-    }
-    if (req(input$plottype) == "flux"){
-      input$graph1
-      isolate({
-        output$PLOT<-renderPlot({
-          if (req(input$plottype) == "flux"){
-            req(flux1(),ordre1())
-            tailleGraph$height<-dim(ordre1())[1]*400
-            return(marrangeGrob(flux1(), layout_matrix=ordre1()))
+    ###### PLOT_AND_TAB sous.seq
+      if (req(input$plottype) %in% c("sous.seq","sous.seq.ch")){
+        
+       # output$PLOT_AND_TAB<-renderUI({
+        
+          output$PLOT_DES<-renderUI({
+            
+            output$PLOT<-renderPlot({
+          if (req(input$plottype) %in% c("sous.seq","sous.seq.ch")){
+            req(sousSeqPlot(),ordre1())
+            tailleGraph$height<-dim(ordre1())[1]*1000
+            return(marrangeGrob(sousSeqPlot()$p, layout_matrix=ordre1()))
           }
         },width = large(),height = haut1())
-        return(plotOutput("PLOT",height = tailleGraph$height))
-      })
-    }
-    if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
-      output$PLOT<-renderPlot({
-        if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
-          req(seq.select1(),data.select1(),ordre1())
-          tailleGraph$height<-dim(ordre1())[1]*400
-          if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])){
-            if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(data2()[,input$souspop1]) ){
-              req(seq.select1(),data.select1(),ordre1())
-              if (req(input$plottype) == "I") {
-                return(seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1],sortv = input$TapisSorted,yaxis=FALSE))
-              }else{
-                return(seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1]))
-              }
-            }else{
-              return(NULL)
-            }
-          }
-          else{
-            req(seq.select1())
-            if (req(input$plottype) == "I") {
-              return(seqplot(seqdata = seq.select1(), type = input$plottype,sortv = input$TapisSorted,yaxis=FALSE))
-            }else{
-              return(seqplot(seqdata = seq.select1(), type = input$plottype))
-            }
-          }
-        }
         
-      },width = large(),height = haut1())
-      
-      return(plotOutput("PLOT",height = tailleGraph$height))
-    }
+        plotOutput("PLOT",height = tailleGraph$height)#->PLOT
+         
+         })
+          
+          output$TAB_DES<-renderUI({
+            output$TAB<-renderDataTable({
+              sousSeqPlot()$data
+            })
+            
+            shiny::dataTableOutput("TAB")
+          })
+       
+        
+        #return(list(PLOT, TAB))
+        #})
+        
+      }
+    ###### PLOT_AND_TAB flux
     
-  })
-  })
+      if (req(input$plottype) == "flux"){
+        input$graph1
+        isolate({
+          output$PLOT<-renderPlot({
+            if (req(input$plottype) == "flux"){
+              req(flux1(),ordre1())
+              tailleGraph$height<-dim(ordre1())[1]*400
+              return(marrangeGrob(flux1(), layout_matrix=ordre1()))
+            }
+          },width = large(),height = haut1())
+          return(plotOutput("PLOT",height = tailleGraph$height))
+        })
+      }
+    
+    ###### PLOT_AND_TAB autres
+    
+    
+      if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
+        
+      #  output$PLOT_AND_TAB<-renderUI({
+        #output$PLOT<-renderPlot({
+          if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
+            req(seq.select1(),data.select1(),ordre1())
+            tailleGraph$height<-dim(ordre1())[1]*400
+            if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])){
+              if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(data2()[,input$souspop1]) ){
+                req(seq.select1(),data.select1(),ordre1())
+                if (req(input$plottype) == "I") {
+                  
+                  
+                  output$PLOT_DES<-renderUI({
+                  
+                  seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1],sortv = input$TapisSorted,yaxis=FALSE)->p
+                    output$PLOT<-renderPlot({p}, width = large(),height = haut1())
+                    plotOutput("PLOT",height = tailleGraph$height)#->PLOT
+                  })
+                  
+                  
+                  output$TAB_DES<-renderUI({
+                    
+                  seqtab(seqdata = seq.select1() )->data
+                  
+                  output$TAB<-renderDataTable({
+                    data
+                  })
+                  
+                  DT::dataTableOutput("TAB")#->TAB
+                  
+                  })
+                  
+                  #return(list(PLOT, TAB))
+                  
+                } else{
+                  
+                  output$PLOT_DES<-renderUI({
+                 
+                    seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1])->p
+                    output$PLOT<-renderPlot({p}, width = large(),height = haut1())
+                    plotOutput("PLOT",height = tailleGraph$height)#->PLOT
+                  })
+                  
+                  
+                  output$TAB_DES<-renderUI({
+                    
+                    
+                  DONNEES_POUR_PLOT()->data
+          
+                  output$TAB<-renderDataTable({
+                    data
+                  })
+                  
+                  DT::dataTableOutput("TAB")
+                  })
+                  
+                  #return(list(PLOT, TAB))
+                  
+                  
+                }
+              }else{
+                return(NULL)
+              }
+            }
+            else{
+              req(seq.select1())
+              if (req(input$plottype) == "I") {
+                #return(seqplot(seqdata = seq.select1(), type = input$plottype,sortv = input$TapisSorted,yaxis=FALSE))
+               
+                output$PLOT_DES<-renderUI({
+                  
+                  seqplot(seqdata = seq.select1(), type = input$plottype,sortv = input$TapisSorted,yaxis=FALSE)->p
+                  output$PLOT<-renderPlot({p}, width = large(),height = haut1())
+                  plotOutput("PLOT",height = tailleGraph$height)#->PLOT
+                })
+                
+                
+                output$TAB_DES<-renderUI({
+                  
+                  seqtab(seqdata = seq.select1() )->data
+                  
+                  output$TAB<-renderDataTable({
+                    data
+                  })
+                  
+                  DT::dataTableOutput("TAB")#->TAB
+                  
+                })
+                
+                
+              }else{
+                #return(seqplot(seqdata = seq.select1(), type = input$plottype))
+                
+                output$PLOT_DES<-renderUI({
+                  
+                  #->p
+                  output$PLOT<-renderPlot(seqggplot(TYPE = input$plottype, objseq = seq.select1()), #seqplot(seqdata = seq.select1(), type = input$plottype), 
+                                          width = large(),height = haut1())
+                  plotOutput("PLOT",height = tailleGraph$height)#->PLOT
+                })
+                
+                
+                output$TAB_DES<-renderUI({
+                  
+                  
+                  DONNEES_POUR_PLOT(type =input$plottype, objseq =  seq.select1())->data
+                  
+                  output$TAB<-renderDataTable({
+                    data
+                  })
+                  
+                  DT::dataTableOutput("TAB")
+                })
+                
+                
+              }
+            }
+          }
+
+        }#,width = large(),height = haut1())
+
+        #return(plotOutput("PLOT",height = tailleGraph$height))
+      })
+
+
+  
+  
+  # observeEvent(input$COMPUTE_GRAPH, {
+  # output$PLOT3<- renderUI({
+  #   if (req(input$plottype) %in% c("sous.seq","sous.seq.ch")){
+  #     output$PLOT<-renderPlot({
+  #       if (req(input$plottype) %in% c("sous.seq","sous.seq.ch")){
+  #         req(sousSeqPlot(),ordre1())
+  #         tailleGraph$height<-dim(ordre1())[1]*1000
+  #         return(marrangeGrob(sousSeqPlot(), layout_matrix=ordre1()))
+  #       }
+  #     },width = large(),height = haut1())
+  #     return(plotOutput("PLOT",height = tailleGraph$height))
+  #   }
+  #   if (req(input$plottype) == "flux"){
+  #     input$graph1
+  #     isolate({
+  #       output$PLOT<-renderPlot({
+  #         if (req(input$plottype) == "flux"){
+  #           req(flux1(),ordre1())
+  #           tailleGraph$height<-dim(ordre1())[1]*400
+  #           return(marrangeGrob(flux1(), layout_matrix=ordre1()))
+  #         }
+  #       },width = large(),height = haut1())
+  #       return(plotOutput("PLOT",height = tailleGraph$height))
+  #     })
+  #   }
+  #   if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
+  #     output$PLOT<-renderPlot({
+  #       if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
+  #         req(seq.select1(),data.select1(),ordre1())
+  #         tailleGraph$height<-dim(ordre1())[1]*400
+  #         if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])){
+  #           if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(data2()[,input$souspop1]) ){
+  #             req(seq.select1(),data.select1(),ordre1())
+  #             if (req(input$plottype) == "I") {
+  #               return(seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1],sortv = input$TapisSorted,yaxis=FALSE))
+  #             }else{
+  #               return(seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1]))
+  #             }
+  #           }else{
+  #             return(NULL)
+  #           }
+  #         }
+  #         else{
+  #           req(seq.select1())
+  #           if (req(input$plottype) == "I") {
+  #             return(seqplot(seqdata = seq.select1(), type = input$plottype,sortv = input$TapisSorted,yaxis=FALSE))
+  #           }else{
+  #             return(seqplot(seqdata = seq.select1(), type = input$plottype))
+  #           }
+  #         }
+  #       }
+  #       
+  #     },width = large(),height = haut1())
+  #     
+  #     return(plotOutput("PLOT",height = tailleGraph$height))
+  #   }
+  #   
+  # })
+  # })
   
   ### Titre rappelant la selection choisie #####
   reactive({
