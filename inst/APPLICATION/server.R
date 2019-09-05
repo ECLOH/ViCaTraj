@@ -918,10 +918,10 @@ observeEvent(eventExpr = data.seq(),{
   output$modalite1<- renderUI({
     if(input$souspop1!="Aucune"){
       if (is.factor(data2()[,input$souspop1])){
-        selectInput(inputId = "souspop_modalite1",label="Modalité", choices = levels(data2()[,input$souspop1]),selected="",multiple = TRUE)
+        selectInput(inputId = "souspop_modalite1",label="Modalité(s)", choices = levels(data2()[,input$souspop1]),selected="",multiple = TRUE)
       } else {if(is.character(data2()[,input$souspop1])){
         if(length(unique(data2()[,input$souspop1]))<25){
-          selectInput(inputId = "souspop_modalite1",label="Modalité", choices = unique(data2()[,input$souspop1]),selected="",multiple = TRUE)
+          selectInput(inputId = "souspop_modalite1",label="Modalité(s)", choices = unique(data2()[,input$souspop1]),selected="",multiple = TRUE)
           
           }
       }}
@@ -955,37 +955,35 @@ observeEvent(eventExpr = data.seq(),{
     return(data.select)
     
   })
-  
+  #### SEQ.SELECT1 ####
   seq.select1<-reactive({
     req(input$souspop1)
     
     if (input$souspop1=="Aucune" || input$souspop1==""){
       seq.select<-data.seq()
     }else{
-      
-      if (is.factor(data2()[,input$souspop1])){
-        if(length(input$souspop_modalite1)>0){
-          seq.select<-data.seq()[(data2()[,input$souspop1] %in% c(input$souspop_modalite1)),]
-        }else{
-          seq.select<-NULL 
-        }
+      if (is.factor(data2()[,input$souspop1])|is.character(data2()[,input$souspop1])) {
+      if(length(input$souspop_modalite1)<1){
+        seq.select<-lapply(X = input$souspop_modalite1, FUN = function(levels.i){
+          data.seq()[(data2()[,input$souspop1] == levels.i ),]
+        })
+        names(seq.select)<-input$souspop_modalite1
       } else {
-        if(is.character(data2()[,input$souspop1])&length(unique(data2()[,input$souspop1]))<25){
-          if(length(unique(input$souspop_modalite1)>0)){
-            seq.select<-data.seq()[(data2()[,input$souspop1] %in% c(input$souspop_modalite1)),]
-        }
+        seq.select<-data.seq()[(data2()[,input$souspop1] %in% c(input$souspop_modalite1)),]
+        #seq.select<-data.seq()[(data2()[,input$souspop1] %in% c(input$souspop_modalite1)),]
+      }
       } else {
-      if (is.numeric(data2()[,input$souspop1])){
-        req(input$sous_pop_num1)
-        seq.select<-data.seq()[which(data2()[,input$souspop1]<= max(input$sous_pop_num1,na.rm=TRUE) & data2()[,input$souspop1]>= min(input$sous_pop_num1,na.rm=TRUE)),]
-      }
-      }
+        
+        if (is.numeric(data2()[,input$souspop1])){
+          req(input$sous_pop_num1)
+          seq.select<-data.seq()[which(data2()[,input$souspop1]<= max(input$sous_pop_num1,na.rm=TRUE) & data2()[,input$souspop1]>= min(input$sous_pop_num1,na.rm=TRUE)),]
+        }
+        
       }
     }
     return(seq.select)
     
   })
-    
     
 
   
@@ -1380,7 +1378,7 @@ observeEvent(eventExpr = data.seq(),{
                 output$TAB_DES<-renderUI({
                   
                   
-                  DONNEES_POUR_PLOT(type =input$plottype, objseq =  seq.select1())->data
+                  DONNEES_POUR_PLOT(TYPE =input$plottype, objseq =  seq.select1())->data
                   
                   output$TAB<-renderDataTable({
                     data

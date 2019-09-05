@@ -1,15 +1,23 @@
-DONNEES_POUR_PLOT<-function(type=as.character(input$plottype), objseq=seq.select1(), arrondi=2  ){
-  tye<-type
-  as.data.frame(matrix(data = c(
-"d", "seqstatd(objseq)->objdat;round(objdat$Frequencies*100, arrondi)",
-"f", "seqtab(objseq)->objdat;round(attributes(objdat)$freq, arrondi)",
-"I", "seqtab(objseq)->objdat;round(attributes(objdat)$freq, arrondi)",
-"Ht", "seqstatd(objseq)->objdat;objdat$Entropy",
-"ms", "seqmodst(objseq)",
-"mt", "round(seqmeant(objseq), arrondi)",
-"r", "seqrep(objseq)"
-), ncol=2, byrow = TRUE), stringsAsFactors = FALSE)->df
-  names(df)<-c("TYPE" , "EXPR")
-  eval(parse(text =   df[df$TYPE==tye , ]$EXPR ) )->res
+DONNEES_POUR_PLOT<-function(TYPE=as.character(input$plottype), objseq=seq.select1(), ...  ){
+  if(sum(class(objseq)!=c("stslist", "data.frame"))==0){
+    DONNEES_POUR_PLOT.internal(TYPE.r1=TYPE, objseq.r1=objseq, ... )->res
+  } else {
+    if(class(objseq)=="list"){
+      print(length(objseq))
+    lapply(1:length(objseq), function(i){
+      DONNEES_POUR_PLOT.internal(TYPE.r1=TYPE, objseq.r1=objseq[[i]], ... )->df
+      if(is.null(names(objseq))){
+        nam<-i
+        } else {
+          nam<-names(objseq)[i]
+        }
+      df$MODALITE<-nam
+      return(df)
+    })->resi
+    do.call("rbind", resi)->res
+    }
+  }
   return(res)
 }
+  
+
