@@ -9,7 +9,7 @@
 #### SERVER ####
 server <- function(input, output, session) {
   #### CR2EATION JEU DE DONNEES
-  BIGLIST<-reactive({
+  BIGLIST1<-reactive({
   if ( is.null(input$LIST_SOURCE_BIG_DF)) return(NULL)
   inFile <- input$LIST_SOURCE_BIG_DF
   file <- inFile$datapath
@@ -62,21 +62,21 @@ return(data)
 
   
   observe({updateSelectInput(session = session, inputId = "MINTIMEBIG", 
-                                 choices = names(BIGLIST() ) , 
-                                selected= names(BIGLIST() )[1]
+                                 choices = names(BIGLIST1() ) , 
+                                selected= names(BIGLIST1() )[1]
   )
                                                 
-                                })#"names(BIGLIST() ), selected =  names(BIGLIST() )) })
+                                })#"names(BIGLIST1() ), selected =  names(BIGLIST1() )) })
   observe({updateSelectInput(session = session, inputId = "MAXTIMEBIG", 
-                             choices = names(BIGLIST() ) , 
-                             selected= names(BIGLIST() )[length(  names(BIGLIST() )  )]
+                             choices = names(BIGLIST1() ) , 
+                             selected= names(BIGLIST1() )[length(  names(BIGLIST1() )  )]
   )
-  })#"names(BIGLIST() ), selected =  names(BIGLIST() )) })
-  output$CONTROLNAMES<-renderText({print(names(BIGLIST() ))})
+  })#"names(BIGLIST1() ), selected =  names(BIGLIST1() )) })
+  output$CONTROLNAMES<-renderText({print(names(BIGLIST1() ))})
   output$SLIDERTEXT<-renderText({
-    req( BIGLIST() )
-    which(names(BIGLIST() )==input$MINTIMEBIG)->base
-    which(names(BIGLIST() )==input$MAXTIMEBIG)->top
+    req( BIGLIST1() )
+    which(names(BIGLIST1() )==input$MINTIMEBIG)->base
+    which(names(BIGLIST1() )==input$MAXTIMEBIG)->top
     if(length(base)!=1){
       base<-1
     }
@@ -84,7 +84,7 @@ return(data)
       top<-1
     }
     seq(from=base, to = top, by=input$PAS_TEMPS_BIGDATA)->SEQ
-    print( names(BIGLIST())[SEQ]  )
+    print( names(BIGLIST1())[SEQ]  )
     })
   
   #### CONDITIONS ON INDIDIVUS
@@ -101,17 +101,17 @@ return(data)
   
   output$UI_DATE_SELECT<-renderUI({
     #reactive({
-    names(BIGLIST())->names.pick
+    names(BIGLIST1())->names.pick
     shiny::selectInput(inputId = "DATE_FOR_SELECT", label = "Date pour sélection:",
                        choices = names.pick, multiple = FALSE)
   })
   #### SELECT VAR et MODLITE ####
-  reactive({BIGLIST()[[input$DATE_FOR_SELECT]]})->the.df
+  reactive({BIGLIST1()[[input$DATE_FOR_SELECT]]})->the.df
   
  output$UI_INDVAR_CHOOSE<-renderUI({
    if(input$DataType!="fichier"){
    if(input$DataType=="objet"){
-   lapply(BIGLIST(), function(bi){
+   lapply(BIGLIST1(), function(bi){
      names(bi)
    })->lina
    unique(unlist(lina))->glona
@@ -132,7 +132,79 @@ return(data)
  })
  
  INDVAR<-reactive({input$INDVAR})
-  
+ 
+ #### DUPLI / NA
+ 
+ control_dupli_na<-reactive({
+   req(input$INDVAR)
+   req(BIGLIST1())
+   if(input$DataType!="fichier"){
+     if(input$DataType=="objet"){
+       lapply(1:length(BIGLIST1()), function(i){
+         #lapply(1:length(csv.list), FUN = function(i){
+           bi<-BIGLIST1()[[i]]
+           bi[ , input$INDVAR]->varbi
+           data.frame(
+             "NA_values"=sum(is.na(varbi)),
+             "Duplicated"=sum(duplicated(varbi[!is.na(varbi)]))
+           )->df
+           df$DATE<-names(BIGLIST1())[[i]]
+           df
+         })->dfresum
+       do.call("rbind", dfresum)->dfresum
+       
+       if(sum(dfresum$NA_values)==0&sum(dfresum$Duplicated)==0){
+        "ok"
+       } else {
+         dfresum
+       }
+     } else {"ok"}
+   } else {"ok"}
+ })
+ 
+ output$MSSG_DUPLI<-renderUI({
+   req(control_dupli_na())
+   if(class(control_dupli_na())=="data.frame"){
+     h3("Attention: la variable d'identifiant contient des foublons et/ou des NA.")
+   } else {h3("OK : pas de doublons ou NA dans la varible d'identifiant.")}
+ })
+ 
+ output$DATA_DUPLI<-renderDataTable({
+   req(control_dupli_na())
+   if(class(control_dupli_na())=="data.frame"){
+     control_dupli_na()
+   }
+ })
+ 
+ output$DELETE_DUPLI_NA<-renderUI({
+   req(control_dupli_na())
+   if(class(control_dupli_na())=="data.frame"){
+    shiny::checkboxInput(inputId = "deleteNA_DUPLI", label = "Faut-il supprimer les doublons et les NA ? (sinon, choisir une autre variable)", value = TRUE)
+   }
+ })
+ 
+ 
+ BIGLIST<-reactive({
+   req( control_dupli_na() )
+   req(input$INDVAR)
+   if(input$DataType=="objet"){
+   if(class(control_dupli_na())=="data.frame"){
+     req(input$deleteNA_DUPLI)
+    if(input$deleteNA_DUPLI){
+     lapply(BIGLIST1(), FUN = function(bi){
+       bi1<-subset(bi, !is.na(bi[ , input$INDVAR]))
+       bi2<-subset(bi1, !duplicated( bi1[ , input$INDVAR] ) )
+       bi2
+     })
+   }
+     }
+     } else {
+     BIGLIST1()
+   }
+ })
+ 
+ ####
+
   output$UI_VAR_SELECT<-renderUI({
     req(the.df())
     #mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = list_csv(), FUN = names))), 
@@ -341,6 +413,7 @@ return(data)
              eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
     })
     output$CONTROL_LIST.OF.INF<-renderText({unlist(list.of.inf.by.cond)})
+    
     lapply(unique(STRING_FOR_SUB()$PAQUET), function(pi){
       which(STRING_FOR_SUB()$PAQUET==pi)->indexes.pi
       unique(unlist(list.of.inf.by.cond[indexes.pi]))
@@ -530,34 +603,7 @@ return(data)
     
   })
   
-  
-  
-  output$CONTROL_DUPLICATED_ID<-renderUI({
-    req( DR_POUR_SEQ_OBJ())
-    req(input$INDVAR)
-    if(sum(duplicated(x = DR_POUR_SEQ_OBJ()[ , input$INDVAR]))>1){
-      list(
-      h3("ATTENTION: la variable d'identifiant individuel sélectionnée comporte des doublons."),
-      h3(" Vous pouvez choisir d'éliminer les doublons ou vous pouvez sélectionner une autre variable d'identifiant individuel"),
-      shiny::checkboxInput(inputId = "ELIMINATE_DOUBLONS",label = "Faut-il éliminer les doublons dans la variable didentifiant individuel?", value = FALSE)
-      )
-    } else {
-      h3("OK: la variable d'identifiant individuel sélectionnée ne comporte pas de doublons.")
-    }
-  })
-  
-  
-  DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS<-reactive({
-    req( DR_POUR_SEQ_OBJ())
-    req(input$INDVAR)
-    if(sum(duplicated(x = DR_POUR_SEQ_OBJ()[ , input$INDVAR]))>1){
-      if(input$ELIMINATE_DOUBLONS==TRUE){
-        drpourseq<-DR_POUR_SEQ_OBJ()[!duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR]) , ]
-      } else {NULL}
-    } else {
-      DR_POUR_SEQ_OBJ()
-    }
-  })
+
   
   data.seq<-eventReactive(eventExpr = input$ValidParametres, {
     #### SI FICHOER ####
@@ -593,10 +639,14 @@ return(data)
       #### SI OBJET ####
       
     if(input$DataType=="objet"){
-      DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()->df.pour.seq
-      if(!is.null(DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS())){
-        seqdef(id = DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()[ , input$INDVAR], 
-               data = DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()))&names(DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS())!=input$INDVAR],
+      
+      DR_POUR_SEQ_OBJ()->df.pour.seq
+      
+      print(DR_POUR_SEQ_OBJ()[ , input$INDVAR][duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR])])
+      
+      if(!is.null(DR_POUR_SEQ_OBJ())){
+        seqdef(id = DR_POUR_SEQ_OBJ()[ , input$INDVAR], 
+               data = DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR],
                gaps = input$TEXT_GAP,
                right = input$TEXT_RIGHT,
                left = input$TEXT_LEFT,nr = "RMA"
@@ -718,7 +768,7 @@ data2<-reactive({
     data()
   } else {
     if(input$DataType=="objet"){ 
-      DR_POUR_SEQ_OBJ.CONTROL.DOUBLONS()
+      DR_POUR_SEQ_OBJ()
     } else {
       if(input$DataType=="objseq"){
         OBJSEQ_COMPLEMENT()

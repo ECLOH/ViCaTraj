@@ -122,7 +122,10 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                              conditionalPanel(
                                                condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
                                                
-                                                             uiOutput("UI_INDVAR_CHOOSE")
+                                                             uiOutput("UI_INDVAR_CHOOSE"),
+                                               uiOutput("MSSG_DUPLI"),
+                                               DT::dataTableOutput("DATA_DUPLI"),
+                                               uiOutput("DELETE_DUPLI_NA")
                                              ),
                                                  conditionalPanel(
                                                    condition = "input.DataType == 'objet'",
