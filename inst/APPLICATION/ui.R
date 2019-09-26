@@ -30,7 +30,9 @@ options(shiny.maxRequestSize=700*1024^2)
 
 ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,theme=shinytheme("flatly"),#fluidPage(theme = shinytheme("flatly"),
                          tabPanel("Les données",
-                                  tabsetPanel(
+                                  shiny::actionButton(inputId = "ValidParametres", label = "Je valide ces trajectoires"),
+                                  shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : " ),
+                                  hr(),
                                     #### SUB-PANEL: PARAMETRAGE ####
                                              tabsetPanel(id = "tabpan",
                                                          tabPanel(title = "Import et formattage des données : ",
@@ -76,6 +78,14 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                  #hr()
                                                  #shiny::textOutput("CONTROLDATA"))
                                                )
+                                               ),
+                                               conditionalPanel(
+                                                 condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
+                                                 
+                                                 uiOutput("UI_INDVAR_CHOOSE"),
+                                                 uiOutput("MSSG_DUPLI"),
+                                                 DT::dataTableOutput("DATA_DUPLI"),
+                                                 uiOutput("DELETE_DUPLI_NA")
                                                )),
                                              #hr(),
                                              #### FORMAT DONNNEES ####
@@ -100,7 +110,6 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                  
                                                  conditionalPanel(
                                                    condition = "input.DataType == 'objet'",
-                                                   hr(),
                                                    shiny::column(width = 4,
                                                                  shiny::selectInput( inputId = "MINTIMEBIG", label = "Borne temporelle inférieure:", 
                                                                                      multiple = FALSE, choices = "" , width = '100%')),
@@ -119,16 +128,11 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                  #### condition = "input.DataType == 'objet'"  ####
                                              sidebarPanel( h3("Sélection des individus:"), 
                                                            width = 12,
-                                             conditionalPanel(
-                                               condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
-                                               
-                                                             uiOutput("UI_INDVAR_CHOOSE"),
-                                               uiOutput("MSSG_DUPLI"),
-                                               DT::dataTableOutput("DATA_DUPLI"),
-                                               uiOutput("DELETE_DUPLI_NA")
-                                             ),
+                                    
+                                             shiny::checkboxInput(inputId="addCONDS", label = "Ajouter des conditions ? ", value = FALSE),
+                                             
                                                  conditionalPanel(
-                                                   condition = "input.DataType == 'objet'",
+                                                   condition = "input.DataType == 'objet' && input.addCONDS == 1",
                                                    sidebarPanel( #h3("Sélection des individus:"), 
                                                                  width = 12,
                                                                  #uiOutput("UI_INDVAR_CHOOSE"),#,
@@ -154,23 +158,31 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                    
                                                    actionButton(inputId="addROW", label = "Ajouter la condition"),
                                                  #),
-                                                 DT::DTOutput("TABLE_POUR_SELECTION"),
-                                                 actionButton(inputId="APPLICATE_SUBSET", label = "Appliquer les conditions"),
+                                                 DT::DTOutput("TABLE_POUR_SELECTION")
+                                                 #actionButton(inputId="APPLICATE_SUBSET", label = "Appliquer les conditions"),
                                                  
                                                  #tableOutput("SUBSET_OUTPUT"),
                                                  #textOutput("SUBSET_BY_PAQUET_OUTPUT"),
                                                  #textOutput("SUBSET_G_OUTPUT"),
                                                  #DTOutput("DATA_OF_SUBSET_CONTROL")
+                                                 )
+                                                 ),
                                                  textOutput("LENGTH_IND_SUBS"),
                                                  textOutput("LENGTH_SUBSETTED"),
+                                                 textOutput("LENGTH_BIGLIST"),
+                                                 textOutput("LENGTH_BIGLIST1"),
+                                                 
                                                  shiny::downloadButton(outputId = "downlist", label = "Enregistrer le jeu de données sur le disque (pour réutilisation ultérieure)")
-                                                 )
-                                                 )
+                                                 
+                                                 #)
                                              )
                                                  
                                                          ),
-                                             tabPanel(title = " Construction des trajectoires ",
+                                             #### Construction des trajectoires ####
+                                             tabPanel(title = " Paramétrage des trajectoires ",
                                              #),
+          
+                                          
                                              conditionalPanel(
                                                condition = "input.DataType != 'objseq'", 
                                                
@@ -185,26 +197,23 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                shiny::textInput(inputId = "TEXT_LEFT", label = "Label pour les départs tardifs : ", value = "LEFT"),
                                                shiny::numericInput(inputId = "criterNb", label = "Critère de sortie : nombre de mois consécutifs",value = 3, min = 1, max = 36, step = 1),
                                                uiOutput("CONTROL_DUPLICATED_ID")
-                                               )),
-                                               shiny::actionButton(inputId = "ValidParametres", label = "Je valide ces trajectoires"),
-                                            shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : " ),
-                                            
-                                            
+                                               ))
+                                             ),
+                                             tabPanel(title="Résumé des trajectoires:",
+
                                             sidebarPanel(
                                               width = 12,
-                                              
-                                              h3("Résumé des trajectoires:"),
-                                              #textOutput("CLASS_TRAJ_OBS"),
                                               textOutput("DES_TRAJ_OBJ"),
                                               uiOutput("ATTR_TRAJ_OBJ")
                                             ),
-                                             
                                              mainPanel(
                                                shiny::dataTableOutput("contenu")
                                              )
                                              )
+                                            
+                                            #######
                                              )
-                                    )
+                                    
                          ),
                                     #### PANEL: STATISTIQUES ####
                                     tabPanel("Statistiques descriptives",

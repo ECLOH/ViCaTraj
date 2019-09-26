@@ -93,6 +93,7 @@ return(data)
   values <- reactiveValues()
   values$DF_subset_initial <- data.frame("PAQUET"="", "DATE"="", "VARIABLE"="", "TYPE"="", 
                                          "TEXT_PATTERN"="","FACTOR_LEVELS"="", "min"="",  "max"="")
+  observe({ print(values$DF_subset_initial) })
   
 ##### DEFINE INPUTS #####
   output$UI_PAQUET_SELECT<-renderUI({
@@ -197,9 +198,9 @@ return(data)
        bi2
      })
    }
-     }
      } else {
      BIGLIST1()
+      }
    }
  })
  
@@ -394,20 +395,26 @@ return(data)
                     ")", sep="")
               
               
-        }
+            } else{ "nosub" }
       }
       }
         }
         })
+      
     data.frame("PAQUET"=data_of_subset$PAQUET, DATE=data_of_subset$DATE, "string_for_sub"=string_for_sub, 
                stringsAsFactors = FALSE)
     })->STRING_FOR_SUB
-  
+  observe(print(values$DF_subset_initial))
+  observe(print(STRING_FOR_SUB()))
   INDIVIDUELS<-reactive({
+    
+    req(INDVAR())
+    
+    if(input$addCONDS==TRUE){
     req(STRING_FOR_SUB() )
     print(STRING_FOR_SUB())
     
-    req(INDVAR())
+    
     list.of.inf.by.cond<-lapply(1:nrow(STRING_FOR_SUB() ), function(i){
       subset(BIGLIST()[[STRING_FOR_SUB()$DATE[i]]], 
              eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
@@ -421,18 +428,32 @@ return(data)
     
     Reduce(intersect, ind.by.paq)->ind.all.paq
     ind.all.paq
+    } else {
+      lapply(BIGLIST(), function(bil){
+        bil[ , INDVAR()]
+      })->list.ind.no.subset
+      unique(unlist(list.ind.no.subset))
+    }
   })
   
   reactive({
     req(BIGLIST() )
-    req(INDIVIDUELS())
+    if(input$addCONDS==TRUE){
+    req(INDIVIDUELS() )
     lapply(BIGLIST(), FUN = function(bi){
     subset(bi, bi[ , INDVAR()]%in%INDIVIDUELS())
     })
+    } else {
+      BIGLIST()
+    }
     })->SUBSETTED_LIST
   
   output$LENGTH_IND_SUBS<-renderText({ length( INDIVIDUELS() )    }) 
+  output$LENGTH_BIGLIST<-renderText({ length( BIGLIST() )    }) 
   output$LENGTH_SUBSETTED<-renderText({ length( SUBSETTED_LIST() )    }) 
+  output$LENGTH_BIGLIST1<-renderText({ length( BIGLIST1() )    }) 
+  
+  
   
   observe({
     SUBSETTED_LIST()->data.to.save 
