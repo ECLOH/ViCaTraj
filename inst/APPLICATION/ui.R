@@ -30,191 +30,8 @@ options(shiny.maxRequestSize=700*1024^2)
 
 ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,theme=shinytheme("flatly"),#fluidPage(theme = shinytheme("flatly"),
                          tabPanel("Les données",
-                                  shiny::actionButton(inputId = "ValidParametres", label = "Je valide ces trajectoires"),
-                                  shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : " ),
-                                  hr(),
-                                    #### SUB-PANEL: PARAMETRAGE ####
-                                             tabsetPanel(id = "tabpan",
-                                                         tabPanel(title = "Import et formattage des données : ",
-                                             #### CHARGEMENT FICHIER ####
-                                             sidebarPanel(
-                                               h3("Chargement du fichier"), 
-                                               width = 12,
-                                               shiny::column(width = 6,
-                                               shiny::selectInput(inputId = "DataType", label = "Choix du type de données", 
-                                                                  choices = c("Un objet RData contenant de multiples data.frame"="objet", 
-                                                                              "Un objet RData contenant un objet seqdata"="objseq",
-                                                                              "Un seul fichier.csv contenant des données prêtes à l'emploi"="fichier" 
-                                                                              ), 
-                                                                  multiple = FALSE, selected = "fichier")
-                                               ),
-                                               shiny::column(width = 6,
-                                                             
-                                               conditionalPanel(
-                                                 condition = "input.DataType == 'fichier'",
-                                                 
-                                                 fileInput(inputId="file1", label="Sélectionnez votre fichier source:", 
-                                                           multiple = FALSE, accept = c("text/csv",
-                                                                                        "text/comma-separated-values,text/plain",
-                                                                                        ".csv"), width = NULL)
-                                                 ), 
-                                               conditionalPanel(
-                                                 condition = "input.DataType == 'objet'",
-                                                 h5("INFO: pour des raisons de sécurité il n'est pas possible de charger directement un dossier dans un navigateur web. Vous pouvez utiliser la fonction LIST_MULTIPLE_CSV du package ViCaTraj pour créer l'objet RData à partir de mulitples fichiers .csv"),
-                                                 fileInput(inputId="LIST_SOURCE_BIG_DF", 
-                                                           label="Sélectionner l'objet .RData contenant les multiples data.frame", 
-                                                           multiple = FALSE, accept = NULL, width = NULL)
-                                      
-                                                 #hr()
-                                                 #shiny::textOutput("CONTROLDATA"))
-                                               ),
-                                               conditionalPanel(
-                                                 condition = "input.DataType == 'objseq'",
-                                                 h5("INFO: vous pouvez charger un objet .RData contenant une liste d'objet, dont au moins un objet de type seqdata, et éventuellement un ou des data.frames complémentaires"),
-                                                 fileInput(inputId="LIST_SEQ", 
-                                                           label="Sélectionner l'objet .RData contenant l'objet seqdata", 
-                                                           multiple = FALSE, accept = NULL, width = NULL)
-                                                 
-                                                 #hr()
-                                                 #shiny::textOutput("CONTROLDATA"))
-                                               )
-                                               ),
-                                               conditionalPanel(
-                                                 condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
-                                                 
-                                                 uiOutput("UI_INDVAR_CHOOSE"),
-                                                 uiOutput("MSSG_DUPLI"),
-                                                 DT::dataTableOutput("DATA_DUPLI"),
-                                                 uiOutput("DELETE_DUPLI_NA")
-                                               )),
-                                             #hr(),
-                                             #### FORMAT DONNNEES ####
-                                             
-                                             sidebarPanel( h3("Format des données"), 
-                                                           width = 12,
-                                                           #### condition = "input.DataType == 'fichier'"  ####
-                                                 conditionalPanel(
-                                                   condition = "input.DataType == 'fichier'",
-                                                 shiny::selectInput(inputId="sepcol", label= "Separateur de colonnes", choices=c("Virgule" = ",","Point-Virgule" = ";","Tabulation" = "\t"), selected=","),
-                                                 shiny::selectInput(inputId="dec", label= "Séparateur décimal", choices=c("Virgule" = ",","Point" = "."), selected="."),
-                                                 shiny::selectInput(inputId="endoding", label= "Comment est codé le fichier ? Les accents sont-ils correctement lus ?", choices=c(UTF8 = "UTF-8", Latin1 = "latin1"), selected = "UTF-8", multiple = FALSE, width = "50%"),
-                                                 shiny::checkboxInput(inputId = "header", label="La première ligne correspond-elle aux noms des variables ?",value=FALSE),  
-                                                 shiny::checkboxInput(inputId = "rowname", label="Une variable correspond-elle à un identifiant des individus ?",value=FALSE),
-                                                 conditionalPanel(
-                                                   condition = "input.rowname == true",
-                                                   shiny::selectInput(inputId="rownames_par", label="Variable servant d'identifiant", 
-                                                                      choices = "", multiple = FALSE,selected = NULL, selectize = TRUE)),
-                                                 shiny::selectInput(inputId = "na", label = "Codage des valeurs manquantes", choices = c("Vide" , "Espace" = " ", "NA" = "NA"), selected = "NA", multiple = TRUE, selectize = TRUE)
-                                                 ),
-                                                 #### condition = "input.DataType == 'objet'"  ####
-                                                 
-                                                 conditionalPanel(
-                                                   condition = "input.DataType == 'objet'",
-                                                   shiny::column(width = 4,
-                                                                 shiny::selectInput( inputId = "MINTIMEBIG", label = "Borne temporelle inférieure:", 
-                                                                                     multiple = FALSE, choices = "" , width = '100%')),
-                                                   shiny::column(width = 4,
-                                                                 shiny::selectInput( inputId = "MAXTIMEBIG", label = "Borne temporelle supérieure:", 
-                                                                                     multiple = FALSE , choices = "", width = '100%')),
-                                                   shiny::column(width = 4,
-                                                   shiny::numericInput(inputId = "PAS_TEMPS_BIGDATA", label = "Pas de temps pour les données:", 
-                                                                       value = 1, min = 1, step = 1, width = '100%')),
-                                                   shiny::column(width = 6, "Noms des data.frame présents dans la base : "),  shiny::column(width = 6, textOutput("CONTROLNAMES")),
-                                                   shiny::column(width = 6, "Noms des data.frame sélectionnés : "),  shiny::column(width = 6, textOutput("SLIDERTEXT"))
-                                                   )
-                                                 ),
-                                                 hr(),
-                                                 
-                                                 #### condition = "input.DataType == 'objet'"  ####
-                                             sidebarPanel( h3("Sélection des individus:"), 
-                                                           width = 12,
-                                    
-                                             shiny::checkboxInput(inputId="addCONDS", label = "Ajouter des conditions ? ", value = FALSE),
-                                             
-                                                 conditionalPanel(
-                                                   condition = "input.DataType == 'objet' && input.addCONDS == 1",
-                                                   sidebarPanel( #h3("Sélection des individus:"), 
-                                                                 width = 12,
-                                                                 #uiOutput("UI_INDVAR_CHOOSE"),#,
-                                                   hr(),
-                                                   #shiny::column(width=6, 
-                                                                 uiOutput("UI_PAQUET_SELECT"),
-                                                   h5("INFO: "),
-                                                   h5("toutes les conditions ajoutées dans le même paquet ne sont pas additives (utilisation de l'opérateur logique 'ou' ('|')."),
-                                                   h5("toutes les conditions ajoutées dans des paquets différents sont additives (utilisation de l'opérateur logique 'et' entre les paquets de conditions ('&'))."),
-                                                   
-                                                   #), 
-                                                   
-                                                   shiny::column(width=4, 
-                                                                 uiOutput("UI_DATE_SELECT")
-                                                   ), 
-                                                   #hr(),
-                                                   shiny::column(width=4, 
-                                                   uiOutput("UI_VAR_SELECT")), 
-                                                   shiny::column(width=4, 
-                                                   uiOutput("UI_CLASS_SELECT")),
-                                                   uiOutput("UI_MOD_SELECT"),
-                                                   hr(),
-                                                   
-                                                   actionButton(inputId="addROW", label = "Ajouter la condition"),
-                                                 #),
-                                                 DT::DTOutput("TABLE_POUR_SELECTION")
-                                                 #actionButton(inputId="APPLICATE_SUBSET", label = "Appliquer les conditions"),
-                                                 
-                                                 #tableOutput("SUBSET_OUTPUT"),
-                                                 #textOutput("SUBSET_BY_PAQUET_OUTPUT"),
-                                                 #textOutput("SUBSET_G_OUTPUT"),
-                                                 #DTOutput("DATA_OF_SUBSET_CONTROL")
-                                                 )
-                                                 ),
-                                                 textOutput("LENGTH_IND_SUBS"),
-                                                 textOutput("LENGTH_SUBSETTED"),
-                                                 textOutput("LENGTH_BIGLIST"),
-                                                 textOutput("LENGTH_BIGLIST1"),
-                                                 
-                                                 shiny::downloadButton(outputId = "downlist", label = "Enregistrer le jeu de données sur le disque (pour réutilisation ultérieure)")
-                                                 
-                                                 #)
-                                             )
-                                                 
-                                                         ),
-                                             #### Construction des trajectoires ####
-                                             tabPanel(title = " Paramétrage des trajectoires ",
-                                             #),
-          
-                                          
-                                             conditionalPanel(
-                                               condition = "input.DataType != 'objseq'", 
-                                               
-                                             sidebarPanel(
-                                               
-                                               h3("Paramétrage des trajectoires"),
-                                               width = 12,
-                                               shiny::selectInput(inputId = "timecol", label = "Variables temporelles (mettre dans l'ordre chronologique)", choices = "", selected = "PrestationRSA.SituationDossierRSA.EtatDossierRSA.ETATDOSRSA", multiple = TRUE, selectize = TRUE),
-                                               shiny::uiOutput("DATA_UI"),
-                                               shiny::textInput(inputId = "TEXT_GAP", label = "Label pour les 'gaps' : ", value = "GAP"),
-                                               shiny::textInput(inputId = "TEXT_RIGHT", label = "Label pour les censures à droite : ", value = "CENSURE"),
-                                               shiny::textInput(inputId = "TEXT_LEFT", label = "Label pour les départs tardifs : ", value = "LEFT"),
-                                               shiny::numericInput(inputId = "criterNb", label = "Critère de sortie : nombre de mois consécutifs",value = 3, min = 1, max = 36, step = 1),
-                                               uiOutput("CONTROL_DUPLICATED_ID")
-                                               ))
-                                             ),
-                                             tabPanel(title="Résumé des trajectoires:",
-
-                                            sidebarPanel(
-                                              width = 12,
-                                              textOutput("DES_TRAJ_OBJ"),
-                                              uiOutput("ATTR_TRAJ_OBJ")
-                                            ),
-                                             mainPanel(
-                                               shiny::dataTableOutput("contenu")
-                                             )
-                                             )
-                                            
-                                            #######
-                                             )
-                                    
-                         ),
+                                  module_data_UI(id = "id1")
+                                  ),
                                     #### PANEL: STATISTIQUES ####
                                     tabPanel("Statistiques descriptives",
                                              tabsetPanel(
@@ -264,7 +81,8 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                         shiny::uiOutput(outputId= "slider1"),
                                                                         shiny::uiOutput(outputId= "modalite1"),
                                                                         conditionalPanel(condition="input.plottype=='flux'",
-                                                                                         shiny::selectInput(inputId = "timeseq1", label = "Pas de temps", choices = "", selected = "", multiple = TRUE, selectize = TRUE),
+                                                                                         shiny::selectInput(inputId = "timeseq1", label = "Pas de temps", 
+                                                                                                            choices = "", selected = "", multiple = TRUE, selectize = TRUE),
                                                                                          
                                                                                          shiny::actionButton(inputId = "graph1", label = "Afficher le graphique")
                                                                         ),
@@ -439,7 +257,8 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                  
                                                                  
                                                                  conditionalPanel(condition="input.plottypeG=='flux'",
-                                                                                  shiny::selectInput(inputId = "timeseq2", label = "Pas de temps", choices = "", selected = "", multiple = TRUE, selectize = TRUE),
+                                                                                  shiny::selectInput(inputId = "timeseq2", label = "Pas de temps", 
+                                                                                                     choices = "", selected = "", multiple = TRUE, selectize = TRUE),
                                                                                   shiny::selectInput(inputId="var_grp",label="Variable Groupe",choices=c(""),selected ="" ,multiple = TRUE),
                                                                                   
                                                                                   shiny::actionButton(inputId = "graph2", label = "Afficher les graphiques")

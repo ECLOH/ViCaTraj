@@ -8,806 +8,21 @@
 
 #### SERVER ####
 server <- function(input, output, session) {
-  #### CR2EATION JEU DE DONNEES
-  BIGLIST1<-reactive({
-  if ( is.null(input$LIST_SOURCE_BIG_DF)) return(NULL)
-  inFile <- input$LIST_SOURCE_BIG_DF
-  file <- inFile$datapath
-  # load the file into new environment and get it from there
-  e = new.env()
-  name <- load(file, envir = e)
-  data <- e[[name]]
-  #
- temp.lenght<-length(data)
-# b1<-names(temp.lenght)[1]
-# b.max<-names(temp.lenght)[temp.lenght]
-return(data)
-  })
+
+  callModule(module = module_data, id = "id1")->DATAs
   
-  LIST_OBJSEQ<-reactive({
-    if ( is.null(input$LIST_SEQ)) return(NULL)
-    inFile <- input$LIST_SEQ
-    file <- inFile$datapath
-    # load the file into new environment and get it from there
-    e = new.env()
-    name <- load(file, envir = e)
-    data <- e[[name]]
-    #
-    temp.lenght<-length(data)
-    # b1<-names(temp.lenght)[1]
-    # b.max<-names(temp.lenght)[temp.lenght]
-    return(data)
-  })
-  
-  CLASS_LIST_OBJSEQ<-reactive({
-    req( LIST_OBJSEQ())
-    lapply(LIST_OBJSEQ(), class)->class.listSEQ
-    print(class.listSEQ)
-    lapply(class.listSEQ, function(xi){sum(grepl(pattern = "stslist", x = xi))})->li2
-    li2
-  })
-  
-  OBJSEQ<-reactive({
-    req( LIST_OBJSEQ())
-    req(CLASS_LIST_OBJSEQ())
-    LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()>0)]]
-  })
-  
-  OBJSEQ_COMPLEMENT<-reactive({
-    req( LIST_OBJSEQ())
-    req(CLASS_LIST_OBJSEQ())
-    LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<1)]]->df.pour.seq
-  })
 
 
-  
-  observe({updateSelectInput(session = session, inputId = "MINTIMEBIG", 
-                                 choices = names(BIGLIST1() ) , 
-                                selected= names(BIGLIST1() )[1]
-  )
-                                                
-                                })#"names(BIGLIST1() ), selected =  names(BIGLIST1() )) })
-  observe({updateSelectInput(session = session, inputId = "MAXTIMEBIG", 
-                             choices = names(BIGLIST1() ) , 
-                             selected= names(BIGLIST1() )[length(  names(BIGLIST1() )  )]
-  )
-  })#"names(BIGLIST1() ), selected =  names(BIGLIST1() )) })
-  output$CONTROLNAMES<-renderText({print(names(BIGLIST1() ))})
-  output$SLIDERTEXT<-renderText({
-    req( BIGLIST1() )
-    which(names(BIGLIST1() )==input$MINTIMEBIG)->base
-    which(names(BIGLIST1() )==input$MAXTIMEBIG)->top
-    if(length(base)!=1){
-      base<-1
-    }
-    if(length(top)!=1){
-      top<-1
-    }
-    seq(from=base, to = top, by=input$PAS_TEMPS_BIGDATA)->SEQ
-    print( names(BIGLIST1())[SEQ]  )
-    })
-  
-  #### CONDITIONS ON INDIDIVUS
- ##### DEFINE DF #####
-
-  values <- reactiveValues()
-  values$DF_subset_initial <- data.frame("PAQUET"="", "DATE"="", "VARIABLE"="", "TYPE"="", 
-                                         "TEXT_PATTERN"="","FACTOR_LEVELS"="", "min"="",  "max"="")
-  observe({ print(values$DF_subset_initial) })
-  
-##### DEFINE INPUTS #####
-  output$UI_PAQUET_SELECT<-renderUI({
-    shiny::numericInput(inputId="PAQUET_FOR_SELECT", value=1, label = "Paquet : ", min = 1, step = 1)
-  })
-  
-  output$UI_DATE_SELECT<-renderUI({
-    #reactive({
-    names(BIGLIST1())->names.pick
-    shiny::selectInput(inputId = "DATE_FOR_SELECT", label = "Date pour sélection:",
-                       choices = names.pick, multiple = FALSE)
-  })
-  #### SELECT VAR et MODLITE ####
-  reactive({BIGLIST1()[[input$DATE_FOR_SELECT]]})->the.df
-  
- output$UI_INDVAR_CHOOSE<-renderUI({
-   if(input$DataType!="fichier"){
-   if(input$DataType=="objet"){
-   lapply(BIGLIST1(), function(bi){
-     names(bi)
-   })->lina
-   unique(unlist(lina))->glona
-   message<-h5("Renseignez la variable dans les données qui identifie des individus uniques et qui sera utilisée comme paramètre 'id' de seqdata()")
-   
-   } else {
-     if(input$DataType=="objseq"){
-       names( OBJSEQ_COMPLEMENT() )->glona
-       message<-h5("Renseignez la variable dans les données complémentaires qui correspond à l'attribut row.names de l'objet seqdata")
-     }
-   }
-   list(
-     message,
-   selectInput(inputId = "INDVAR", label = "Variable pour identifiant individuel: ", 
-               choices = glona, multiple = FALSE)
-   )
-   }
- })
- 
- INDVAR<-reactive({input$INDVAR})
- 
- #### DUPLI / NA
- 
- control_dupli_na<-reactive({
-   req(input$INDVAR)
-   req(BIGLIST1())
-   if(input$DataType!="fichier"){
-     if(input$DataType=="objet"){
-       lapply(1:length(BIGLIST1()), function(i){
-         #lapply(1:length(csv.list), FUN = function(i){
-           bi<-BIGLIST1()[[i]]
-           bi[ , input$INDVAR]->varbi
-           data.frame(
-             "NA_values"=sum(is.na(varbi)),
-             "Duplicated"=sum(duplicated(varbi[!is.na(varbi)]))
-           )->df
-           df$DATE<-names(BIGLIST1())[[i]]
-           df
-         })->dfresum
-       do.call("rbind", dfresum)->dfresum
-       
-       if(sum(dfresum$NA_values)==0&sum(dfresum$Duplicated)==0){
-        "ok"
-       } else {
-         dfresum
-       }
-     } else {"ok"}
-   } else {"ok"}
- })
- 
- output$MSSG_DUPLI<-renderUI({
-   req(control_dupli_na())
-   if(class(control_dupli_na())=="data.frame"){
-     h3("Attention: la variable d'identifiant contient des foublons et/ou des NA.")
-   } else {h3("OK : pas de doublons ou NA dans la varible d'identifiant.")}
- })
- 
- output$DATA_DUPLI<-renderDataTable({
-   req(control_dupli_na())
-   if(class(control_dupli_na())=="data.frame"){
-     control_dupli_na()
-   }
- })
- 
- output$DELETE_DUPLI_NA<-renderUI({
-   req(control_dupli_na())
-   if(class(control_dupli_na())=="data.frame"){
-    shiny::checkboxInput(inputId = "deleteNA_DUPLI", label = "Faut-il supprimer les doublons et les NA ? (sinon, choisir une autre variable)", value = TRUE)
-   }
- })
- 
- 
- BIGLIST<-reactive({
-   req( control_dupli_na() )
-   req(input$INDVAR)
-   if(input$DataType=="objet"){
-   if(class(control_dupli_na())=="data.frame"){
-     req(input$deleteNA_DUPLI)
-    if(input$deleteNA_DUPLI){
-     lapply(BIGLIST1(), FUN = function(bi){
-       bi1<-subset(bi, !is.na(bi[ , input$INDVAR]))
-       bi2<-subset(bi1, !duplicated( bi1[ , input$INDVAR] ) )
-       bi2
-     })
-   }
-     } else {
-     BIGLIST1()
-      }
-   }
- })
- 
- ####
-
-  output$UI_VAR_SELECT<-renderUI({
-    req(the.df())
-    #mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = list_csv(), FUN = names))), 
-    #                         use.names = FALSE))
-    selectInput(inputId = "VAR_FOR_SELECT", label = "Variable pour sélection", 
-                choices = names(the.df()), multiple = FALSE)
-  })
-  
-  THE_VAR<-reactive({
-    req( the.df() )
-    req( input$VAR_FOR_SELECT)
-    the.df()[ , input$VAR_FOR_SELECT]->the.var
-    the.var
-  })
-  
-  output$UI_CLASS_SELECT<-renderUI({
-    req(THE_VAR() )
-    class(THE_VAR())->CLASS_VAR
-    shiny::selectInput(inputId = "classSelect", label = "Contrôle de la classe", 
-                       choices =  c("factor", "character", "numeric", "Date", "integer"), 
-                       selected = CLASS_VAR)
-  })
-  
-  output$UI_MOD_SELECT<-renderUI({
-    req(THE_VAR() )
-    req(input$classSelect)
-    
-    
-    if(input$classSelect%in%c("numeric", "integer")){
-      
-      as.numeric(THE_VAR())->temp.num.var
-      
-      minis <- min(temp.num.var, 
-                   na.rm = TRUE)
-      maxis <- max(temp.num.var, 
-                   na.rm = TRUE)
-      
-      
-      shiny::sliderInput(inputId = "NumSelect", label = "Valeurs sélectionnées", 
-                         min = minis, max = maxis, 
-                         value = c(minis, maxis))
-    } else {
-      if(input$classSelect=="factor"){#, "character") ){
-        if(length(unique(THE_VAR()))>100){
-          table(THE_VAR())->tab
-          tab[order(tab, decreasing = TRUE)]->tab
-          tab[1:25]->tab
-        } else {tab<-unique(THE_VAR() )}
-        shiny::selectInput(inputId = "FactSelect", label="Valeurs sélectionnées", 
-                           choices = tab  , multiple = TRUE)
-      } else {
-        if(input$classSelect=="character"){#, "character") ){
-          shiny::textInput(inputId = "CharPatSelect", label="'Paterns' à rechercher (sep by '/'", value = ""
-          )
-        } else  {
-          if(input$classSelect=="Date" ){
-            list(
-              shiny::textInput(inputId = "DATEformat", label = "Format d'origine", value = "" ),
-              shiny::dateRangeInput(inputId = "DATE_RANGE", 
-                                    label = "Bornes des dates : ")#, format = "%d/%m/%Y" )#, format = input$DATEformat)
-            )
-          }
-        }
-      }
-    }
-  })
-  
-  observe({
-  req(THE_VAR())
-  req(input$DATEformat)
-    print(THE_VAR())
-    print(as.character(input$DATEformat))
-    as.Date(THE_VAR(), format=as.character(input$DATEformat) )->THE_VAR_DATE
-    print(THE_VAR_DATE)
-    class(THE_VAR_DATE)
-    min(THE_VAR_DATE, na.rm = TRUE)->mindate
-    print(mindate)
-    max(THE_VAR_DATE, na.rm = TRUE)->maxdate
-    print(maxdate)
-    shiny::updateDateRangeInput(session = session, inputId = "DATE_RANGE", start = mindate, end=maxdate )
-  })
-  
-  output$UI_VIEW_VAR<-renderText({
-    req(THE_VAR() )
-    req(input$classSelect)
-    req(the.df())
-    THE_VAR()[!is.na(THE_VAR())]->the.var2
-    print(head(the.var2, 20))
-  })
-  
-  ##### ADD ROW #####
-  
-
-  newEntry <- observeEvent(input$addROW, {
-    
-    factor_levels<-NA
-    text_pattern<-NA
-    minus<-NA
-    maxus<-NA
-    
-    if(input$classSelect=="factor"){
-      
-      paste("'", paste(isolate(input$FactSelect), collapse = "','"), "'", sep="")->choix
-      paste("c(", choix, ")" )->factor_levels
-      
-    } else {
-      if(isolate(input$classSelect)=="character"){
-        isolate(input$CharPatSelect)->text_pattern
-      } else {
-        if(input$classSelect=="Date"){
-          isolate(input$DATE_RANGE)->choix
-          choix[1]->minus
-          choix[2]->maxus
-        } else {
-          if(input$classSelect%in%c("numeric", "integer")){
-            isolate(input$NumSelect)->choix
-            choix[1]->minus
-            choix[2]->maxus
-          }
-        }
-      }
-    }
-    
-    data.frame("PAQUET"=isolate(input$PAQUET_FOR_SELECT),
-               "DATE"=isolate(input$DATE_FOR_SELECT),
-               "VARIABLE"=isolate(input$VAR_FOR_SELECT), 
-               "TYPE"=isolate(input$classSelect),
-               "TEXT_PATTERN"=text_pattern,
-               "FACTOR_LEVELS"=factor_levels,
-               "min"=minus,
-               "max"=maxus
-    )->vecto 
-    isolate(values$DF_subset_initial <- rbind(values$DF_subset_initial , vecto))
-    
-    #  newLine <- isolate(c(input$text1, input$text2))
-    #  isolate(values$df <- rbind(values$df, newLine))
-    })
-
-  
-  output$TABLE_POUR_SELECTION<-DT::renderDataTable(
-    values$DF_subset_initial,
-#    server = FALSE,
-    rownames = FALSE,
-    filter = "none",
-    editable = list(target = "row"
-                    #disable = list(columns = c(1, 2))
-                    )
-  )
-  
-  shiny::reactive({
-    req(  values$DF_subset_initial )
-     data_of_subset <-  values$DF_subset_initial
-
-      string_for_sub<-sapply(1:nrow(data_of_subset), function(i){
-        paste("BIGLIST()$", data_of_subset$DATE[i], sep="" )->dfvar
-      if(data_of_subset$TYPE[i]=="factor"){
-        paste( dfvar, "$", data_of_subset$VARIABLE[i], 
-               "%in%",  data_of_subset$FACTOR_LEVELS[i], sep = "")
-      } else {
-        if(data_of_subset$TYPE[i]=="character"){
-          paste("grepl('",  data_of_subset$TEXT_PATTERN[i],"'", 
-                ", ", dfvar, "$", data_of_subset$VARIABLE[i], ", fixed=TRUE)", sep = "")
-        } else {
-          if(data_of_subset$TYPE[i]%in%c("numeric", "integer") ){
-            paste("(", 
-            paste(dfvar, "$", data_of_subset$VARIABLE[i], ">=", data_of_subset$min[i]),
-            "&",
-            paste(dfvar, "$", data_of_subset$VARIABLE[i], "<=", data_of_subset$max[i]),
-            ")", sep="")
-          } else {
-            if(data_of_subset$TYPE[i]=="Date" ){
-              
-              paste("(", 
-                    paste( "as.Date(",   dfvar, "$", data_of_subset$VARIABLE[i], ",",
-                           "format=", "'", input$DATEformat, "')",
-                           ">=", 
-                           "as.Date('" ,  data_of_subset$min[i], "',",
-                           "format=", "'", "%Y-%m-%d", "')", sep=""
-                           ),
-                    "&",
-                    paste( "as.Date(" ,  dfvar, "$", data_of_subset$VARIABLE[i], ",",
-                           "format=", "'", input$DATEformat, "')",
-                           "<=", 
-                           "as.Date('" ,  data_of_subset$max[i], "',",
-                           "format=", "'", "%Y-%m-%d", "')", sep=""
-                    ),
-                    ")", sep="")
-              
-              
-            } else{ "nosub" }
-      }
-      }
-        }
-        })
-      
-    data.frame("PAQUET"=data_of_subset$PAQUET, DATE=data_of_subset$DATE, "string_for_sub"=string_for_sub, 
-               stringsAsFactors = FALSE)
-    })->STRING_FOR_SUB
-  observe(print(values$DF_subset_initial))
-  observe(print(STRING_FOR_SUB()))
-  INDIVIDUELS<-reactive({
-    
-    req(INDVAR())
-    
-    if(input$addCONDS==TRUE){
-    req(STRING_FOR_SUB() )
-    print(STRING_FOR_SUB())
-    
-    
-    list.of.inf.by.cond<-lapply(1:nrow(STRING_FOR_SUB() ), function(i){
-      subset(BIGLIST()[[STRING_FOR_SUB()$DATE[i]]], 
-             eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
-    })
-    output$CONTROL_LIST.OF.INF<-renderText({unlist(list.of.inf.by.cond)})
-    
-    lapply(unique(STRING_FOR_SUB()$PAQUET), function(pi){
-      which(STRING_FOR_SUB()$PAQUET==pi)->indexes.pi
-      unique(unlist(list.of.inf.by.cond[indexes.pi]))
-    })->ind.by.paq
-    
-    Reduce(intersect, ind.by.paq)->ind.all.paq
-    ind.all.paq
-    } else {
-      lapply(BIGLIST(), function(bil){
-        bil[ , INDVAR()]
-      })->list.ind.no.subset
-      unique(unlist(list.ind.no.subset))
-    }
-  })
-  
-  reactive({
-    req(BIGLIST() )
-    if(input$addCONDS==TRUE){
-    req(INDIVIDUELS() )
-    lapply(BIGLIST(), FUN = function(bi){
-    subset(bi, bi[ , INDVAR()]%in%INDIVIDUELS())
-    })
-    } else {
-      BIGLIST()
-    }
-    })->SUBSETTED_LIST
-  
-  output$LENGTH_IND_SUBS<-renderText({ length( INDIVIDUELS() )    }) 
-  output$LENGTH_BIGLIST<-renderText({ length( BIGLIST() )    }) 
-  output$LENGTH_SUBSETTED<-renderText({ length( SUBSETTED_LIST() )    }) 
-  output$LENGTH_BIGLIST1<-renderText({ length( BIGLIST1() )    }) 
-  
-  
-  
-  observe({
-    SUBSETTED_LIST()->data.to.save 
-  output$downlist <- shiny::downloadHandler(filename = "mes_datas.RData", 
-                        content =  function(file) {
-                          save(data.to.save, file = file)
-                        } )
-  })
-  
-  
-  #### Chargement des données ####
- 
-      trajs <- reactiveValues(df = NULL, dataSource = NULL)
-               
-  observe({
-    req(input$file1)
-    trajs$dataSource <- input$file1$datapath
-    updateCheckboxInput(session=session,inputId = "rowname",value = FALSE )
-    updateSelectInput(session = session, inputId = "rownames_par",choices = "")
-  })
-  
-  observe({
-    req(input$sepcol)
-    updateCheckboxInput(session=session,inputId = "rowname",value = FALSE )
-    updateSelectInput(session = session, inputId = "rownames_par",choices = "")
-  })
-   
-
-  argna<-reactive({
-    req(trajs$dataSource)
-    if ("Vide" %in% input$na){
-      c("",input$na)
-      
-    }else{
-      input$na
-      
-    }
-  })
-#### Chargement premier fichier de données ####
-  #### OBJET .RData ####
-  # list_csv<-reactive({
-  #   if(input$DataType=="objet"){
-  #       if ( is.null(input$objetFile)) return(NULL)
-  #       inFile <- input$objetFile
-  #       file <- inFile$datapath
-  #       # load the file into new environment and get it from there
-  #       e = new.env()
-  #       name <- load(file, envir = e)
-  #       data <- e[[name]]
-  #       #
-  #       mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = data, FUN = names))), 
-  #                                use.names = FALSE))
-  #       updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
-  #       #
-  #       return(data)
-  #     }
-  # })
-  renderPrint(print(length(SUBSETTED_LIST())))->output$CONTROLDATA
- #### Un fichier source ####
-  data<-reactive({
-    req(trajs$dataSource)
-    if(input$DataType=="fichier"){ #### Chargement d'un seul fichier CSV ####
-
-    if (input$rowname==TRUE && input$rownames_par=="")
-    {
-      # userData <- read.csv(file = input$file1$datapath, sep = input$sepcol, encoding = input$endoding)
-      # trajs$df<- userData
-      colonneID<- c(colnames(trajs$df)[colId(df = trajs$df)])
-      updateSelectInput(session = session, inputId = "rownames_par",choices = c("",colonneID))
-      }
-    if (input$rowname==TRUE && input$rownames_par!=""){
-      userData <- read.csv(file = input$file1$datapath, 
-                           sep = input$sepcol, 
-                           encoding = input$endoding,
-                           #row.names = input$rownames_par,
-                           header=input$header,na.strings = argna(),
-                           dec=input$dec)
-      row.names(userData)<-userData[ , input$rownames_par]
-      mycolumns<-c(colnames(userData))
-      updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
-      trajs$df<- userData
-
-    }
-
-    if(input$rowname==FALSE){
-      userData <- read.csv(file = input$file1$datapath, sep = input$sepcol, encoding = input$endoding,header=input$header,na.strings = argna(),dec=input$dec)
-      mycolumns <- c(colnames(userData))
-      updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
-      trajs$df<- userData}
-    return(trajs$df)
-    } else {
-        
-      }
-  })
-  output$contenu<-shiny::renderDataTable({
-    req(data())
-    data()
-  })
-  
-  #### Paramétrage des trajectoires ####
-  ####  DATE DEBUT ET FIN POUR TRAJ ####
-  output$DATA_UI<-shiny::renderUI({
-    if(input$DataType=="fichier"){
-      shiny::dateRangeInput(inputId = "date.range", label = "Dates de début et de fin",
-                            format = "mm-yyyy")->the.ui
-    } else {
-      if(input$DataType=="objet"){
-        names(SUBSETTED_LIST())->names.pick
-         mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = SUBSETTED_LIST(), FUN = names))),
-                                       use.names = FALSE))
-        updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
-        list(
-          shiny::selectInput(inputId = "PICKDATE1", label = "Debut:",
-                           choices = names.pick, multiple = FALSE),
-          shiny::selectInput(inputId = "PICKDATE1", label = "Fin:",
-                             choices = names.pick, multiple = FALSE))->the.ui
-      } else {h3("error")->the.ui}
-    }
-    the.ui
-      })
-  ####  data.seq ####
-  
-  DR_POUR_SEQ_OBJ<-reactive({# eventExpr = input$ValidParametres,  {
-    if(input$DataType=="objet"){
-      req(SUBSETTED_LIST())
-      req(input$timecol)
-      
-      
-      lapply(SUBSETTED_LIST(), function(df.i){
-        
-        names(df.i)[grepl(pattern = input$INDVAR, x = names(df.i), ignore.case = FALSE)]->name.code
-        names(df.i)[grepl(pattern = input$timecol, x = names(df.i), ignore.case = FALSE)]->name.RSA_simple
-        df.i[ , c(name.code, name.RSA_simple)]
-      })->DATAlist.sampled.simple
-      
-      
-      Reduce(function(x, y) merge(x, y, by.x=names(x)[grepl(pattern = input$INDVAR, x = names(x), ignore.case = FALSE)], 
-                                  by.y=names(y)[grepl(pattern = input$INDVAR, x = names(y), ignore.case = FALSE)], 
-                                  all=TRUE), DATAlist.sampled.simple)->df_RSA.sampled
-      print(head(df_RSA.sampled))
-      
-      
-      
-      names(df_RSA.sampled)<-c(input$INDVAR, paste(1:(ncol(df_RSA.sampled)-1), "_VAR"))
-      
-      print(head(df_RSA.sampled))
-      
-      print(names(df_RSA.sampled))
-      print(names(df_RSA.sampled))
-      
-      
-      merge(df_RSA.sampled, 
-            SUBSETTED_LIST()[[1]][ , !grepl(pattern = input$timecol, x = names(SUBSETTED_LIST()[[1]]))], 
-            by.x = input$INDVAR, 
-            by.y =  names( SUBSETTED_LIST()[[1]] )[grepl(pattern = input$INDVAR, x=names(SUBSETTED_LIST()[[1]]), fixed = TRUE)][1])->df_RSA.sampled2
-      
-      df_RSA.sampled2->df.pour.seq
-      
-      print("THE DATA")
-      print(head(df_RSA.sampled2))
-      print("INDVAR")
-      print(input$INDVAR)
-      print("grepl input$timecol")
-      print(head(df_RSA.sampled[ , grepl(pattern = input$timecol, x=names(df_RSA.sampled))]))
-      
-      df.pour.seq
-    }
-    
-  })
-  
-
-  
-  data.seq<-eventReactive(eventExpr = input$ValidParametres, {
-    #### SI FICHOER ####
-    if(input$DataType=="fichier"){
-      req(data())
-      data()->df.pour.seq
-      
-  if (length(input$timecol)<2){
-    showModal(modalDialog(
-      title = "Important message",
-      "Il faut mettre au moins deux variables temporelles.",
-      easyClose = TRUE
-    ))
-  }
-  else if ((length(input$timecol)-1)<input$PAStrate){
-    showModal(modalDialog(
-      title = "Important message",
-      "Il faut que le 'Pas de temps pour le calcul des taux de transition' dans l'onglet Statistiques descriptives/taux de transition (et taux de sortie) soit inférieur strictement au nombre de variables temporelles.",
-      easyClose = TRUE
-    ))
-  }
-  else   {
-    # updateNumericInput(session=session, inputId = "PAStrate",value=1)
-    s<-seqdef(df.pour.seq[,input$timecol],cpal = NULL,
-              gaps = input$TEXT_GAP,
-              right = input$TEXT_RIGHT,
-              left = input$TEXT_LEFT,nr = "RMA")
-    
-    }
-    
-    return(s)
-  } else {
-      #### SI OBJET ####
-      
-    if(input$DataType=="objet"){
-      
-      DR_POUR_SEQ_OBJ()->df.pour.seq
-      
-      print(DR_POUR_SEQ_OBJ()[ , input$INDVAR][duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR])])
-      
-      if(!is.null(DR_POUR_SEQ_OBJ())){
-        seqdef(id = DR_POUR_SEQ_OBJ()[ , input$INDVAR], 
-               data = DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR],
-               gaps = input$TEXT_GAP,
-               right = input$TEXT_RIGHT,
-               left = input$TEXT_LEFT,nr = "RMA"
-                
-               
-               #  names(df_RSA.sampled)[names(df_RSA.sampled)!="ID"]], 
-               #right = "NO.RSA", 
-               #left="NO.RSA", 
-               #gaps = "GAP", 
-        )->s
-      } else {s<-NULL}
-    } else {
-      #### SI OBJSEQ####
-      if(input$DataType=="objseq"){
-        req(OBJSEQ())
-        df.pour.seq<-OBJSEQ_COMPLEMENT()
-        s<-OBJSEQ()
-      }
-    }
-  }
-
-
-      
-      
-      
-        # if(sum(duplicated(x = DR_POUR_SEQ_OBJ()[ , input$INDVAR]))>1){
-        # if(input$ELIMINATE_DOUBLONS==TRUE){
-        #   drpourseq<-DR_POUR_SEQ_OBJ()[!duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR]) , ]
-        #   seqdef(id = drpourseq[ , input$INDVAR], 
-        #          data = drpourseq[ , grepl("_VAR", x = names(drpourseq))&names(drpourseq)!=input$INDVAR],#  names(df_RSA.sampled)[names(df_RSA.sampled)!="ID"]], 
-        #          #right = "NO.RSA", 
-        #          #left="NO.RSA", 
-        #          #gaps = "GAP", 
-        #   )->s
-        # } else {
-        #   s<-NULL
-        # }
-        # } else {
-        #   seqdef(id = DR_POUR_SEQ_OBJ()[ , input$INDVAR], 
-        #          data = DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR],#  names(df_RSA.sampled)[names(df_RSA.sampled)!="ID"]], 
-        #          #right = "NO.RSA", 
-        #          #left="NO.RSA", 
-        #          #gaps = "GAP", 
-        #   )->s
-    
-    if (!is.null(s)){
-      if (length(alphabet(s))<=12&!is.null(s)){
-        #permet d'avoir les mêmes couleurs que pour les graphiques de flux
-        a<-col_flux(data = df.pour.seq, seq.data = s)
-        attr(s, "cpal") <- unname(a[alphabet(s)])
-      }
-      }
-      return(s)
-    
-  })
-  
-  
-  INDVAR_UNI<-reactive({
-    req(data.seq())
-    if(input$DataType=="objet"|input$DataType=="objseq"){
-      req(input$INDVAR)
-      input$INDVAR->idvar
-    } else {
-      if(input$DataType=="fichier"){
-        req(input$rownames_par)
-        input$rownames_par->idvar
-      }
-    }
-    idvar
-  })
-  
-  
-  # output$WARNINGS.UNIQUE.ID<-renderText({
-  #   if(!is.null(data.seq())){
-  #   "OK: la variable d'identifiant individuel sélectionnée est unique"
-  #   } else {
-  #   "La variable d'identifiant individuel sélectionnée comporte des doublons. Impossible de créer l'objet trajectoire ( seqdef() )"
-  #   }
-  # })
-
-    output$CLASS_TRAJ_OBS<-renderPrint({
-    class( data.seq() )
-    #summary(data.seq())
-  })
-  
-  output$DES_TRAJ_OBJ<-renderPrint({
-    dim( data.seq() )
-    #summary(data.seq())
-    })
-  
-  output$ATTR_TRAJ_OBJ<-renderUI({
-    attributes(data.seq() )->list.attr
-    print(list.attr)
-    list.attr[names(list.attr)!="row.names"]->list.attr
-    lapply(1:length(list.attr), function(li){
-      list(
-      h5(paste(names(list.attr)[li], " : ", sep = "")),
-      renderPrint({list.attr[[li]]})
-      )
-    })
-    #summary(data.seq())
-  })
-
-  
-  observe({
-    list("SEQ"=data.seq(), "DATA"=DR_POUR_SEQ_OBJ())->list.to.save
-    output$downseq <- shiny::downloadHandler(filename = "mes_trajectoires.RData", 
-                                              content =  function(file) {
-                                                save(list.to.save, file = file)
-                                              } )
-  })
-  
-nom_var_seq<-reactive({
-    names( data.seq() )
-})
-
-data2<-reactive({
-  if(input$DataType=="fichier"){ 
-    data()
-  } else {
-    if(input$DataType=="objet"){ 
-      DR_POUR_SEQ_OBJ()
-    } else {
-      if(input$DataType=="objseq"){
-        OBJSEQ_COMPLEMENT()
-      }
-    }
-  }
-})
-
-observe({print(head(data2()))})
+observe({print(head(DATAs()$DATA_COMP))})
 
 
 #### STATISTIQUES DESCRIPTIVES ####
 
   
   ###max PAStrate ####
-observeEvent(eventExpr = data.seq(),{
-  req(data.seq())
-  updateNumericInput(session=session, inputId = "PAStrate",max=length(nom_var_seq())-1)
+observeEvent(eventExpr = DATAs()$SEQ_OBJ,{
+  req(DATAs())
+  updateNumericInput(session=session, inputId = "PAStrate",max=length(names(DATAs()$SEQ_OBJ))-1)
 })
 
   PASTRAJ<-reactive({
@@ -818,25 +33,25 @@ observeEvent(eventExpr = data.seq(),{
   })
   
   data.seq.inv<-reactive({
-    req(data.seq())
+    req(DATAs())
     #req(input$timecol)
-    print("summary(data.seq())")
-    print(summary(data.seq()))
+    print("summary(DATAs()$SEQ_OBJ)")
+    print(summary(DATAs()$SEQ_OBJ))
     return(
-      #seqdef(data2()[,rev(nom_var_seq())],cpal = NULL)
-      seqdef(data.seq()[rev(names(data.seq()))], 
+      #seqdef(DATAs()$DATA_COMP[,rev(names(DATAs()$SEQ_OBJ))],cpal = NULL)
+      seqdef(DATAs()$SEQ_OBJ[rev(names(DATAs()$SEQ_OBJ))], 
              cpal=NULL,
-             gaps = input$TEXT_GAP,
-             right = input$TEXT_RIGHT,
-             left = input$TEXT_LEFT,nr = "RMA")
+             gaps = DATAs()$CODAGE_MANQUANT$GAP,
+             right = DATAs()$CODAGE_MANQUANT$RIGHT,
+             left = DATAs()$CODAGE_MANQUANT$LEFT, nr = "RMA")
       )
   })
   
   #On organise la sequence dans l'autre sens afin d'avoir les transitions arrivant et pas seulement celles partant d'une situation
   Seqordre<-reactive({
-    req(data.seq(),data.seq.inv())
+    req(DATAs(),data.seq.inv())
     if(input$DebArr=="deb"){
-      return(data.seq())
+      return(DATAs()$SEQ_OBJ)
     }else{
       return(data.seq.inv())
     }
@@ -870,7 +85,7 @@ observeEvent(eventExpr = data.seq(),{
   
   observe({
     print(LISTTRATE() )
-    req(data.seq(),LISTTRATE())
+    req(DATAs(),LISTTRATE())
     
     lapply(1:length(LISTTRATE()), FUN=function(i){
       paste0('TRAJTRATE', i)->id.output
@@ -885,25 +100,25 @@ observeEvent(eventExpr = data.seq(),{
       }
        print("xx")
       print(xx)
-      gsub(pattern=" ",replacement="_", x = alphabet(data.seq()))->names.alpha
+      gsub(pattern=" ",replacement="_", x = alphabet(DATAs()$SEQ_OBJ))->names.alpha
       names(xx)<-names.alpha
       print("xx names")
       print(xx)
       print("alphabet")
-      print(alphabet(data.seq()))
+      print(alphabet(DATAs()$SEQ_OBJ))
       
       colnames(xx)<-gsub(pattern = "[-> ", replacement = "", fixed = TRUE, x = colnames(xx))
       colnames(xx)<-gsub(pattern = "]", replacement = "", fixed = TRUE, x = colnames(xx))
       
       colnames(xx)->names.alpha
       if(input$DebArr=="deb"){
-        cbind(xx, "DEPART"=alphabet(data.seq()))->xx
-        #alphabet(data.seq())->xx$DEPART
+        cbind(xx, "DEPART"=alphabet(DATAs()$SEQ_OBJ))->xx
+        #alphabet(DATAs()$SEQ_OBJ)->xx$DEPART
         xx[, c("DEPART", names.alpha)]->xx
       }else{
-        cbind(xx, "ARRIVEE"=alphabet(data.seq()))->xx
+        cbind(xx, "ARRIVEE"=alphabet(DATAs()$SEQ_OBJ))->xx
         
-        #alphabet(data.seq())->xx$ARRIVEE
+        #alphabet(DATAs()$SEQ_OBJ)->xx$ARRIVEE
         xx[, c("ARRIVEE", names.alpha)]->xx
       }
       
@@ -912,14 +127,14 @@ observeEvent(eventExpr = data.seq(),{
       #Affiche les pas de temps considérés dnas le(s) tableau(x)
       paste0('Text_TRAJTRATE', i)->id.output.text
       if (input$TYPEtrate==TRUE){
-        output[[id.output.text]] <- renderText(paste("Entre",colnames(data.seq())[i],"et",colnames(data.seq())[i+PASTRAJ()]))
+        output[[id.output.text]] <- renderText(paste("Entre",colnames(DATAs()$SEQ_OBJ)[i],"et",colnames(DATAs()$SEQ_OBJ)[i+PASTRAJ()]))
       }else{
-        output[[id.output.text]] <- renderText(paste("Sur l'ensemble de la période étudiée (entre",colnames(data.seq())[1],"et",colnames(data.seq())[dim(data.seq())[2]],")"))
+        output[[id.output.text]] <- renderText(paste("Sur l'ensemble de la période étudiée (entre",colnames(DATAs()$SEQ_OBJ)[1],"et",colnames(DATAs()$SEQ_OBJ)[dim(DATAs()$SEQ_OBJ)[2]],")"))
       }
       paste0('DownloadTabTrans',i)->id.output.download
       output[[id.output.download]] <- downloadHandler(
         filename = function() {
-          paste0('Transition_',colnames(data.seq())[i],'_',colnames(data.seq())[i+PASTRAJ()], input$TypeTrans)
+          paste0('Transition_',colnames(DATAs()$SEQ_OBJ)[i],'_',colnames(DATAs()$SEQ_OBJ)[i+PASTRAJ()], input$TypeTrans)
         },
         content = function(file){
           write.table(xx,file,sep = input$sepcol,row.names=TRUE,col.names = NA,dec = input$dec , fileEncoding = input$endoding)
@@ -961,11 +176,13 @@ observeEvent(eventExpr = data.seq(),{
   })
   ####### Type de graph ####
   #mise a jour des input et création de nouveaux input selon le type de sous-population choisi
-  observeEvent(eventExpr = input$ValidParametres,{
-    req(data.seq())
-    updateSelectInput(session = session, inputId = "timeseq1", choices = input$timecol)
+  observe({#eventExpr = input$ValidParametres,{
+    req(DATAs())
+    updateSelectInput(session = session, inputId = "timeseq1", choices = names(DATAs()$SEQ_OBJ))
     
-    colsouspop<-colnames(data2())[!(colnames(data2()) %in% input$timecol)]
+    colsouspop<-colnames(DATAs()$DATA_COMP)[!(colnames(DATAs()$DATA_COMP) %in% input$timecol)]
+    message("COUCOU 184")
+    print(colsouspop)
     updateSelectInput(session = session, inputId = "souspop1", choices = c("Aucune",colsouspop))
     
   })
@@ -979,20 +196,20 @@ observeEvent(eventExpr = data.seq(),{
   
   output$slider1<- renderUI({
     if(input$souspop1!="Aucune"){
-      if (is.numeric(data2()[,input$souspop1])){
-        min<-min(data2()[,input$souspop1],na.rm = TRUE)
-        max<-max(data2()[,input$souspop1],na.rm = TRUE)
+      if (is.numeric(DATAs()$DATA_COMP[,input$souspop1])){
+        min<-min(DATAs()$DATA_COMP[,input$souspop1],na.rm = TRUE)
+        max<-max(DATAs()$DATA_COMP[,input$souspop1],na.rm = TRUE)
         sliderInput(inputId = "sous_pop_num1", label="Slider",min=min,max=max,value = c(min,max))
       }
     }
   })
   output$modalite1<- renderUI({
     if(input$souspop1!="Aucune"){
-      if (is.factor(data2()[,input$souspop1])){
-        selectInput(inputId = "souspop_modalite1",label="Modalité(s)", choices = levels(data2()[,input$souspop1]),selected="",multiple = TRUE)
-      } else {if(is.character(data2()[,input$souspop1])){
-        if(length(unique(data2()[,input$souspop1]))<25){
-          selectInput(inputId = "souspop_modalite1",label="Modalité(s)", choices = unique(data2()[,input$souspop1]),selected="",multiple = TRUE)
+      if (is.factor(DATAs()$DATA_COMP[,input$souspop1])){
+        selectInput(inputId = "souspop_modalite1",label="Modalité(s)", choices = levels(DATAs()$DATA_COMP[,input$souspop1]),selected="",multiple = TRUE)
+      } else {if(is.character(DATAs()$DATA_COMP[,input$souspop1])){
+        if(length(unique(DATAs()$DATA_COMP[,input$souspop1]))<25){
+          selectInput(inputId = "souspop_modalite1",label="Modalité(s)", choices = unique(DATAs()$DATA_COMP[,input$souspop1]),selected="",multiple = TRUE)
           
           }
       }}
@@ -1004,21 +221,23 @@ observeEvent(eventExpr = data.seq(),{
   ####### Selection des sous populations ####
   data.select1<-reactive({
     req(input$souspop1)
+    print("coucou!! 1110")
+    
     
     if (input$souspop1=="Aucune" || input$souspop1==""){
-      data.select<-data2()
+      data.select<-DATAs()$DATA_COMP
     }else{
       
-      if (is.factor(data2()[,input$souspop1])|(is.character(data2()[,input$souspop1])&length(unique(data2()[,input$souspop1]))<25)){
+      if (is.factor(DATAs()$DATA_COMP[,input$souspop1])|(is.character(DATAs()$DATA_COMP[,input$souspop1])&length(unique(DATAs()$DATA_COMP[,input$souspop1]))<25)){
         if(length(input$souspop_modalite1)>0){
-          data.select<-data2()[(data2()[,input$souspop1] %in% c(input$souspop_modalite1)),]
+          data.select<-DATAs()$DATA_COMP[(DATAs()$DATA_COMP[,input$souspop1] %in% c(input$souspop_modalite1)),]
         }else{
           data.select<-NULL
         }
       }else{
-        if (is.numeric(data2()[,input$souspop1])){
+        if (is.numeric(DATAs()$DATA_COMP[,input$souspop1])){
           req(input$sous_pop_num1)
-          data.select<-data2()[which(data2()[,input$souspop1]<= max(input$sous_pop_num1,na.rm=TRUE) & data2()[,input$souspop1]>= min(input$sous_pop_num1,na.rm=TRUE)),]
+          data.select<-DATAs()$DATA_COMP[which(DATAs()$DATA_COMP[,input$souspop1]<= max(input$sous_pop_num1,na.rm=TRUE) & DATAs()$DATA_COMP[,input$souspop1]>= min(input$sous_pop_num1,na.rm=TRUE)),]
           
         }
       }
@@ -1029,29 +248,35 @@ observeEvent(eventExpr = data.seq(),{
   #### SEQ.SELECT1 ####
   seq.select1<-reactive({
     req(input$souspop1)
+    print("coucou!! 1135")
     
     if (input$souspop1=="Aucune" || input$souspop1==""){
-      seq.select<-data.seq()
+      print("coucou!! 1140")
+      
+      seq.select<-DATAs()$SEQ_OBJ
     }else{
-      if (is.factor(data2()[,input$souspop1])|is.character(data2()[,input$souspop1])) {
+      if (is.factor(DATAs()$DATA_COMP[,input$souspop1])|is.character(DATAs()$DATA_COMP[,input$souspop1])) {
+        print("coucou!! 1145")
+        
       if(length(input$souspop_modalite1)<1){
         seq.select<-lapply(X = input$souspop_modalite1, FUN = function(levels.i){
-          data.seq()[(data2()[,input$souspop1] == levels.i ),]
+          DATAs()$SEQ_OBJ[(DATAs()$DATA_COMP[,input$souspop1] == levels.i ),]
         })
         names(seq.select)<-input$souspop_modalite1
       } else {
-        seq.select<-data.seq()[(data2()[,input$souspop1] %in% c(input$souspop_modalite1)),]
-        #seq.select<-data.seq()[(data2()[,input$souspop1] %in% c(input$souspop_modalite1)),]
+        seq.select<-DATAs()$SEQ_OBJ[(DATAs()$DATA_COMP[,input$souspop1] %in% c(input$souspop_modalite1)),]
+        #seq.select<-DATAs()$SEQ_OBJ[(DATAs()$DATA_COMP[,input$souspop1] %in% c(input$souspop_modalite1)),]
       }
       } else {
         
-        if (is.numeric(data2()[,input$souspop1])){
+        if (is.numeric(DATAs()$DATA_COMP[,input$souspop1])){
           req(input$sous_pop_num1)
-          seq.select<-data.seq()[which(data2()[,input$souspop1]<= max(input$sous_pop_num1,na.rm=TRUE) & data2()[,input$souspop1]>= min(input$sous_pop_num1,na.rm=TRUE)),]
+          seq.select<-DATAs()$SEQ_OBJ[which(DATAs()$DATA_COMP[,input$souspop1]<= max(input$sous_pop_num1,na.rm=TRUE) & DATAs()$DATA_COMP[,input$souspop1]>= min(input$sous_pop_num1,na.rm=TRUE)),]
         }
         
       }
     }
+    print(class(seq.select))
     return(seq.select)
     
   })
@@ -1064,15 +289,24 @@ observeEvent(eventExpr = data.seq(),{
     input$timeseq1
   })
   
-  ####### Création d'une liste des graphiques de flux pour pouvoir les tracer côte à côte
+  ####### Création d'une liste des graphiques de flux pour pouvoir les tracer côte à côte ####
   flux1<-eventReactive(eventExpr = input$graph1,{
     req(data.select1(),col_periode1(),seq.select1())
-    if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])) {
+    if (input$souspop1!="Aucune"){#} && is.factor(DATAs()$DATA_COMP[,input$souspop1])) {
       lapply(1:length(input$souspop_modalite1), FUN=function(i){
-        graph_flux_grp(data=data.select1(),seq_data=seq.select1(),col_periode=col_periode1(),var_grp=input$souspop1,label_grp= as.character(input$souspop_modalite1[i]))
+        print(class(data.select1()))
+        print(dim(data.select1()))
+        print(class(seq.select1()))
+        print()
+        graph_flux_grp(data=data.select1(),
+                       seq_data=seq.select1(),
+                       col_periode=col_periode1(),
+                       var_grp=input$souspop1,
+                       label_grp= as.character(input$souspop_modalite1[i]))
       })
     }
     else{
+      print("coucou!! l1183")
       return(list(graph_flux(data=data.select1(),seq_data=seq.select1(),col_periode=col_periode1())))
     }
     
@@ -1085,8 +319,8 @@ observeEvent(eventExpr = data.seq(),{
     req(seq.select1())
     if (req(input$plottype) == "sous.seq"){
       #Pour la comparaison des sous-populations, on met les graphiques dans une liste#
-      if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])) {
-        if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(data2()[,input$souspop1]) ){
+      if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])) {
+        if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(DATAs()$DATA_COMP[,input$souspop1]) ){
           lapply(1:length(input$souspop_modalite1), FUN=function(i){
             seq.select1()[data.select1()[,input$souspop1]==input$souspop_modalite1[i],]->seqSouspop
             seqecreate(seqSouspop, tevent="state", use.labels=FALSE)->seqGlobal
@@ -1116,8 +350,8 @@ observeEvent(eventExpr = data.seq(),{
         req(values$df)
         #condition d'un data.frame values non vide pour exécuter la suite du code afin de ne pas avoir d'erreur quand la data.frame est vide
         if(nrow(values$df)>0){
-          if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])) {
-            if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(data2()[,input$souspop1]) ){
+          if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])) {
+            if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(DATAs()$DATA_COMP[,input$souspop1]) ){
               lapply(1:length(input$souspop_modalite1), FUN=function(i){
                 
                 seq.select1()[data.select1()[,input$souspop1]==input$souspop_modalite1[i],]->seqSouspop
@@ -1230,7 +464,7 @@ observeEvent(eventExpr = data.seq(),{
     input$graph1
     isolate({
       if(input$plottype=="flux"){
-        if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])) {
+        if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])) {
           if (length(input$souspop_modalite1)>1){
             return(taille_graph_flux(length(input$souspop_modalite1)))
           }else{
@@ -1249,7 +483,7 @@ observeEvent(eventExpr = data.seq(),{
     })
     
     if(req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht","sous.seq","sous.seq.ch")) {
-      if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])) {
+      if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])) {
         if (length(input$souspop_modalite1)>1){
           return(taille_graph_flux(length(input$souspop_modalite1)))
         }else{
@@ -1277,7 +511,7 @@ observeEvent(eventExpr = data.seq(),{
   tailleGraph<-reactiveValues(height=400)
   ####### Rend automatique la largeur des graphiques pour qu'ils soient lisisbles ###
   large<-function(){
-    if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])){
+    if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])){
       req(input$souspop_modalite1)
       if(length(input$souspop_modalite1)>1){
         return(1300)
@@ -1323,10 +557,11 @@ observeEvent(eventExpr = data.seq(),{
         #return(list(PLOT, TAB))
         #})
         
-      }
+      } else {
     ###### PLOT_AND_TAB flux
     
       if (req(input$plottype) == "flux"){
+        print("COUCOU ligne 1441")
         input$graph1
         isolate({
           output$PLOT<-renderPlot({
@@ -1338,20 +573,18 @@ observeEvent(eventExpr = data.seq(),{
           },width = large(),height = haut1())
           return(plotOutput("PLOT",height = tailleGraph$height))
         })
-      }
+      } else {
     
     ###### PLOT_AND_TAB autres
     
     
-      if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
-        
-      #  output$PLOT_AND_TAB<-renderUI({
-        #output$PLOT<-renderPlot({
-          if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
+      if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht") &req(input$plottype)!="flux") {
+        print("COUCOU NON 1463")
+          #if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
             req(seq.select1(),data.select1(),ordre1())
             tailleGraph$height<-dim(ordre1())[1]*400
-            if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])){
-              if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(data2()[,input$souspop1]) ){
+            if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])){
+              if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(DATAs()$DATA_COMP[,input$souspop1]) ){
                 req(seq.select1(),data.select1(),ordre1())
                 if (req(input$plottype) == "I") {
                   
@@ -1391,7 +624,7 @@ observeEvent(eventExpr = data.seq(),{
                   output$TAB_DES<-renderUI({
                     
                     
-                  DONNEES_POUR_PLOT()->data
+                  DONNEES_POUR_PLOT(TYPE = as.character(input$plottype), objseq=seq.select1())->data
           
                   output$TAB<-renderDataTable({
                     data
@@ -1407,8 +640,7 @@ observeEvent(eventExpr = data.seq(),{
               }else{
                 return(NULL)
               }
-            }
-            else{
+            } else{
               req(seq.select1())
               if (req(input$plottype) == "I") {
                 #return(seqplot(seqdata = seq.select1(), type = input$plottype,sortv = input$TapisSorted,yaxis=FALSE))
@@ -1463,8 +695,8 @@ observeEvent(eventExpr = data.seq(),{
             }
           }
 
-        }#,width = large(),height = haut1())
-
+        #}#,width = large(),height = haut1())
+}}
         #return(plotOutput("PLOT",height = tailleGraph$height))
       })
 
@@ -1501,8 +733,8 @@ observeEvent(eventExpr = data.seq(),{
   #       if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
   #         req(seq.select1(),data.select1(),ordre1())
   #         tailleGraph$height<-dim(ordre1())[1]*400
-  #         if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])){
-  #           if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(data2()[,input$souspop1]) ){
+  #         if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])){
+  #           if(length(input$souspop_modalite1)>0 && input$souspop_modalite1 %in% levels(DATAs()$DATA_COMP[,input$souspop1]) ){
   #             req(seq.select1(),data.select1(),ordre1())
   #             if (req(input$plottype) == "I") {
   #               return(seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1],sortv = input$TapisSorted,yaxis=FALSE))
@@ -1540,11 +772,11 @@ observeEvent(eventExpr = data.seq(),{
           return("Vous avez sélectionné aucune sous population")
         }else{
           
-          if (is.factor(data2()[,input$souspop1])){
+          if (is.factor(DATAs()$DATA_COMP[,input$souspop1])){
             req(input$souspop_modalite1)
             return(paste("Vous avez sélectionné la sous population",input$souspop1, "avec les modalités",paste(input$souspop_modalite1,collapse = ", ")))
           }
-          if (is.numeric(data2()[,input$souspop1])){
+          if (is.numeric(DATAs()$DATA_COMP[,input$souspop1])){
             
             return(paste("Vous avez sélectionné la sous population",input$souspop1, "entre",min(input$sous_pop_num1,na.rm=TRUE),"et",max(input$sous_pop_num1,na.rm=TRUE)))
             
@@ -1557,11 +789,11 @@ observeEvent(eventExpr = data.seq(),{
         return("Vous avez sélectionné aucune sous population")
       }else{
         
-        if (is.factor(data2()[,input$souspop1])){
+        if (is.factor(DATAs()$DATA_COMP[,input$souspop1])){
           req(input$souspop_modalite1)
           return(paste("Vous avez sélectionné la sous population",input$souspop1, "avec les modalités",paste(input$souspop_modalite1,collapse = ", ")))
         }
-        if (is.numeric(data2()[,input$souspop1])){
+        if (is.numeric(DATAs()$DATA_COMP[,input$souspop1])){
           
           return(paste("Vous avez sélectionné la sous population",input$souspop1, "entre",min(input$sous_pop_num1,na.rm=TRUE),"et",max(input$sous_pop_num1,na.rm=TRUE)))
           
@@ -1582,7 +814,7 @@ observeEvent(eventExpr = data.seq(),{
   seqplot_fonction<-function(){
     if (req(input$plottype) %in% c("d", "f", "I", "ms", "mt", "r","Ht")) {
       req(ordre1())
-      if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1])){
+      if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1])){
         req(input$souspop_modalite1)
         if (req(input$plottype) == "I") {
           return(seqplot(seqdata = seq.select1(), type = input$plottype, group = data.select1()[,input$souspop1],sortv = input$TapisSorted,yaxis=FALSE))
@@ -1615,13 +847,13 @@ observeEvent(eventExpr = data.seq(),{
   
   widthSousSeq<-function(){
     if (req(input$plottype)=="flux"){
-      if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1]) && length(input$souspop_modalite1)>1){
+      if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1]) && length(input$souspop_modalite1)>1){
         return(20)
       }else{
         return(12)
       }
     }else{
-      if (input$souspop1!="Aucune" && is.factor(data2()[,input$souspop1]) && length(input$souspop_modalite1)>1){
+      if (input$souspop1!="Aucune" && is.factor(DATAs()$DATA_COMP[,input$souspop1]) && length(input$souspop_modalite1)>1){
         return(20)
       }else{
         return(10)
@@ -1706,13 +938,13 @@ observeEvent(eventExpr = data.seq(),{
   
   ### NOMBRE DE TRAJECTOIRES: TOTAL ET  SELECTIONNEES  ####
   NB_TRAJS<-shiny::reactive({
-    req(data.seq())
-    print( nrow(data.seq()))
-    nrow(data.seq())
+    req(DATAs())
+    print( nrow(DATAs()$SEQ_OBJ))
+    nrow(DATAs()$SEQ_OBJ)
   })
   unique.trajs<-shiny::reactive({
-    req(data.seq())
-    seqtab(data.seq()[ , ], idxs = 0, format = "STS")
+    req(DATAs())
+    seqtab(DATAs()$SEQ_OBJ[ , ], idxs = 0, format = "STS")
     })
 
     NB_UNIQUE_TRAJS<-shiny::reactive({
@@ -1804,15 +1036,15 @@ observeEvent(eventExpr = data.seq(),{
   ###trajs.forclass  ####
   
   output$UI_SAMPLE_VAR<-renderUI({
-    req(data.seq())
+    req(DATAs())
     shiny::selectInput(inputId = "sample_var",
                        label = "Variables utilisées pour la représentativité",
-                       choices = names(data2()), multiple = TRUE, selected = NULL)
+                       choices = names(DATAs()$DATA_COMP), multiple = TRUE, selected = NULL)
     
   })
   
   MATCH_SEQ_DATA_C0NTROL<-reactive({
-    if(sum(attributes(data.seq())$row.names!=data2()[ , INDVAR_UNI()])==0){
+    if(sum(attributes(DATAs()$SEQ_OBJ)$row.names!=DATAs()$DATA_COMP[ , INDVAR_UNI()])==0){
       1 
     } else {
         0
@@ -1827,24 +1059,24 @@ observeEvent(eventExpr = data.seq(),{
       if(#input$sample_var==""|
         is.null(input$sample_var)#|length(input$sample_var)<1
         ){
-        REPRESENTED_SAMPLE(data = data2(), interact.var = NULL, SIZE = input$sample_prop*nrow(data.seq()), id.var = INDVAR_UNI())->vec.sample
+        REPRESENTED_SAMPLE(data = DATAs()$DATA_COMP, interact.var = NULL, SIZE = input$sample_prop*nrow(DATAs()$SEQ_OBJ), id.var = INDVAR_UNI())->vec.sample
       } else {
-        REPRESENTED_SAMPLE(data = data2(), 
+        REPRESENTED_SAMPLE(data = DATAs()$DATA_COMP, 
                            interact.var = input$sample_var, 
-                           SIZE = input$sample_prop*nrow( data2() ), id.var=INDVAR_UNI())->vec.sample
+                           SIZE = input$sample_prop*nrow( DATAs()$DATA_COMP ), id.var=INDVAR_UNI())->vec.sample
       }
-      seqdef(data.seq()[row.names(data.seq())%in%vec.sample , ], 
+      seqdef(DATAs()$SEQ_OBJ[row.names(DATAs()$SEQ_OBJ)%in%vec.sample , ], 
              left = "DEL",#input$TEXT_LEFT, 
              right = "DEL",#input$TEXT_RIGHT, 
              gaps = "DEL",#input$TEXT_GAP, nr = "RMA",
-             id = row.names( data.seq()[row.names(data.seq())%in%vec.sample , ] ))
+             id = row.names( DATAs()$SEQ_OBJ[row.names(DATAs()$SEQ_OBJ)%in%vec.sample , ] ))
       
     } else {
       if(input$selection_rows=="unique.traj"){
         #### unique.traj ####
-        rev(wesanderson::wes_palette(name = "Darjeeling1", n = length(alphabet(data.seq())), type = "continuous"))->cpal.seq
-        #cpal(seqdata = data.seq())<-cpal.seq
-        #seqtab(data.seq()[ , ], idxs = 0, format = "STS")->unique.trajs
+        rev(wesanderson::wes_palette(name = "Darjeeling1", n = length(alphabet(DATAs()$SEQ_OBJ)), type = "continuous"))->cpal.seq
+        #cpal(seqdata = DATAs()$SEQ_OBJ)<-cpal.seq
+        #seqtab(DATAs()$SEQ_OBJ[ , ], idxs = 0, format = "STS")->unique.trajs
         #data.frame(unique.trajs)->unique.trajs.df
         data.frame(unique.trajs())->unique.trajs.df
         seqdef(data = unique.trajs.df, weights = attributes(unique.trajs())$freq$Percent, cpal = cpal.seq, 
@@ -1854,7 +1086,7 @@ observeEvent(eventExpr = data.seq(),{
         unique.trajs.seq
       } else {
         if(input$selection_rows=="all"){
-          data.seq()
+          DATAs()$SEQ_OBJ
         }
       }
     }
@@ -1872,7 +1104,7 @@ observeEvent(eventExpr = data.seq(),{
         renderPrint({list.attr[[li]]})
       )
     })
-    #summary(data.seq())
+    #summary(DATAs()$SEQ_OBJ)
   })
   
 #   ### SEQCOST  ###
@@ -2111,9 +1343,9 @@ observeEvent(input$calculDist, {
      
      if(input$selection_rows=="Sample"){
        
-       data2()[data2()[ , INDVAR_UNI()]%in%row.names(trajs.forclass()) , ]->df_pour_class
+       DATAs()$DATA_COMP[DATAs()$DATA_COMP[ , INDVAR_UNI()]%in%row.names(trajs.forclass()) , ]->df_pour_class
        
-     } else {data2()->df_pour_class}
+     } else {DATAs()$DATA_COMP->df_pour_class}
      
      if (input$cluster_type=="CAHPAM"){
        
@@ -2126,7 +1358,7 @@ observeEvent(input$calculDist, {
                                        intialclust=SEQCLASS())
        #return(
        data_cluster(indicateur,
-                           df_pour_class,#data2(),
+                           df_pour_class,#DATAs()$DATA_COMP,
                            input$nb_cluster)->res_def
      } else {
      if(input$cluster_type=="CAH"){
@@ -2150,8 +1382,8 @@ observeEvent(input$calculDist, {
              data.frame("ID"= sapply(1:nrow(unique.trajs()), function(i){paste(unique.trajs()[i , ], collapse = "-")}), 
                         "Clustering"=clusterCAH.class)->df
              
-             data.frame("IDVAR"=row.names(data.seq()), 
-                        "ID"=sapply(1:nrow(data.seq()), function(i){paste(data.seq()[i , ], collapse = "-")})
+             data.frame("IDVAR"=row.names(DATAs()$SEQ_OBJ), 
+                        "ID"=sapply(1:nrow(DATAs()$SEQ_OBJ), function(i){paste(DATAs()$SEQ_OBJ[i , ], collapse = "-")})
              )->df2
              
              merge(df2, df, by.x="ID", by.y="ID")->df3
