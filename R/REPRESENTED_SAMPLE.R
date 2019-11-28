@@ -1,3 +1,5 @@
+#' @export
+
 REPRESENTED_SAMPLE<-function(data, interact.var, SIZE, id.var){
   if(!is.null(interact.var)){
   data.frame(

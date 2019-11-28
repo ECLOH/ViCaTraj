@@ -1,0 +1,12 @@
+L'appli: 
+
+-> Sélection de mois à mois sur l'appli => appliquer la condition à plusieurs mois compris entre 2 dates
+-> Suspension => RSA simple
+ETATDOSRSA:
+-> RSA_simple +  0 comme valeure manquante (censure à gauche) "NO.RSA"
+-> 5 et 6 " ensemble" + 0 comme valeure manquante (censure à gauche) "NO.RSA"
+-> labels ordonnés + time ordonné dans ggploNIR
+-> conditions => reset quand nouveau jeu
+-> ajouter un bouton pour les taux de transition
+-> classif gains d'inertie
+

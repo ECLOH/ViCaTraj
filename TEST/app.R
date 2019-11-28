@@ -10,12 +10,16 @@
 library(shiny)
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- navbarPage('TEST_MODULES', id="page", collapsible=TRUE, inverse=FALSE,theme=shinytheme("flatly"),
+  tabPanel(title = "PAN1",
 module_data_UI(id = "id1"),
 textOutput("DIMTEST"),
 textOutput("DATYPE")
-
-
+),
+tabPanel(title = "PAN2",
+         module_select_and_plot_UI(id = "id2"),
+         plotOutput("CLASS")
+         )
 )
 
 # Define server logic required to draw a histogram
@@ -28,6 +32,15 @@ output$DIMTEST<-renderPrint({
 output$DATYPE<-renderPrint({
   print(input$DataType)
 })
+
+#reactive({
+  callModule(module = module_select_and_plot, id = "id2", data=reactive(RESTEST()))->CLASS
+  output$CLASS<-renderPlot({
+    CLASS()
+  })
+  #})->SELECT_AND_PLOT
+
+
 }
 
 # Run the application 

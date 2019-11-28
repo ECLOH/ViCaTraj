@@ -176,9 +176,6 @@ observeEvent(eventExpr = DATAs()$SEQ_OBJ,{
   })
   ####### Type de graph ####
   #mise a jour des input et création de nouveaux input selon le type de sous-population choisi
-  
-  
-  
   observe({#eventExpr = input$ValidParametres,{
     req(DATAs())
     updateSelectInput(session = session, inputId = "timeseq1", choices = names(DATAs()$SEQ_OBJ))

@@ -1,4 +1,6 @@
 #### CES FONCTIONS PERMETTENT DE CALCULER LE TEMPS DE CALCUL DE SEQDIST POUR UNE AMPLITUDE CHOISIE DE NOMBRE DE TRAJECTOIRES, ET DE TROUVER LE TEMPS SIMULE POUR TOUT NOMBRE DE TRAJECTOIRE. 
+#' @export
+
 times.dist<-function(amplit=seq(from = 0, to=5000, by=200)){#}, nb.sequences=10000){
   if(amplit[1]==0){amplit[1]<-1}
 lapply(X =amplit , FUN = function(i){
@@ -17,6 +19,9 @@ return(df)
 #
 #times.dist()->calculated.times.for.dist
 #
+
+#' @export
+
 predict.time.dist<-function(df=calculated.times.for.dist, nb.sequences=10000){
 fit_nls <- nls(time ~ a*(amplit ^ b), data = df[ , ], start =  c(a=0.5, b = 1), trace = F, control=nls.control(maxiter=1000))
 pp<-ggplot(data = df)+geom_point(aes(x=amplit, y=time))+

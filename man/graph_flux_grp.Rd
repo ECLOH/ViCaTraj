@@ -4,18 +4,14 @@
 \alias{graph_flux_grp}
 \title{Fonction pour faire des graphiques de flux pour un groupe d'individus donné}
 \usage{
-graph_flux_grp(data, seq_data, col_periode, var_grp, label_grp)
+graph_flux_grp(seq_data, col_periode, group_var = actcal.seq[, 1])
 }
 \arguments{
-\item{data}{}
-
 \item{seq_data}{}
 
 \item{col_periode}{}
 
-\item{var_grp}{}
-
-\item{label_grp}{}
+\item{group_var}{}
 }
 \description{
 Fonction pour faire des graphiques de flux pour un groupe d'individus donné

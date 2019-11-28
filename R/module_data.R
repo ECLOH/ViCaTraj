@@ -16,12 +16,12 @@ module_data_UI <- function(id){#label = "CSV file") {
            #### SUB-PANEL: PARAMETRAGE ####
            tabsetPanel(id = "tabpan",
                        
-                       tabPanel("TEST",
-                                numericInput(inputId = ns("numinput"), label = "numeric input test", value = 5, min = 1 ,max = 10),
-                                uiOutput(ns("ui_server_created")),
-                                uiOutput(ns("ui_sever_created2"))
-                                         
-                       ),
+                       #tabPanel("TEST",
+                      #          numericInput(inputId = ns("numinput"), label = "numeric input test", value = 5, min = 1 ,max = 10),
+                      #          uiOutput(ns("ui_server_created")),
+                      #          uiOutput(ns("ui_sever_created2"))
+                      #                   
+                      # ),
                        
                        tabPanel(title = "Import et formattage des données : ",
                                 #### CHARGEMENT FICHIER ####
@@ -41,6 +41,18 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                 conditionalPanel(
                                                   condition = paste0("input['", ns("DataType"), "'] == 'fichier'"),
                                                   #condition = "input.DataType == 'fichier'",
+                                                  
+                                                  
+                                                  shiny::selectInput(inputId=ns("sepcol"), label= "Separateur de colonnes", 
+                                                                     choices=c("Virgule" = ",","Point-Virgule" = ";","Tabulation" = "\t"), selected=","),
+                                                  shiny::selectInput(inputId=ns("dec"), label= "Séparateur décimal", 
+                                                                     choices=c("Virgule" = ",","Point" = "."), selected="."),
+                                                  shiny::selectInput(inputId=ns("endoding"), label= "Comment est codé le fichier ? Les accents sont-ils correctement lus ?", 
+                                                                     choices=c(UTF8 = "UTF-8", Latin1 = "latin1"), selected = "UTF-8", multiple = FALSE, width = "50%"),
+                                                  shiny::checkboxInput(inputId = ns("header"), label="La première ligne correspond-elle aux noms des variables ?",
+                                                                       value=FALSE),  
+                                                  shiny::selectInput(inputId = ns("na"), label = "Codage des valeurs manquantes", choices = c("Vide" , "Espace" = " ", "NA" = "NA"), 
+                                                                     selected = "NA", multiple = TRUE, selectize = TRUE),
                                                   
                                                   fileInput(inputId=ns("file1"), label="Sélectionnez votre fichier source:", 
                                                             multiple = FALSE, accept = c("text/csv",
@@ -73,7 +85,8 @@ module_data_UI <- function(id){#label = "CSV file") {
                                   ),
                                   conditionalPanel(
                                     #condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
-                                    condition = paste0("input['", ns("DataType"), "'] == 'objet'||input['", ns("DataType"), "'] == 'objseq'"),
+                                    condition = paste0(
+                                      "input['", ns("DataType"), "'] == 'objet'||input['", ns("DataType"), "'] == 'objseq'||input['", ns("DataType"), "'] == 'fichier'"),
                                     
                                     
                                     uiOutput(ns("UI_INDVAR_CHOOSE")),
@@ -87,23 +100,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                 sidebarPanel( h3("Format des données"), 
                                               width = 12,
                                               #### condition = "input.DataType == 'fichier'"  ####
-                                              conditionalPanel(
-                                                #condition = "input.DataType == 'fichier'",
-                                                condition = paste0("input['", ns("DataType"), "'] == 'fichier'"),
-                                                
-                                                shiny::selectInput(inputId=ns("sepcol"), label= "Separateur de colonnes", choices=c("Virgule" = ",","Point-Virgule" = ";","Tabulation" = "\t"), selected=","),
-                                                shiny::selectInput(inputId=ns("dec"), label= "Séparateur décimal", choices=c("Virgule" = ",","Point" = "."), selected="."),
-                                                shiny::selectInput(inputId=ns("endoding"), label= "Comment est codé le fichier ? Les accents sont-ils correctement lus ?", choices=c(UTF8 = "UTF-8", Latin1 = "latin1"), selected = "UTF-8", multiple = FALSE, width = "50%"),
-                                                shiny::checkboxInput(inputId = ns("header"), label="La première ligne correspond-elle aux noms des variables ?",value=FALSE),  
-                                                shiny::checkboxInput(inputId = ns("rowname"), label="Une variable correspond-elle à un identifiant des individus ?",value=FALSE),
-                                                conditionalPanel(
-                                                  #condition = "input.rowname == true",
-                                                  condition = paste0("input['", ns("rowname"), "'] == true"),
-                                                  
-                                                  shiny::selectInput(inputId=ns("rownames_par"), label="Variable servant d'identifiant", 
-                                                                     choices = "", multiple = FALSE,selected = NULL, selectize = TRUE)),
-                                                shiny::selectInput(inputId = ns("na"), label = "Codage des valeurs manquantes", choices = c("Vide" , "Espace" = " ", "NA" = "NA"), selected = "NA", multiple = TRUE, selectize = TRUE)
-                                              ),
+                        
                                               #### condition = "input.DataType == 'objet'"  ####
                                               
                                               conditionalPanel(
@@ -135,7 +132,9 @@ module_data_UI <- function(id){#label = "CSV file") {
                                               
                                               conditionalPanel(
                                                 #condition = "input.DataType == 'objet' && input.addCONDS == 1",
-                                                condition = paste0("input['", ns("DataType"), "'] == 'objet' && input['", ns("addCONDS"), "']==1"),
+                                                condition = paste0(
+                                                  #"input['", ns("DataType"), "'] == 'objet' && 
+                                                  "input['", ns("addCONDS"), "']==1"),
                                                 
                                                 sidebarPanel( #h3("Sélection des individus:"), 
                                                   width = 12,
@@ -161,6 +160,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   
                                                   actionButton(inputId=ns("addROW"), label = "Ajouter la condition"),
                                                   #),
+                                                  actionButton(inputId = ns('delROW'), label = "Supprimer les conditions sélectionnées"),
                                                   DT::DTOutput(ns("TABLE_POUR_SELECTION"))
                                                   #actionButton(inputId="APPLICATE_SUBSET", label = "Appliquer les conditions"),
                                                   
@@ -196,7 +196,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                     h3("Paramétrage des trajectoires"),
                                     width = 12,
                                     shiny::selectInput(inputId = ns("timecol"), label = "Variables temporelles (mettre dans l'ordre chronologique)", 
-                                                       choices = "", selected = "PrestationRSA.SituationDossierRSA.EtatDossierRSA.ETATDOSRSA", multiple = TRUE, selectize = TRUE),
+                                                       choices = "", selected = NULL, multiple = TRUE, selectize = TRUE),
                                     shiny::uiOutput(ns("DATA_UI")),
                                     shiny::textInput(inputId = ns("TEXT_GAP"), label = "Label pour les 'gaps' : ", value = "GAP"),
                                     shiny::textInput(inputId = ns("TEXT_RIGHT"), label = "Label pour les censures à droite : ", value = "CENSURE"),
@@ -209,7 +209,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                 
                                 sidebarPanel(
                                   width = 12,
-                                  textOutput("DES_TRAJ_OBJ"),
+                                  uiOutput(ns("DES_TRAJ_OBJ")),
                                   uiOutput(ns("ATTR_TRAJ_OBJ"))
                                 ),
                                 mainPanel(
@@ -237,20 +237,28 @@ module_data <- function(input, output, session) {
   library(RColorBrewer)
   ns <- session$ns
   
-  output$ui_server_created<-renderUI({
-    print(input$numinput)
-    shiny::numericInput(inputId=ns("NEW_SELECT"), value=100*input$numinput, label = "SERVEUR CREATED UI",
-                        min = 100*input$numinput-10, max = 100*input$numinput+10, step = 1)
-  })
+  #buttonInput <- function(FUN, len, id, ...) {
+   # inputs <- character(len)
+  #  for (i in seq_len(len)) {
+  #    inputs[i] <- as.character(FUN(paste0(id, i), ...))
+  #  }
+  #  inputs
+  #}
   
-  output$ui_sever_created2<-renderUI({
-    shiny::selectInput(inputId = ns("SELECT1"), label = "SERVEUR CREATED UI 2", 
-                       choices = seq(input$NEW_SELECT-10, input$NEW_SELECT+10, 1), selected = NULL)
-  })
+  #output$ui_server_created<-renderUI({
+  #  print(input$numinput)
+  #  shiny::numericInput(inputId=ns("NEW_SELECT"), value=100*input$numinput, label = "SERVEUR CREATED UI",
+  #                      min = 100*input$numinput-10, max = 100*input$numinput+10, step = 1)
+  #})
+  
+  #output$ui_sever_created2<-renderUI({
+  #  shiny::selectInput(inputId = ns("SELECT1"), label = "SERVEUR CREATED UI 2", 
+  #                     choices = seq(input$NEW_SELECT-10, input$NEW_SELECT+10, 1), selected = NULL)
+  #})
     
   
-  
-  BIGLIST1<-reactive({
+  #### CHARGEMENT DES DONNEES : liste de df ####
+  BIGLIST.FIRST<-reactive({
     if ( is.null(input$LIST_SOURCE_BIG_DF)) return(NULL)
     inFile <- input$LIST_SOURCE_BIG_DF
     file <- inFile$datapath
@@ -263,8 +271,12 @@ module_data <- function(input, output, session) {
     # b1<-names(temp.lenght)[1]
     # b.max<-names(temp.lenght)[temp.lenght]
     #print(data)
+    names(data)<-sapply(names(data), function(ni){if(substr(ni, 1, 1)%in%c("0", as.character(seq(1, 9, 1)))  ) paste("D", ni, sep=".") else ni })
+    names(data)<-gsub(pattern = "-", replacement = "_", fixed = TRUE, x=names(data))
     return(data)
   })
+  
+  #### CHARGEMENT DES DONNEES : list avec objet de class seqdata ####
   
   LIST_OBJSEQ<-reactive({
     if ( is.null(input$LIST_SEQ)) return(NULL)
@@ -299,9 +311,100 @@ module_data <- function(input, output, session) {
     req( LIST_OBJSEQ())
     req(CLASS_LIST_OBJSEQ())
     LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<1)]]->df.pour.seq
+    list("Table.unique"=df.pour.seq)->res
+    return(res)
+  })
+  
+  #### CHARGEMENT DES DONNEES : 1 seul fichier ####
+  
+  trajs <- reactiveValues(df = NULL, dataSource = NULL)
+  
+  observe({
+    req(input$file1)
+    trajs$dataSource <- input$file1$datapath
+    updateCheckboxInput(session=session,inputId = "rowname",value = FALSE )
+    updateSelectInput(session = session, inputId = "rownames_par",choices = "")
+  })
+  
+  observe({
+    req(input$sepcol)
+    updateCheckboxInput(session=session,inputId = "rowname",value = FALSE )
+    updateSelectInput(session = session, inputId = "rownames_par",choices = "")
   })
   
   
+  argna<-reactive({
+    req(trajs$dataSource)
+    if ("Vide" %in% input$na){
+      c("",input$na)
+      
+    }else{
+      input$na
+      
+    }
+  })
+  
+  data<-reactive({
+    message("coucou 343")
+    if ( is.null(input$file1)) return(NULL)
+      if(input$DataType=="fichier"){ #### Chargement d'un seul fichier CSV ####
+      #if (input$rowname==TRUE && input$rownames_par!=""){
+        message("coucou 347")
+        userData <- read.csv(file = input$file1$datapath, 
+                             sep = input$sepcol, 
+                             encoding = input$endoding,
+                             #row.names = input$rownames_par,
+                             header=input$header,na.strings = argna(),
+                             dec=input$dec)
+        #row.names(userData)<-userData[ , input$rownames_par]
+        #mycolumns<-c(colnames(userData))
+        #updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
+     # }
+      
+      #if(input$rowname==FALSE){
+       # userData <- read.csv(file = input$file1$datapath, sep = input$sepcol, 
+         #                    encoding = input$endoding,header=input$header,na.strings = argna(),dec=input$dec)
+        #mycolumns <- c(colnames(userData))
+        #updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
+       # trajs$df<- userData}
+      
+        names(userData)<-sapply(names(userData), function(ni){if(substr(ni, 1, 1)%in%c("0", as.character(seq(1, 9, 1)))  ) paste("D", ni, sep=".") else ni })
+        names(userData)<-gsub(pattern = "-", replacement = "_", fixed = TRUE, x=names(userData))
+        
+        
+      list("Table.unique"=userData)->res
+      return(res)
+    } else {
+      
+    }
+  })
+  
+  output$contenu<-shiny::renderDataTable({
+    req(data())
+    data()
+  })
+  
+  #### CHARGEMENT DES DONNEES : BIGLIST1() ####
+  
+  BIGLIST1<-reactive({
+    req(input$DataType)
+    if(input$DataType=="fichier"){
+      req(data())
+      print(head(data()[[1]]))
+      return(data())
+    } else {
+      if(input$DataType=="objseq"){
+        req(OBJSEQ_COMPLEMENT())
+        return(OBJSEQ_COMPLEMENT())
+      } else {
+        if(input$DataType=="objet"){
+          req(BIGLIST.FIRST())
+          return(BIGLIST.FIRST())
+        } else {
+          NULL}
+      }
+    }
+  })
   
   observe({updateSelectInput(session = session, inputId = "MINTIMEBIG", 
                              choices = names(BIGLIST1() ) , 
@@ -314,11 +417,14 @@ module_data <- function(input, output, session) {
                              selected= names(BIGLIST1() )[length(  names(BIGLIST1() )  )]
   )
   })#"names(BIGLIST1() ), selected =  names(BIGLIST1() )) })
+  
+  
   output$CONTROLNAMES<-renderText({
     print("coucou 315")
     print(names(BIGLIST1() ))
     return(print(names(BIGLIST1() )))
     })
+  
   output$SLIDERTEXT<-renderText({
     req( BIGLIST1() )
     which(names(BIGLIST1() )==input$MINTIMEBIG)->base
@@ -339,6 +445,7 @@ module_data <- function(input, output, session) {
   values <- reactiveValues()
   values$DF_subset_initial <- data.frame("PAQUET"="", "DATE"="", "VARIABLE"="", "TYPE"="", 
                                          "TEXT_PATTERN"="","FACTOR_LEVELS"="", "min"="",  "max"="",  "DATE_min"="", "DATE_max"="", stringsAsFactors = FALSE)
+  
   observe({ print(values$DF_subset_initial) })
   
   ##### DEFINE INPUTS #####
@@ -352,14 +459,13 @@ module_data <- function(input, output, session) {
     #reactive({
     names(BIGLIST1())->names.pick
     shiny::selectInput(inputId = ns("DATE_FOR_SELECT"), label = "Date pour sélection:",
-                       choices = names.pick, multiple = FALSE)
+                       choices = names.pick, multiple = TRUE)
   })
   #### SELECT VAR et MODLITE ####
   
   
   output$UI_INDVAR_CHOOSE<-renderUI({
     ns <- session$ns
-    if(req(input$DataType)!="fichier"){
       if(req(input$DataType)=="objet"){
         lapply(BIGLIST1(), function(bi){
           names(bi)
@@ -369,17 +475,25 @@ module_data <- function(input, output, session) {
         
       } else {
         if(input$DataType=="objseq"){
-          names( OBJSEQ_COMPLEMENT() )->glona
+          names( OBJSEQ_COMPLEMENT()[[1]] )->glona
           message<-h5("Renseignez la variable dans les données complémentaires qui correspond à l'attribut row.names de l'objet seqdata")
+        } else {
+          if(input$DataType=="fichier"){
+            lapply(BIGLIST1(), function(bi){
+              names(bi)
+            })->lina
+            unique(unlist(lina))->glona
+            message<-h5("Renseignez la variable dans les données qui identifie des individus uniques et qui sera utilisée comme paramètre 'id' de seqdata()")
+          } else NULL
         }
       }
+    
       list(
         message,
         selectInput(inputId = ns("INDVAR"), label = "Variable pour identifiant individuel: ", 
                     choices = glona, multiple = FALSE)
       )
-    }
-  })
+    })
   
   INDVAR<-reactive({input$INDVAR})
   
@@ -388,8 +502,8 @@ module_data <- function(input, output, session) {
   control_dupli_na<-reactive({
     req(input$INDVAR)
     req(BIGLIST1())
-    if(req(input$DataType)!="fichier"){
-      if(input$DataType=="objet"){
+    #if(req(input$DataType)!="fichier"){
+      if(input$DataType=="objet"|input$DataType=="fichier"){
         lapply(1:length(BIGLIST1()), function(i){
           #lapply(1:length(csv.list), FUN = function(i){
           bi<-BIGLIST1()[[i]]
@@ -402,14 +516,13 @@ module_data <- function(input, output, session) {
           df
         })->dfresum
         do.call("rbind", dfresum)->dfresum
-        
         if(sum(dfresum$NA_values)==0&sum(dfresum$Duplicated)==0){
           "ok"
         } else {
           dfresum
         }
       } else {"ok"}
-    } else {"ok"}
+    #} else {"ok"}
   })
   
   output$MSSG_DUPLI<-renderUI({
@@ -439,7 +552,7 @@ module_data <- function(input, output, session) {
   BIGLIST<-reactive({
     req( control_dupli_na() )
     req(input$INDVAR)
-    if(input$DataType=="objet"){
+    if(input$DataType=="objet"|input$DataType=="fichier"){
       if(class(control_dupli_na())=="data.frame"){
         req(input$deleteNA_DUPLI)
         if(input$deleteNA_DUPLI){
@@ -459,7 +572,19 @@ module_data <- function(input, output, session) {
   
   reactive({
     req(input$DATE_FOR_SELECT)
-    BIGLIST1()[[input$DATE_FOR_SELECT]]->tempdf
+    
+    if(length(input$DATE_FOR_SELECT)>1){
+      
+      BIGLIST1()[names( BIGLIST1())%in%DATE_FOR_SELECT]->tempdf
+  
+    } else {
+      
+      BIGLIST1()[[input$DATE_FOR_SELECT]]->tempdf
+      
+    }
+    
+    
+    
     print("COUCOU 456")
     print("req(input$addvar) : ")
     print(input$addvar)
@@ -474,7 +599,15 @@ module_data <- function(input, output, session) {
         print(input$MERGEORIGINVAR)
         print(input$MERGEADDVAR)
         req(ADDDATA())
-        left_join(tempdf, ADDDATA(), by=c(input$MERGEORIGINVAR, input$MERGEADDVAR))->tempdf2
+        
+        if(length(input$DATE_FOR_SELECT)>1){
+          lapply(tempdf, function(xi){
+            left_join(xi, ADDDATA(), by=c(input$MERGEORIGINVAR, input$MERGEADDVAR))
+          })->tempdf2
+        } else {
+          left_join(tempdf, ADDDATA(), by=c(input$MERGEORIGINVAR, input$MERGEADDVAR))->tempdf2
+        }
+        
       } else {
         print("COUCOU 465")
         
@@ -539,7 +672,7 @@ module_data <- function(input, output, session) {
   
   observe({
     req(input$DATE_FOR_SELECT)
-    BIGLIST1()[[input$DATE_FOR_SELECT]]->tempdf
+    BIGLIST1()[[input$DATE_FOR_SELECT[1]]]->tempdf
     print(names(tempdf))
     updateSelectInput(session=session, inputId = "MERGEORIGINVAR", choices = names(tempdf), selected=NULL)
   })
@@ -554,21 +687,52 @@ module_data <- function(input, output, session) {
     print("on est là")
     #mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = list_csv(), FUN = names))), 
     #                         use.names = FALSE))
+    if(class(the.df())=="data.frame"){
     selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
                 choices = names(the.df()), multiple = FALSE)
+    } else {
+      if(class(the.df())=="list"){
+        
+        unique(unlist(Reduce(intersect,lapply(the.df(), names))))->naminun
+        
+        selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
+                    choices =naminun, multiple = FALSE)
+      }
+    }
   })
   
   THE_VAR<-reactive({
     #req( the.df() )
     req( input$VAR_FOR_SELECT)
-    the.df()[ , input$VAR_FOR_SELECT]->the.var
+    if(class(the.df())=="list"){
+      if(sum(sapply(the.df(), FUN = function(di){!input$VAR_FOR_SELECT%in%names(di)}))==0){
+        lapply(the.df(), function(di){
+          di[ , input$VAR_FOR_SELECT]
+        })->the.var
+          
+      }
+    } else {
+      if(class(the.df())=="data.frame"){
+        the.df()[ , input$VAR_FOR_SELECT]->the.var
+        
+      }
+      
+    }
+    
     the.var
   })
   
   output$UI_CLASS_SELECT<-renderUI({
     ns <- session$ns
     req(THE_VAR() )
+    
+    message("COUCOU 625")
+    print(THE_VAR())
+    if( class(THE_VAR() )=="list" ){
+      class(THE_VAR()[[1]])->CLASS_VAR
+    } else {
     class(THE_VAR())->CLASS_VAR
+    }
     shiny::selectInput(inputId = ns("classSelect"), label = "Contrôle de la classe", 
                        choices =  c("factor", "character", "numeric", "Date", "integer"), 
                        selected = CLASS_VAR)
@@ -579,10 +743,15 @@ module_data <- function(input, output, session) {
     req(THE_VAR() )
     req(input$classSelect)
     
+    if(class(THE_VAR())=="list"){
+      unique(unlist(THE_VAR()))->vars
+    } else {
+      THE_VAR()->vars
+    }
     
     if(input$classSelect%in%c("numeric", "integer")){
       
-      as.numeric(THE_VAR())->temp.num.var
+      as.numeric(vars)->temp.num.var
       
       minis <- min(temp.num.var, 
                    na.rm = TRUE)
@@ -595,11 +764,11 @@ module_data <- function(input, output, session) {
                          value = c(minis, maxis))
     } else {
       if(input$classSelect=="factor"){#, "character") ){
-        if(length(unique(THE_VAR()))>100){
-          table(THE_VAR())->tab
+        if(length(unique(vars))>100){
+          table(vars)->tab
           tab[order(tab, decreasing = TRUE)]->tab
           tab[1:25]->tab
-        } else {tab<-unique(THE_VAR() )}
+        } else {tab<-unique(vars )}
         shiny::selectInput(inputId = ns("FactSelect"), label="Valeurs sélectionnées", 
                            choices = tab  , multiple = TRUE)
       } else {
@@ -609,7 +778,7 @@ module_data <- function(input, output, session) {
         } else  {
           if(input$classSelect=="Date" ){
             
-            renderText(print( unique(THE_VAR() )[!is.na(unique(THE_VAR()) )][1]  ) )->output$AFFICHDATE
+            renderText(print( unique(vars )[!is.na(unique(vars) )][1]  ) )->output$AFFICHDATE
             list(
               column(width=4, 
                      h4("Format de la date dans les données:"),
@@ -632,16 +801,24 @@ module_data <- function(input, output, session) {
   observe({
     req(THE_VAR())
     req(input$DATEformat)
-    print(THE_VAR())
-    print(as.character(input$DATEformat))
-    if(class(THE_VAR())=="Date"){
-      THE_VAR()->THE_VAR_DATE
+    
+    
+    if(class(THE_VAR())=="list"){
+      unique(unlist(THE_VAR()))->vars
     } else {
-      if(class(THE_VAR())=="character"){
-        as.Date(THE_VAR(), format=as.character(input$DATEformat) )->THE_VAR_DATE
+      THE_VAR()->vars
+    }
+    
+    print(vars)
+    print(as.character(input$DATEformat))
+    if(class(vars)=="Date"){
+      vars->THE_VAR_DATE
+    } else {
+      if(class(vars)=="character"&input$DATEformat!=""){
+        as.Date(as.character(vars), format=as.character(input$DATEformat) )->THE_VAR_DATE
       } else {
-        if(class(THE_VAR())=="numeric"|class(THE_VAR())=="integer"){
-          as.POSIXct(THE_VAR(),origin="1970-01-01")->THE_VAR_DATE
+        if(class(vars)=="numeric"|class(vars)=="integer"){
+          as.POSIXct(vars,origin="1970-01-01")->THE_VAR_DATE
         }
       }
     }
@@ -658,7 +835,14 @@ module_data <- function(input, output, session) {
     req(THE_VAR() )
     req(input$classSelect)
     req(the.df())
-    THE_VAR()[!is.na(THE_VAR())]->the.var2
+    
+    if(class(THE_VAR())=="list"){
+      unique(unlist(THE_VAR()))->vars
+    } else {
+      THE_VAR()->vars
+    }
+    
+    vars[!is.na(vars)]->the.var2
     print(head(the.var2, 20))
   })
   
@@ -699,9 +883,15 @@ module_data <- function(input, output, session) {
         }
       }
     }
+    isolate(input$DATE_FOR_SELECT)->datesse
+    if(length(datesse)>1){
+      paste("c(" ,paste(datesse, collapse=","), ")")->resudatess
+    } else {
+      datesse->resudatess
+    }
     
     data.frame("PAQUET"=isolate(input$PAQUET_FOR_SELECT),
-               "DATE"=isolate(input$DATE_FOR_SELECT),
+               "DATE"=resudatess,#isolate(input$DATE_FOR_SELECT),
                "VARIABLE"=isolate(input$VAR_FOR_SELECT), 
                "TYPE"=isolate(input$classSelect),
                "TEXT_PATTERN"=text_pattern,
@@ -709,7 +899,14 @@ module_data <- function(input, output, session) {
                "min"=minus,
                "max"=maxus,
                "DATE_min"=datmin,
-               "DATE_max"=datmax
+               "DATE_max"=datmax#,
+               #"Action" = buttonInput(
+              #   FUN = actionButton,
+              #   len = 10,
+              #   id = 'button_',
+              #   label = "Delete",
+              #   onclick = 'Shiny.onInputChange(\"lastClick\",  this.id)'
+              # )
                
     )->vecto 
     print("vecto")
@@ -720,13 +917,25 @@ module_data <- function(input, output, session) {
     #  newLine <- isolate(c(input$text1, input$text2))
     #  isolate(values$df <- rbind(values$df, newLine))
   })
-  
+  #### DELETE ROWS ####
+  observeEvent(input$delROW, {
+      #print(input$contents_rows_selected) #testing input
+    values$DF_subset_initial <- values$DF_subset_initial[-nrow(input$contents_TABLE_POUR_SELECTION),]
+    
+    
+    
+    #df2 <- data()
+    values$DF_subset_initial <- values$DF_subset_initial[-as.numeric(input$contents_TABLE_POUR_SELECTION),] 
+    #data(df2)
+    
+  })
   
   output$TABLE_POUR_SELECTION<-DT::renderDataTable(
     values$DF_subset_initial,
     #    server = FALSE,
     rownames = FALSE,
     filter = "none",
+    escape=FALSE,
     editable = list(target = "row"
                     #disable = list(columns = c(1, 2))
     )
@@ -737,6 +946,53 @@ module_data <- function(input, output, session) {
     data_of_subset <-  values$DF_subset_initial
     
     string_for_sub<-sapply(1:nrow(data_of_subset), function(i){
+      if(grepl(pattern = ",", fixed = TRUE, x = data_of_subset$DATE[i])){
+        eval(parse(text = data_of_subset$DATE[i]))->vecda
+        
+        paste(sapply(vecda, function(vecda.i){
+          
+          paste("BIGLIST()$", vecda.i, sep="" )->dfvar
+          if(data_of_subset$TYPE[i]=="factor"){
+            paste( dfvar, "$", data_of_subset$VARIABLE[i], 
+                   "%in%",  data_of_subset$FACTOR_LEVELS[i], sep = "")
+          } else {
+            if(data_of_subset$TYPE[i]=="character"){
+              paste("grepl('",  data_of_subset$TEXT_PATTERN[i],"'", 
+                    ", ", dfvar, "$", data_of_subset$VARIABLE[i], ", fixed=TRUE)", sep = "")
+            } else {
+              if(data_of_subset$TYPE[i]%in%c("numeric", "integer") ){
+                paste("(", 
+                      paste(dfvar, "$", data_of_subset$VARIABLE[i], ">=", data_of_subset$min[i]),
+                      "&",
+                      paste(dfvar, "$", data_of_subset$VARIABLE[i], "<=", data_of_subset$max[i]),
+                      ")", sep="")
+              } else {
+                if(data_of_subset$TYPE[i]=="Date" ){
+                  
+                  paste("(", 
+                        paste( "as.Date(",   dfvar, "$", data_of_subset$VARIABLE[i], ",",
+                               "format=", "'", input$DATEformat, "')",
+                               ">=", 
+                               "as.Date('" ,  data_of_subset$DATE_min[i], "',",
+                               "format=", "'", "%Y-%m-%d", "')", sep=""
+                        ),
+                        "&",
+                        paste( "as.Date(" ,  dfvar, "$", data_of_subset$VARIABLE[i], ",",
+                               "format=", "'", input$DATEformat, "')",
+                               "<=", 
+                               "as.Date('" ,  data_of_subset$DATE_max[i], "',",
+                               "format=", "'", "%Y-%m-%d", "')", sep=""
+                        ),
+                        ")", sep="")
+
+                } else{ "nosub" }
+              }
+            }
+          }
+        }), collapse="&")
+        
+        
+      } else {
       paste("BIGLIST()$", data_of_subset$DATE[i], sep="" )->dfvar
       if(data_of_subset$TYPE[i]=="factor"){
         paste( dfvar, "$", data_of_subset$VARIABLE[i], 
@@ -795,6 +1051,7 @@ module_data <- function(input, output, session) {
           }
         }
       }
+      }
     })
     
     data.frame("PAQUET"=data_of_subset$PAQUET, DATE=data_of_subset$DATE, "string_for_sub"=string_for_sub, 
@@ -828,6 +1085,15 @@ module_data <- function(input, output, session) {
         if(STRING_FOR_SUB()$string_for_sub[i]=="nosub"){
           BIGLIST()[[STRING_FOR_SUB()$DATE[i]]][ , INDVAR()]
         } else {
+          
+          message("coucou 1084")
+          print(STRING_FOR_SUB())
+          message("coucou 1086")
+          print(names(BIGLIST()))
+          message("coucou 1088")
+          print(STRING_FOR_SUB()$DATE[i])
+          print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST()))
+          
         subset(BIGLIST()[[STRING_FOR_SUB()$DATE[i]]], 
                eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
         }
@@ -887,94 +1153,40 @@ module_data <- function(input, output, session) {
   
   #### Chargement des données ####
   
-  trajs <- reactiveValues(df = NULL, dataSource = NULL)
   
-  observe({
-    req(input$file1)
-    trajs$dataSource <- input$file1$datapath
-    updateCheckboxInput(session=session,inputId = "rowname",value = FALSE )
-    updateSelectInput(session = session, inputId = "rownames_par",choices = "")
-  })
-  
-  observe({
-    req(input$sepcol)
-    updateCheckboxInput(session=session,inputId = "rowname",value = FALSE )
-    updateSelectInput(session = session, inputId = "rownames_par",choices = "")
-  })
-  
-  
-  argna<-reactive({
-    req(trajs$dataSource)
-    if ("Vide" %in% input$na){
-      c("",input$na)
-      
-    }else{
-      input$na
-      
-    }
-  })
+
   #### Chargement premier fichier de données ####
   renderPrint(print(length(SUBSETTED_LIST())))->output$CONTROLDATA
-  #### Un fichier source ####
-  data<-reactive({
-    req(trajs$dataSource)
-    if(input$DataType=="fichier"){ #### Chargement d'un seul fichier CSV ####
-      
-      if (input$rowname==TRUE && input$rownames_par=="")
-      {
 
-        colonneID<- c(colnames(trajs$df)[colId(df = trajs$df)])
-        updateSelectInput(session = session, inputId = "rownames_par",choices = c("",colonneID))
-      }
-      if (input$rowname==TRUE && input$rownames_par!=""){
-        userData <- read.csv(file = input$file1$datapath, 
-                             sep = input$sepcol, 
-                             encoding = input$endoding,
-                             #row.names = input$rownames_par,
-                             header=input$header,na.strings = argna(),
-                             dec=input$dec)
-        row.names(userData)<-userData[ , input$rownames_par]
-        mycolumns<-c(colnames(userData))
-        updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
-        trajs$df<- userData
-        
-      }
-      
-      if(input$rowname==FALSE){
-        userData <- read.csv(file = input$file1$datapath, sep = input$sepcol, encoding = input$endoding,header=input$header,na.strings = argna(),dec=input$dec)
-        mycolumns <- c(colnames(userData))
-        updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
-        trajs$df<- userData}
-      return(trajs$df)
-    } else {
-      
-    }
-  })
-  output$contenu<-shiny::renderDataTable({
-    req(data())
-    data()
-  })
-  
   #### Paramétrage des trajectoires ####
   ####  DATE DEBUT ET FIN POUR TRAJ ####
   output$DATA_UI<-shiny::renderUI({
     ns <- session$ns
-    if(input$DataType=="fichier"){
-      shiny::dateRangeInput(inputId = ns("date.range"), label = "Dates de début et de fin",
-                            format = "mm-yyyy")->the.ui
-    } else {
-      if(input$DataType=="objet"){
+    #if(input$DataType=="fichier"){
+    #  shiny::dateRangeInput(inputId = ns("date.range"), label = "Dates de début et de fin",
+    #                        format = "mm-yyyy")->the.ui
+    #} else {
+      if(input$DataType=="objet"|input$DataType=="fichier"){
         names(SUBSETTED_LIST())->names.pick
         mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = SUBSETTED_LIST(), FUN = names))),
                                  use.names = FALSE))
-        updateSelectInput(session = session, inputId = "timecol", choices = mycolumns)
+        if(length(SUBSETTED_LIST())>1){
+          updateSelectInput(session = session, inputId = "timecol", choices = mycolumns, label = "Choisir la variable commune aux data.frame utilisée pour construire les trajectoires:")
         list(
           shiny::selectInput(inputId = ns("PICKDATE1"), label = "Debut:",
                              choices = names.pick, multiple = FALSE),
           shiny::selectInput(inputId = ns("PICKDATE1"), label = "Fin:",
                              choices = names.pick, multiple = FALSE))->the.ui
+        } else {
+          if(length(SUBSETTED_LIST())==1){
+            updateSelectInput(session = session, inputId = "timecol", 
+                              choices = mycolumns, 
+                              label = "Choisir les variables temporelles (par ordre chronologique):")
+            h3("")->the.ui
+          }
+        }
       } else {h3("error")->the.ui}
-    }
+    #}
     the.ui
   })
   ####  data.seq ####
@@ -1023,6 +1235,29 @@ module_data <- function(input, output, session) {
       print(head(df_RSA.sampled[ , grepl(pattern = input$timecol, x=names(df_RSA.sampled))]))
       
       df.pour.seq
+    } else {
+      if(input$DataType=="fichier"){
+        req(SUBSETTED_LIST())
+        req(input$timecol)
+        message("COUCOU 1242")
+        print(input$timecol)
+        
+        if (length(input$timecol)<2){
+          showModal(modalDialog(
+            title = "Important message",
+            "Il faut mettre au moins deux variables temporelles.",
+            easyClose = TRUE
+          ))
+        }
+        else {
+        message("coucou 1259")
+          print(head(SUBSETTED_LIST()[["Table.unique"]]))
+        SUBSETTED_LIST()[["Table.unique"]][ , c(input$INDVAR,  input$timecol)]->df.pour.seq
+        message("coucou 1261")
+          print(head(df.pour.seq))
+          return(df.pour.seq)
+        }
+      }
     }
     
   })
@@ -1032,34 +1267,14 @@ module_data <- function(input, output, session) {
   data.seq<-eventReactive(eventExpr = input$ValidParametres, {
     #### SI FICHOER ####
     if(input$DataType=="fichier"){
-      req(data())
-      data()->df.pour.seq
-      
-      if (length(input$timecol)<2){
-        showModal(modalDialog(
-          title = "Important message",
-          "Il faut mettre au moins deux variables temporelles.",
-          easyClose = TRUE
-        ))
-      }
-      else if ((length(input$timecol)-1)<input$PAStrate){
-        showModal(modalDialog(
-          title = "Important message",
-          "Il faut que le 'Pas de temps pour le calcul des taux de transition' dans l'onglet Statistiques descriptives/taux de transition (et taux de sortie) soit inférieur strictement au nombre de variables temporelles.",
-          easyClose = TRUE
-        ))
-      }
-      else   {
         # updateNumericInput(session=session, inputId = "PAStrate",value=1)
-        s<-seqdef(df.pour.seq[,input$timecol],cpal = NULL,
+        s<-seqdef(DR_POUR_SEQ_OBJ()[,input$timecol],cpal = NULL,id = DR_POUR_SEQ_OBJ()[,input$INDVAR],
                   gaps = input$TEXT_GAP,
                   right = input$TEXT_RIGHT,
                   left = input$TEXT_LEFT,nr = "RMA")
+        return(s)
         
-      }
-      
-      return(s)
-    } else {
+      } else {
       #### SI OBJET ####
       
       if(input$DataType=="objet"){
@@ -1093,6 +1308,16 @@ module_data <- function(input, output, session) {
         attr(s, "cpal") <- unname(a[alphabet(s)])
       }
     }
+    
+    if (!is.null(s)){
+    if( sum(is.na(attributes(s)$cpal))==length(attributes(s)$alphabet) ){
+      library(wesanderson)
+      cpal(s)<-wes_palette(name = "Darjeeling1", 
+                           n = length(attributes(s)$alphabet), 
+                           type = "continuous")
+    }
+    }
+    
     return(s)
     
   })
@@ -1117,8 +1342,9 @@ module_data <- function(input, output, session) {
     #summary(data.seq())
   })
   
-  output$DES_TRAJ_OBJ<-renderPrint({
-    dim( data.seq() )
+  output$DES_TRAJ_OBJ<-renderUI({
+    ns <- session$ns
+    h5(paste("nrow : ",  dim( data.seq() )[1], " | ncol : ", dim( data.seq() )[2]), sep="")
     #summary(data.seq())
   })
   
@@ -1167,10 +1393,64 @@ module_data <- function(input, output, session) {
     #}
   })
   
+  reactive({
+    if(input$DataType=="objet"){
+      SUBSETTED_LIST()
+    } else {
+      if(input$DataType=="objseq"){
+        if(class(OBJSEQ_COMPLEMENT())=="data.frame"){
+          list("DATE_UNIQUE"=OBJSEQ_COMPLEMENT())
+        } else {
+          if(class(OBJSEQ_COMPLEMENT())=="list"){
+            OBJSEQ_COMPLEMENT()
+          }
+        }
+      } else {
+        if(input$DataType=="fichier"){
+          if(class(data2())=="data.frame"){
+            list("DATE_UNIQUE"=data2())
+          } else {
+            if(class(data2())=="list"){
+              data2()
+            }
+          }
+        }
+      }
+    }
+  })->data_for_res
+  
+  reactive({
+    req(input$INDVAR)
+    req(data_for_res())
+    lapply(data_for_res(), FUN = function(x){
+      
+      x[ , input$INDVAR]->indpresents
+      
+      row.names(data.seq())[!row.names(data.seq())%in%indpresents]->notpresents
+      print(indpresents)
+      print(notpresents)
+      
+      if(length(notpresents)>0){
+        data.frame(
+          lapply(names(x), function(xi){rep(NA, times=length(notpresents))}), 
+          stringsAsFactors = FALSE)->dfx.add
+    dfx.add[ , input$INDVAR]<-notpresents
+    data.frame(rbind(x, dfx.add), stringsAsFactors = FALSE)->dfx
+      } else {
+        x->dfx
+      }
+      dfx[match(row.names(data.seq()), dfx[ , input$INDVAR]),]->dfx
+    return(dfx)
+  })
+  })->data_for_res2
+  
+
+  
   return(reactive({
     list("SEQ_OBJ"=data.seq(), 
-         "DATA_COMP"=data2(), 
+         "DATA_COMP"=data_for_res2(), 
          "TYPE_SOURCE"=input$DataType, 
-         "CODAGE_MANQUANT"=list("GAP"=input$TEXT_GAP, "RIGHT"=input$TEXT_RIGHT, "LEFT"=input$TEXT_LEFT) )
+         "CODAGE_MANQUANT"=list("GAP"=input$TEXT_GAP, "RIGHT"=input$TEXT_RIGHT, "LEFT"=input$TEXT_LEFT),
+         "ID_VAR"=input$INDVAR)
   }))
 }

@@ -115,6 +115,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
               #### PANEL: classif ####
               
                                     tabPanel("Classification des trajectoires",
+                                             textOutput("id_module_output"),
                                              tabsetPanel(
                                                #tabsetPanel(
                                                tabPanel(title="Matrice de distance",
