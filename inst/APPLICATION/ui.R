@@ -49,6 +49,10 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                         
                                                ),
                                                #### SUB-PANEL: représentation ####
+                                               tabPanel(title = "Représentation des trajectoires (module)",
+                                                        module_select_and_plot_UI(id = "id2")
+                                               
+                                               ),
                                                tabPanel(title = "Représentation des trajectoires",
                                                         fluidRow(useShinyjs(),
                                                                  column(2,

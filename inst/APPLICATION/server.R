@@ -174,6 +174,10 @@ observeEvent(eventExpr = DATAs()$SEQ_OBJ,{
     trate.long %>% gather(-TIME, -ORIGINE, key = APRES, value = value) ->trate.long
     trate.long
   })
+  ##### SELECT AND PLOT #####
+  callModule(module = module_select_and_plot, data = DATAs(), id = "id2")
+  
+  
   ####### Type de graph ####
   #mise a jour des input et création de nouveaux input selon le type de sous-population choisi
   
