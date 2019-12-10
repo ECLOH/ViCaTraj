@@ -291,7 +291,7 @@ module_select_and_plot <- function(input, output, session, data) {
           } else {
             if(input$classSelect=="numeric"|input$classSelect=="integer"){
               subset(the.df.for.groupe, 
-                     as.numeric(the.df.for.groupe[ , input$VAR_SELECT_M1])>NumSelect[1]&as.numeric(the.df.for.groupe[ , input$VAR_SELECT_M1])<NumSelect[2])->the.df.for.groupe
+                     as.numeric(the.df.for.groupe[ , input$VAR_SELECT_M1])>=input$NumSelect[1]&as.numeric(the.df.for.groupe[ , input$VAR_SELECT_M1])<=input$NumSelect[2])->the.df.for.groupe
               the.df.for.groupe$VARgrup<-"SELECTION"
               
             } else {

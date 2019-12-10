@@ -12,6 +12,7 @@ module_data_UI <- function(id){#label = "CSV file") {
   tabPanel("Les données",
            shiny::actionButton(inputId = ns("ValidParametres"), label = "Je valide ces trajectoires"),
            shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : " ),
+           uiOutput(ns("DES_TRAJ_OBJ")),
            hr(),
            #### SUB-PANEL: PARAMETRAGE ####
            tabsetPanel(id = "tabpan",
@@ -209,7 +210,6 @@ module_data_UI <- function(id){#label = "CSV file") {
                                 
                                 sidebarPanel(
                                   width = 12,
-                                  uiOutput(ns("DES_TRAJ_OBJ")),
                                   uiOutput(ns("ATTR_TRAJ_OBJ"))
                                 ),
                                 mainPanel(
@@ -1344,7 +1344,7 @@ module_data <- function(input, output, session) {
   
   output$DES_TRAJ_OBJ<-renderUI({
     ns <- session$ns
-    h5(paste("nrow : ",  dim( data.seq() )[1], " | ncol : ", dim( data.seq() )[2]), sep="")
+    h3(paste("nrow : ",  dim( data.seq() )[1], " | ncol : ", dim( data.seq() )[2]), sep="")
     #summary(data.seq())
   })
   

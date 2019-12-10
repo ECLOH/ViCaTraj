@@ -145,10 +145,10 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
         } else {
           if(TYPE.r1=="sous.seq"){
 
-              gg<-ggplot(data=dats,aes(x=reorder(event,-Support),y=Support)) +
+              gg<-ggplot(data=dats,aes(x=reorder(event,Support),y=Support)) +
                 geom_bar(stat='identity',width=0.9,fill=gray(0.1))+
                 geom_label(aes(label=paste(round(Support*100,2), "%", sep="")),
-                           hjust=-1, colour="white", fill=gray(0.3))+ 
+                           hjust=-1, colour="white", fill=gray(0.3), size=7/length(unique(dats$level)))+ 
                 theme_hc()+
                 xlab('')+
                 theme(axis.text.x = element_text(size=9, angle=90, hjust=1,vjust = 0.3),
@@ -156,7 +156,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
                       plot.title = element_text(hjust = 0.5,size=18,face = "bold"),
                       plot.subtitle = element_text(hjust = 0.5,size=14))+ylim(0,1)+
                 coord_flip()+
-                facet_wrap(.~level)
+                facet_wrap(.~level, )
               return(gg)
               
           } else {
