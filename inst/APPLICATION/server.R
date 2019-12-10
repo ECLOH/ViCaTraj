@@ -174,8 +174,9 @@ observeEvent(eventExpr = DATAs()$SEQ_OBJ,{
     trate.long %>% gather(-TIME, -ORIGINE, key = APRES, value = value) ->trate.long
     trate.long
   })
-  ##### SELECT AND PLOT #####
+  ##### SELECT AND PLOT MODULE #####
   callModule(module = module_select_and_plot, data = DATAs(), id = "id2")
+  ##### SELECT AND PLOT ANCIEN #####
   
   
   ####### Type de graph ####

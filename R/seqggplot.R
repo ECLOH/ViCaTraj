@@ -1,11 +1,12 @@
 # En cours
 #' @export
 
-seqggplot<-function(TYPE="d", objseq = actcal.seq, groupes=NULL, merge_mods, col.selected=c("1", "2")){
+seqggplot<-function(TYPE="d", objseq = actcal.seq, groupes=NULL, merge_mods, col.selected=c("1", "2"), pmin.sup=0.05 , str.subs=NULL){
   
   if(sum(class(objseq)!=c("stslist", "data.frame"))==0){
     #p<-
-      seqggplot.internal(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=groupes, merge_mods.r1 = merge_mods, col_selected.r1=col.selected)
+      seqggplot.internal(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=groupes, 
+                         merge_mods.r1 = merge_mods, col_selected.r1=col.selected, pmin.sup1 = pmin.sup, STR.SUBS.1 = str.subs)
   } else {
     if(class(objseq)=="list"){
      # p<-

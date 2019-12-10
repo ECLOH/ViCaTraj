@@ -8,6 +8,7 @@
 module_select_and_plot_UI <- function(id){#label = "CSV file") {
   ns <- NS(id)
   shiny::fluidRow(
+    shiny::column(width=6,
   shiny::selectInput(inputId = ns("plottype"), label = "Quel graphique voulez-vous représenter? ", 
                      choices = c("Chronogramme [seqplot(type = 'd')] "="d", "Séquences les plus fréquentes [seqplot(type = 'd')] "="f", 
                                  "Tapis [seqplot(type = 'd')] "="I", "Etat modal [seqplot(type = 'd')] "="ms", 
@@ -21,13 +22,25 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
   uiOutput(ns("VAR_server_created")),
   #shiny::checkboxInput(inputId = ns("UserSelect"), label = "Voulez-vous sélectionner certaines modalités ? ", value = FALSE),
   uiOutput(ns("CLASS_SELECT_server_created")),
-  uiOutput(ns("MOD_SELECT_server_created")),
+  uiOutput(ns("MOD_SELECT_server_created"))
+  ),
+  shiny::column(width=6,
   uiOutput(ns("SELECT_COL_TIME_FLUX")),
+  uiOutput(ns("SELECT_EVENTS")),
   uiOutput(ns("MERGED_SELECTED_mod")),
-  uiOutput(ns("WARNING_LENGTH")),
-  actionButton(inputId = ns("UPDATE_PLOT"), label = "Mettre à jour le graphique et les données"),
-  plotOutput(ns("plot1")),
+  uiOutput(ns("WARNING_LENGTH"))
+  ),
+  shiny::column(width=12,
+  actionButton(inputId = ns("UPDATE_PLOT"), label = "Mettre à jour le graphique et les données")
+  ),
+  shiny::column(width=12,
+  plotOutput(ns("plot1"))
+  ),
+  shiny::column(width=12,
+                
   uiOutput(ns("DATA_r"))
+  )
+  
   )
   
   }
@@ -394,6 +407,37 @@ module_select_and_plot <- function(input, output, session, data) {
     }
   })
   
+  output$SELECT_EVENTS<-renderUI({
+    if(input$plottype=="sous.seq"){
+      list(
+      shiny::numericInput(inputId = ns("nb_event"), 
+                         label = "Nombre maximum d'états pour caractériser les transitions:", min = 1, max = 5, value = 2),
+      shiny::numericInput(inputId = ns("pminsup"), 
+                          label = "Support minimum :", min = 0, max = 0.95, value = 0.05, step = 0.05),
+      shiny::selectInput(inputId = ns("select_event"), 
+                          label = "Transitions choisies :", selected = NULL, multiple = TRUE, choices=NULL)
+      )
+      
+    }
+  }) 
+  
+  observe({
+    req(input$pminsup )
+    req(input$nb_event)
+    seqecreate(data = data$SEQ_OBJ)->sese
+    seqefsub(eseq = sese, pmin.support = 0.01 )->sese.sub
+    
+    shiny::updateNumericInput(session = session, inputId = "pminsup",max = max(susu$data$Support))
+  })
+  
+  observe({
+    req(input$pminsup )
+    req(input$nb_event)
+    seqecreate(data = data$SEQ_OBJ)->sese
+    seqefsub(eseq = sese, pmin.support = input$pminsup )->sese.sub
+    sese.sub$subseq[order(sese.sub$data$Count, decreasing = TRUE), ]->choices.sese
+    shiny::updateSelectInput(session = session, inputId = "select_event", choices = choices.sese)
+  })
   
   ##### OUTPUTS #####
   THE_PLOT<-eventReactive(input$UPDATE_PLOT, {
@@ -404,7 +448,8 @@ module_select_and_plot <- function(input, output, session, data) {
                  objseq = data$SEQ_OBJ, 
                  groupes = the.grups(), 
                  merge_mods = input$merge_moda, 
-                 col.selected = input$select_col_time_flux)
+                 col.selected = input$select_col_time_flux, pmin.sup = input$pminsup, str.subs = input$select_event)
+                  
     } else {NULL}
    return(p)
   })
@@ -422,7 +467,8 @@ module_select_and_plot <- function(input, output, session, data) {
         
         data$SEQ_OBJ[the.grups()==levi , ]->seqi
         seqi[!is.na(seqi[ , 1]) , ]->seqi
-        DONNEES_POUR_PLOT(TYPE = input$plottype, objseq = seqi)
+        DONNEES_POUR_PLOT(TYPE = input$plottype, objseq = seqi,
+                          pmin.sup=input$pminsup, STR.SUBS=input$select_event)
         
       })->listdat
       #
@@ -435,7 +481,13 @@ module_select_and_plot <- function(input, output, session, data) {
           message("coucou 409")
           lapply(1:length(listdat[[li]]), function(li2){ 
             output[[ paste("l", li, li2, sep="")]]<-DT::renderDataTable(datatable(listdat[[li]][[li2]]))
-            DT::dataTableOutput(ns(paste("l2", li, li2, sep="")))
+
+              list(
+            h3( names(listdat[[li]])[li2]),
+              DT::dataTableOutput(ns(paste("l2", li, li2, sep="")))
+            )->res
+            
+              return(res)
             
           })
         } else {
@@ -445,8 +497,13 @@ module_select_and_plot <- function(input, output, session, data) {
           message("coucou 424")
           
           output[[ paste("l1", li, sep="") ]]<-DT::renderDataTable(datatable(data.frame(listdat[[li]])))
-          DT::dataTableOutput(ns(paste("l1", li, sep="")))
           
+          list(
+            h3( names(listdat)[li]),
+            DT::dataTableOutput(ns(paste("l1", li, sep="")))
+          )->res
+          
+return(res)
         }
       })->liou
       

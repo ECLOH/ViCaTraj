@@ -1,6 +1,6 @@
 #' @export
 
-DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2, col.selected.r1=NULL){
+DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2, col.selected.r1=NULL, pmin.sup1=0.05, STR.SUBS.1=NULL){
   
   if(!is.null(col.selected.r1)){
     actcal.seq[ , which(names(actcal.seq)%in%col.selected.r1)]
@@ -15,6 +15,8 @@ DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2, 
     "ms", "seqmodst(objseq.r1)",
     "mt", "round(seqmeant(objseq.r1), arrondi)",
     "r", "seqrep(objseq.r1)",
+    "sous.seq", "seqecreate(objseq.r1)->seqe.obj;
+    seqefsub(seqe.obj, pmin.support=pmin.sup1)->seqe.stat; cbind('event'=as.character(seqe.stat$subseq), seqe.stat$data)->res;res",
     "flux", "seqstatd(objseq.r1)->objdat;round(objdat$Frequencies*100, arrondi)->res1;
 
 as.data.frame.array(round(seqtrate(seqdata = objseq.r1, time.varying = TRUE)*100, arrondi))->res2;
