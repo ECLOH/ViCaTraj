@@ -10,11 +10,11 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
   shiny::fluidRow(
     shiny::column(width=6,
   shiny::selectInput(inputId = ns("plottype"), label = "Quel graphique voulez-vous représenter? ", 
-                     choices = c("Chronogramme [seqplot(type = 'd')] "="d", "Séquences les plus fréquentes [seqplot(type = 'd')] "="f", 
-                                 "Tapis [seqplot(type = 'd')] "="I", "Etat modal [seqplot(type = 'd')] "="ms", 
-                                 "Durée moyenne dans chaque état [seqplot(type = 'd')] "="mt",
-                                 "Graphique d'entropie [seqplot(type = 'd')] "="Ht", 
-                                 "Séquences représentatives  [seqplot(type = 'd')] "="r",
+                     choices = c("Chronogramme [seqplot(type = 'd')] "="d", "Séquences les plus fréquentes [seqplot(type = 'f')] "="f", 
+                                 "Tapis [seqplot(type = 'I')] "="I", "Etat modal [seqplot(type = 'ms')] "="ms", 
+                                 "Durée moyenne dans chaque état [seqplot(type = 'mt')] "="mt",
+                                 "Graphique d'entropie [seqplot(type = 'Ht')] "="Ht", 
+                                 "Séquences représentatives  [seqplot(type = 'r')] "="r",
                                  "Graphique de flux"="flux",
                                  "Sous-séquences  [seqefsub()] "="sous.seq"
                                  ), selected = "d", multiple = FALSE),
