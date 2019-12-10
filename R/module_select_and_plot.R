@@ -16,8 +16,8 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
                                  "Graphique d'entropie [seqplot(type = 'd')] "="Ht", 
                                  "Séquences représentatives  [seqplot(type = 'd')] "="r",
                                  "Graphique de flux"="flux",
-                                 "Sous-séquences triées selon leur support  [seqefsub()] "="sous.seq",
-                                 "Sous-séquences choisies  [seqefsub()] "="sous.seq.ch"), selected = "d", multiple = FALSE),
+                                 "Sous-séquences  [seqefsub()] "="sous.seq"
+                                 ), selected = "d", multiple = FALSE),
   uiOutput(ns("DATE_server_created")),
   uiOutput(ns("VAR_server_created")),
   #shiny::checkboxInput(inputId = ns("UserSelect"), label = "Voulez-vous sélectionner certaines modalités ? ", value = FALSE),
