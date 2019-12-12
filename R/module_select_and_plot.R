@@ -34,11 +34,11 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
   actionButton(inputId = ns("UPDATE_PLOT"), label = "Mettre à jour le graphique et les données")
   ),
   shiny::column(width=12,
-  plotOutput(ns("plot1"))
+  plotOutput(ns("plot1"))%>% withSpinner(color="#0dc5c1")
   ),
   shiny::column(width=12,
                 
-  uiOutput(ns("DATA_r"))
+  uiOutput(ns("DATA_r"))%>% withSpinner(color="#0dc5c1")
   )
   
   )
@@ -427,7 +427,7 @@ module_select_and_plot <- function(input, output, session, data) {
     seqecreate(data = data$SEQ_OBJ)->sese
     seqefsub(eseq = sese, pmin.support = 0.01 )->sese.sub
     
-    shiny::updateNumericInput(session = session, inputId = "pminsup",max = max(susu$data$Support))
+    shiny::updateNumericInput(session = session, inputId = "pminsup",max = max(sese.sub$data$Support))
   })
   
   observe({

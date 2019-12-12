@@ -11,7 +11,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
   attributes(objseq.r1)$alphabet->labels_order
   
   if(is.null(grup_var.r1)){
-  DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1, arrondi=2)->dats
+  DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1, arrondi=2, pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1)->dats
   as.data.frame(dats)->dats
   dats$level<-"Ensemble"
   dats$ID<-row.names(dats)
@@ -23,7 +23,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
     lapply(1:length(unique(grup_var.r1)), FUN = function(i){
       objseq.r1[grup_var.r1==unique(grup_var.r1)[i] , ]->objseq.r1.i
       objseq.r1.i[!is.na(objseq.r1.i[ , 1]) , ]->objseq.r1.i
-      DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1.i, arrondi=2)->dats
+      DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1.i, arrondi=2,pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1)->dats
       as.data.frame(dats)->dats
       dats$level<-unique(grup_var.r1)[i]
       dats$ID<-row.names(dats)
@@ -144,17 +144,17 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
           graph_flux_grp(seq_data = objseq.r1, col_periode = col_selected.r1, group_var = grup_var.r1)#, merge_mods = merge_mods.r1)
         } else {
           if(TYPE.r1=="sous.seq"){
-
+            #dats$Support<-dats$Support/100
               gg<-ggplot(data=dats,aes(x=reorder(event,Support),y=Support)) +
                 geom_bar(stat='identity',width=0.9,fill=gray(0.1))+
-                geom_label(aes(label=paste(round(Support*100,2), "%", sep="")),
+                geom_label(aes(label=paste(round(Support,2), "%", sep="")),
                            hjust=-1, colour="white", fill=gray(0.3), size=7/length(unique(dats$level)))+ 
                 theme_hc()+
                 xlab('')+
                 theme(axis.text.x = element_text(size=9, angle=90, hjust=1,vjust = 0.3),
                       axis.title.x = element_blank(),
                       plot.title = element_text(hjust = 0.5,size=18,face = "bold"),
-                      plot.subtitle = element_text(hjust = 0.5,size=14))+ylim(0,1)+
+                      plot.subtitle = element_text(hjust = 0.5,size=14))+ylim(0,100)+
                 coord_flip()+
                 facet_wrap(.~level, )
               return(gg)
