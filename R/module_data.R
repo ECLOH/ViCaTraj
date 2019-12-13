@@ -51,7 +51,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   shiny::selectInput(inputId=ns("endoding"), label= "Comment est codé le fichier ? Les accents sont-ils correctement lus ?", 
                                                                      choices=c(UTF8 = "UTF-8", Latin1 = "latin1"), selected = "UTF-8", multiple = FALSE, width = "50%"),
                                                   shiny::checkboxInput(inputId = ns("header"), label="La première ligne correspond-elle aux noms des variables ?",
-                                                                       value=FALSE),  
+                                                                       value=TRUE),  
                                                   shiny::selectInput(inputId = ns("na"), label = "Codage des valeurs manquantes", choices = c("Vide" , "Espace" = " ", "NA" = "NA"), 
                                                                      selected = "NA", multiple = TRUE, selectize = TRUE),
                                                   
