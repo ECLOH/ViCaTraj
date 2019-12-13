@@ -1,7 +1,7 @@
 #' @export
 
 DONNEES_POUR_PLOT<-function(TYPE=as.character(input$plottype), objseq=seq.select1(), 
-                            col.selected = NULL, pmin.sup=0.05, STR.SUBS=NULL,  ...  ){
+                            col.selected = NULL, pmin.sup=0.05, STR.SUBS=NULL,  grup.var, ...  ){
   if(sum(class(objseq)!=c("stslist", "data.frame"))==0){
     DONNEES_POUR_PLOT.internal(TYPE.r1=TYPE, objseq.r1=objseq, col.selected.r1=col.selected, pmin.sup1 = pmin.sup, STR.SUBS.1 = STR.SUBS, ... )->res
   } else {

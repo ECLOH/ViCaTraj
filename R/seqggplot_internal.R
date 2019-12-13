@@ -29,9 +29,58 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
       dats$ID<-row.names(dats)
       
       return(dats)
+      
+      
+      
     })->lidat
     do.call("rbind", lidat)->dats
     
+    if(TYPE.r1=="sous.seq"){
+      message("debug1")
+      seqecreate(objseq.r1)->seqe2
+      seqefsub(seqe2, str.subseq = unique(dats$event))->sub2
+      print(sub2)
+      print(seqe2)
+      if(is.null(grup_var.r1)){
+        dats$CodeValue<-0
+      } else {
+      if(length(unique(grup_var.r1))>1){
+      seqecmpgroup(subseq = sub2, group = grup_var.r1)->discr2
+      cbind("subseq"=as.character(discr2$subseq),  discr2$data)->datdiscr2
+      reshape(datdiscr2, direction = "long", varying = list(colnames(datdiscr2)[grepl("Resid.", colnames(datdiscr2), fixed = TRUE)]), 
+              times = colnames(datdiscr2)[grepl("Resid.", colnames(datdiscr2), fixed = TRUE)])->datdiscr2
+      datdiscr2$CodeValue<-sapply(1:nrow(datdiscr2), function(i){
+        if(datdiscr2$p.value[i]<0.1){
+          if(datdiscr2$p.value[i]>0.05){
+            1} else {
+              if(datdiscr2$p.value[i]>0.01){
+                2} else {
+                  3
+                }
+            }
+        } else {0}
+      })
+      datdiscr2$CodeValue<-sapply(1:nrow(datdiscr2), function(i){
+        if(datdiscr2[ , grepl("Resid.", colnames(datdiscr2), fixed = TRUE)][i]<0){
+          -datdiscr2$CodeValue[i]
+        } else {
+          datdiscr2$CodeValue[i]
+        }
+      })
+      datdiscr2$time<-gsub(pattern = "Resid.", replacement = "", fixed = TRUE, x = datdiscr2$time)
+      
+      if(length(intersect(dats$event, datdiscr2$subseq))==length(unique(dats$event))){
+        message("debug2")
+        
+        left_join(dats, datdiscr2[, c("subseq", "time", "CodeValue")], by=c("event"="subseq", "level"="time"))->dats
+      } else {
+        dats$CodeValue<-0
+      }
+      } else {
+        dats$CodeValue<-0
+      }
+}
+    }
   }
   print(head(dats, 50))
   
@@ -145,18 +194,27 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
         } else {
           if(TYPE.r1=="sous.seq"){
             #dats$Support<-dats$Support/100
-              gg<-ggplot(data=dats,aes(x=reorder(event,Support),y=Support)) +
-                geom_bar(stat='identity',width=0.9,fill=gray(0.1))+
-                geom_label(aes(label=paste(round(Support,2), "%", sep="")),
-                           hjust=-1, colour="white", fill=gray(0.3), size=7/length(unique(dats$level)))+ 
+            log(length(unique(dats$level)))->size.effect
+            if(size.effect==0){size.effect<-1}
+            #dats<-dats[!duplicated(dats$event) , ]
+            
+            dats$event<-factor(dats$event, levels = as.character(sub2$subseq[order(sub2$data$Support, decreasing = TRUE)]), ordered = TRUE)
+            brewer.pal(name = "Spectral", n = 8)->colpal
+            names(colpal)<-as.character(c(-3, -2, -1, 0, 1, 2, 3))
+            factor(dats$CodeValue)->dats$CodeValue
+              gg<-ggplot(data=dats,aes(x=event,y=Support, fill= CodeValue)) +
+                geom_bar(stat='identity',width=0.9)+
+                geom_text(aes(label=paste(round(Support,2), "%", sep="")),
+                           hjust=-1, colour=gray(0.3), size=5/size.effect)+
+                scale_fill_manual(values = colpal)+
                 theme_hc()+
                 xlab('')+
-                theme(axis.text.x = element_text(size=9, angle=90, hjust=1,vjust = 0.3),
+                theme(legend.position = "none", axis.text.x = element_text(size=9, angle=90, hjust=1,vjust = 0.3),
                       axis.title.x = element_blank(),
                       plot.title = element_text(hjust = 0.5,size=18,face = "bold"),
                       plot.subtitle = element_text(hjust = 0.5,size=14))+ylim(0,100)+
                 coord_flip()+
-                facet_wrap(.~level, )
+                facet_wrap(.~level, ncol = 2)
               return(gg)
               
           } else {
@@ -166,4 +224,5 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
     }}
   }
   #return(p)
-}
+  }
+  

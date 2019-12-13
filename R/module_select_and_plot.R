@@ -14,9 +14,9 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
                                  "Tapis [seqplot(type = 'I')] "="I", "Etat modal [seqplot(type = 'ms')] "="ms", 
                                  "Durée moyenne dans chaque état [seqplot(type = 'mt')] "="mt",
                                  "Graphique d'entropie [seqplot(type = 'Ht')] "="Ht", 
-                                 "Séquences représentatives  [seqplot(type = 'r')] "="r",
                                  "Graphique de flux"="flux",
-                                 "Sous-séquences  [seqefsub()] "="sous.seq"
+                                 "Sous-séquences  [seqefsub()] "="sous.seq",
+                                 "Séquences représentatives  [seqplot(type = 'r')] "="r"
                                  ), selected = "d", multiple = FALSE),
   uiOutput(ns("DATE_server_created")),
   uiOutput(ns("VAR_server_created")),
