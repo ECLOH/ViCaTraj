@@ -106,7 +106,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
       scale_fill_manual(values = col.i, name="États : ")+
       theme_excel()+
       xlab(label = "")+ylab(label = "")+
-      theme(axis.title = element_blank(), axis.text.x =  element_text(angle = 45) ,legend.text = element_text(size=2) )+
+      theme(axis.title = element_blank(), axis.text.x =  element_text(angle = 45) )+#,legend.text = element_text(size=2) )+
       facet_wrap(.~level)
     
   } else {
@@ -130,7 +130,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
         scale_fill_manual(values = col.i, name="États : ")+
         theme_excel()+
         xlab(label = "")+ylab(label = "")+
-        theme(axis.title = element_blank() , axis.text.x =  element_text(angle = 45), legend.text = element_text(size=2))+
+        theme(axis.title = element_blank() , axis.text.x =  element_text(angle = 45))+#, legend.text = element_text(size=2))+
         facet_wrap(.~level)
     } else {
       if(TYPE.r1=="ms"){
@@ -184,7 +184,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
           scale_fill_manual(values = col.i, name="États : ")+
           theme_excel()+
           xlab(label = "")+ylab(label = "")+
-          theme(axis.title = element_blank() , axis.text.x =  element_text(angle = 45, hjust = 1), legend.text = element_text(size=2))+
+          theme(axis.title = element_blank() , axis.text.x =  element_text(angle = 45, hjust = 1))+#, legend.text = element_text(size=2))+
           facet_wrap(.~level)
         
         

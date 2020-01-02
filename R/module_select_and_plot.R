@@ -7,7 +7,12 @@
 #' @export
 module_select_and_plot_UI <- function(id){#label = "CSV file") {
   ns <- NS(id)
-  shiny::fluidRow(
+
+    
+#  shiny::fluidRow(
+    fluidPage(
+    tabsetPanel(id = "tabs1", type = "pills",
+                tabPanel(title = "Sélection des données et des indicateurs : ", 
     shiny::column(width=6,
   shiny::selectInput(inputId = ns("plottype"), label = "Quel graphique voulez-vous représenter? ", 
                      choices = c("Chronogramme [seqplot(type = 'd')] "="d", "Séquences les plus fréquentes [seqplot(type = 'f')] "="f", 
@@ -20,7 +25,6 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
                                  ), selected = "d", multiple = FALSE),
   uiOutput(ns("DATE_server_created")),
   uiOutput(ns("VAR_server_created")),
-  #shiny::checkboxInput(inputId = ns("UserSelect"), label = "Voulez-vous sélectionner certaines modalités ? ", value = FALSE),
   uiOutput(ns("CLASS_SELECT_server_created")),
   uiOutput(ns("MOD_SELECT_server_created"))
   ),
@@ -29,16 +33,34 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
   uiOutput(ns("SELECT_EVENTS")),
   uiOutput(ns("MERGED_SELECTED_mod")),
   uiOutput(ns("WARNING_LENGTH"))
+  )
   ),
+  tabPanel(title = "Paramètres d'affichage du graphique",
+          uiOutput(ns("SELECT_THEMES_UI")),
+          shiny::numericInput(inputId = ns("size_text_plot"), label = "Correction de la taille des éléments de texte", min = -10, max = 10, step = 0.5, value = 0)
+           
+  )
+  ),
+  hr(),
   shiny::column(width=12,
   actionButton(inputId = ns("UPDATE_PLOT"), label = "Mettre à jour le graphique et les données")
   ),
   shiny::column(width=12,
-  plotOutput(ns("plot1"))%>% withSpinner(color="#0dc5c1")
+  #plotOutput(ns("plot1"))%>% withSpinner(color="#0dc5c1")
+  uiOutput(ns("plot1_UI")) %>% withSpinner(color="#0dc5c1"),
+  downloadButton(outputId=ns("DownGraphGlobal"),label="Télécharger le graphique")
+  
   ),
   shiny::column(width=12,
                 
-  uiOutput(ns("DATA_r"))%>% withSpinner(color="#0dc5c1")
+  uiOutput(ns("DATA_r"))%>% withSpinner(color="#0dc5c1")),
+  shiny::column(width=6,
+                
+  shiny::radioButtons(inputId = ns("TypeFichierDownload"), label = "Extension du fichier",choices=c("csv2","csv"),selected = "csv"),
+  helpText("'csv' : format .csv standard | 'csv2' :  pour ouverture avec excel")
+  ),
+  shiny::column(width=6,
+  downloadButton(outputId = ns('ButtondownloadData'), 'Télécharger les données')
   )
   
   )
@@ -64,6 +86,37 @@ module_select_and_plot <- function(input, output, session, data) {
   library(ggplot2)
   library(ggthemes)
   ns <- session$ns
+  ####
+  getNamespaceExports("ggthemes")->funkggthemes
+  funkggthemes[grepl(pattern = "theme_", x = funkggthemes, fixed = TRUE)]->funkggthemes
+  funkggthemes<-funkggthemes[grepl(pattern = "theme_", x = funkggthemes, fixed = TRUE)&!funkggthemes%in%c("theme_solid", 
+                                                                                                          "theme_update", 
+                                                                                                      "theme_get",  
+                                                                                                      "theme_set" , 
+                                                                                                      "theme_replace" ,  
+                                                                                                      "theme_test")]
+  paste("ggthemes::", funkggthemes, "()", sep = "")->funkggthemes
+  ###
+  getNamespaceExports("ggplot2")->funkggplot2
+  funkggplot2[grepl(pattern = "theme_", x = funkggplot2, fixed = TRUE)]->funkggplot2
+  
+  funkggplot2<-funkggplot2[grepl(pattern = "theme_", x = funkggplot2, fixed = TRUE)&!funkggplot2%in%c("theme_update", 
+                                                                                         "theme_get",  
+                                                                                         "theme_set" , 
+                                                                                         "theme_replace" ,  
+                                                                                         "theme_test")]
+  paste("ggplot2::", funkggplot2, "()", sep = "")->funkggplot2
+  
+  vec.of.themes<-c(
+    funkggthemes,
+    funkggplot2
+  )
+  
+  output$SELECT_THEMES_UI<-renderUI({
+    shiny::selectInput(inputId = ns("theme_select"), label = "Thème (ggplot2 ou ggthemes)",
+                       choices = c("choix par défaut", vec.of.themes), selected = NULL, multiple = FALSE)
+  })
+  
  #return(reactive(class(data() )))
   #renderPlot({
   output$DATE_server_created<-renderUI({
@@ -440,6 +493,11 @@ module_select_and_plot <- function(input, output, session, data) {
   })
   
   ##### OUTPUTS #####
+  
+  
+  tailleGraph<-reactiveValues(height=400)
+  
+  
   THE_PLOT<-eventReactive(input$UPDATE_PLOT, {
     message("COUCOU 372")
     print(the.grups())
@@ -449,16 +507,62 @@ module_select_and_plot <- function(input, output, session, data) {
                  groupes = the.grups(), 
                  merge_mods = input$merge_moda, 
                  col.selected = input$select_col_time_flux, pmin.sup = input$pminsup, str.subs = input$select_event)
+    
+    if(length(input$theme_select)>0){
+      if(input$theme_select!="choix par défaut"){
+      p<-p+eval(parse(text = input$theme_select))
+      }
+    }
+    
+    if(!is.null(input$size_text_plot)){
+      p<-p+theme(text = element_text(size = p$theme$text$size+input$size_text_plot))
+    }
                   
     } else {NULL}
+    
+    
+
+    
+    
    return(p)
   })
   
-  output$plot1<-renderPlot({
-    THE_PLOT()
+  observeEvent(input$UPDATE_PLOT, {
+    output$plot1_UI<-renderUI({
+      
+      tailleGraph$height<-haut1(nb = length(unique(the.grups() ) ), type.of.plot = input$plottype )
+      
+      
+      output$PLOTi<-renderPlot({ THE_PLOT() })
+      
+      plotOutput(ns("PLOTi"), height = tailleGraph$height)#->PLOT
+      
+    })
   })
   
-  THE_DATA<-eventReactive(input$UPDATE_PLOT, {
+  output$DownGraphGlobal <- downloadHandler(
+    filename =  function() {
+      paste0(input$plottype, ".png")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      shiny::withProgress(
+        message = "Veuillez patienter, le téléchargement de votre graphique est en cours",
+        value = 0,
+        {
+          ggsave(file,
+                 plot=THE_PLOT(),#,
+                 #height =7.5*dim(ordre1())[1],
+                 #width = widthSousSeq(),
+                 device = png()) #méthode pour télécharger les graphiques ggplot
+          
+          dev.off()  # turn the device off
+          shiny::incProgress(1)
+        })
+    } 
+  )
+  
+  THE_DATA_base1<-eventReactive(input$UPDATE_PLOT, {
    
     req(the.grups())
     if(length(unique(the.grups()))<20){
@@ -473,7 +577,17 @@ module_select_and_plot <- function(input, output, session, data) {
       })->listdat
       #
       names(listdat)<-unique(the.grups())
-      #
+      return(listdat)
+      
+    }
+      
+    })
+  
+  THE_DATA_DToutput<-reactive({
+    req(the.grups())
+    req(THE_DATA_base1())
+    THE_DATA_base1()->listdat
+
       lapply(1:length(listdat), function(li){
         message("coucou 412")
         print(listdat[[li]])
@@ -510,15 +624,82 @@ return(res)
       print(liou)
       
       return(liou)
-    } else {NULL}
   })
     
   
   
   output$DATA_r<-renderUI({
-    req(THE_DATA())
-    THE_DATA()
+    req(THE_DATA_DToutput())
+    THE_DATA_DToutput()
   })
+  
+  THE_DATA_forDownload<-reactive({
+    req(the.grups())
+    req(THE_DATA_base1())
+    THE_DATA_base1()->listdat
+    
+    
+    lapply(1:length(listdat), function(li){
+      if(class(listdat[[li]])=="list"){
+        lapply(1:length(listdat[[li]]), function(li2){ 
+          data.frame(listdat[[li]][[li2]])->tempidf2
+          print(tempidf2)
+          tempidf2$SELECTION<-names(listdat[[li]])[li2]
+          print(tempidf2)
+          tempidf2<-reshape(direction = "long", data = tempidf2, 
+                            varying = list(names(tempidf2)[names(tempidf2)!="SELECTION"]), 
+                            times = names(tempidf2)[names(tempidf2)!="SELECTION"], ids = row.names(tempidf2))
+          names(tempidf2)[!names(tempidf2)%in%c("SELECTION", "time", "id")]<-"value"
+          print(tempidf2)
+          
+          
+          return(tempidf2)
+
+        })->souslist
+        do.call("rbind", souslist)->df
+      } else {
+      data.frame(listdat[[li]])->df
+        print(df)
+        df$SELECTION<-names(listdat)[li]
+        print(df)
+        df<-reshape(direction = "long", data = df, varying = list(names(df)[names(df)!="SELECTION"]), 
+                          times = names(df)[names(df)!="SELECTION"], ids = row.names(df))
+        names(df)[!names(df)%in%c("SELECTION", "time", "id")]<-"value"
+        
+        print(df)
+        
+        return(df)
+      }
+    })->datadf
+    do.call("rbind", datadf)->df
+    df
+  })
+    
+    
+  output$ButtondownloadData <- downloadHandler(
+    filename = function() {
+      paste("DATA",gsub(pattern = "2", replacement = "", x = input$TypeFichierDownload, fixed = TRUE),sep = ".")
+    },
+    
+    # This function should write data to a file given to it by
+    # the argument 'file'.
+    content = function(file) {
+      shiny::withProgress(
+        message = "Veuillez patienter, le téléchargement de votre fichier est en cours",
+        value = 0,
+        {
+          if(input$TypeFichierDownload%in%c("csv", "txt")){
+            write.csv(x = THE_DATA_forDownload(), file, row.names = FALSE)
+          } else {
+            
+            if(input$TypeFichierDownload=="csv2"){
+              write.csv2(x = THE_DATA_forDownload(), file, row.names = FALSE)
+            }
+          }
+          shiny::incProgress(1)
+        })
+    }
+  )
   
 #### CLOTURE :  
 }
