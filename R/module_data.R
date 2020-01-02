@@ -505,6 +505,7 @@ module_data <- function(input, output, session) {
     #if(req(input$DataType)!="fichier"){
       if(input$DataType=="objet"|input$DataType=="fichier"){
         lapply(1:length(BIGLIST1()), function(i){
+          req(input$INDVAR)
           #lapply(1:length(csv.list), FUN = function(i){
           bi<-BIGLIST1()[[i]]
           bi[ , input$INDVAR]->varbi
@@ -1451,6 +1452,7 @@ module_data <- function(input, output, session) {
          "DATA_COMP"=data_for_res2(), 
          "TYPE_SOURCE"=input$DataType, 
          "CODAGE_MANQUANT"=list("GAP"=input$TEXT_GAP, "RIGHT"=input$TEXT_RIGHT, "LEFT"=input$TEXT_LEFT),
-         "ID_VAR"=input$INDVAR)
+         "ID_VAR"=as.character(input$INDVAR)
+    )
   }))
 }

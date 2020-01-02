@@ -944,6 +944,11 @@ observeEvent(eventExpr = DATAs()$SEQ_OBJ,{
   
   
   
+  
+  #### MODULE TABLE ####
+  callModule(module = module_tabdes, data = DATAs(), id = "id3")
+  
+  
   ### NOMBRE DE TRAJECTOIRES: TOTAL ET  SELECTIONNEES  ####
   NB_TRAJS<-shiny::reactive({
     req(DATAs())

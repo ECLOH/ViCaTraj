@@ -65,7 +65,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                     tabPanel("Statistiques descriptives",
                                              tabsetPanel(
                                                #### SUB-PANEL: transition ####
-                                               tabPanel(title = "Taux de transition ( et taux de sortie) ",
+                                               tabPanel(title = "Taux de transition ( et taux de sortie ) ",
                                                         useShinyjs(),
                                                         shiny::numericInput(inputId = "PAStrate", label = "Pas de temps pour le calcul des taux de transition",value = 1, min = 1, max = 36, step = 1),
                                                         shiny::checkboxInput(inputId = "TYPEtrate", label = "Les taux de transitions varient-ils avec le temps?",value = FALSE),
@@ -142,8 +142,15 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                         
                                                                  )
                                                         )
-                                               )
-                                             )
+                                               ),
+                                             
+                                   
+                        #### SUB-PANEL: tables ####
+                        tabPanel(title = "Tables et tables de contingence",
+                                 module_tabdes_UI(id = "id3")
+                                 
+                        )
+                                    )
                                     ),
               #### PANEL: classif ####
               
