@@ -145,11 +145,12 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   hr(),
                                                   #shiny::column(width=6, 
                                                   uiOutput(ns("UI_PAQUET_SELECT")),
-                                                  h5("INFO: "),
-                                                  h5("toutes les conditions ajoutées dans le même paquet ne sont pas additives (utilisation de l'opérateur logique 'ou' ('|')."),
-                                                  h5("toutes les conditions ajoutées dans des paquets différents sont additives (utilisation de l'opérateur logique 'et' entre les paquets de conditions ('&'))."),
+                                                  helpText("INFO: "),
+                                                  helpText("toutes les conditions ajoutées dans le même paquet ne sont pas additives (utilisation de l'opérateur logique 'ou' ('|')."),
+                                                  helpText("toutes les conditions ajoutées dans des paquets différents sont additives (utilisation de l'opérateur logique 'et' entre les paquets de conditions ('&'))."),
                                                   
                                                   shiny::uiOutput(ns("UI_DATE_SELECT")),
+                                                  helpText("ATTENTION : si vous sélectionnez plusieurs dates simultanément, ne seront retenus que les individus qui remplissent la condition pour TOUTES les dates sélectionnées."),
                                                   
                                                   shiny::checkboxInput(inputId = ns("addvar"), label = "Ajouter une variable d'un jeu de donnée tiers?", value = FALSE),
                                                   
