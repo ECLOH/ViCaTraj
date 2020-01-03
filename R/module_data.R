@@ -311,7 +311,11 @@ module_data <- function(input, output, session) {
     req( LIST_OBJSEQ())
     req(CLASS_LIST_OBJSEQ())
     LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<1)]]->df.pour.seq
+    if(length(df.pour.seq)==1){
     list("Table.unique"=df.pour.seq)->res
+    } else {
+      res<-df.pour.seq
+    }
     return(res)
   })
   
