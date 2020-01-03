@@ -93,7 +93,9 @@ module_data_UI <- function(id){#label = "CSV file") {
                                     
                                     uiOutput(ns("UI_INDVAR_CHOOSE")),
                                     uiOutput(ns("MSSG_DUPLI")),
-                                    DT::dataTableOutput(ns("DATA_DUPLI")),
+                                    #DT::dataTableOutput(ns("DATA_DUPLI")),
+                                    #uiOutput(ns("TEXTE_NROW_BIGLIST_AVANT_APRES")),
+                                    uiOutput(ns("NROW_BIGLIST_AVANT_APRES")) %>% withSpinner(color="#0dc5c1"),
                                     uiOutput(ns("DELETE_DUPLI_NA"))
                                   )),
                                 #hr(),
@@ -140,7 +142,6 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                 
                                                 sidebarPanel( #h3("Sélection des individus:"), 
                                                   width = 12,
-                                                  #uiOutput("UI_INDVAR_CHOOSE"),#,
                                                   hr(),
                                                   #shiny::column(width=6, 
                                                   uiOutput(ns("UI_PAQUET_SELECT")),
@@ -164,20 +165,17 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   #),
                                                   actionButton(inputId = ns('delROW'), label = "Supprimer les conditions sélectionnées"),
                                                   DT::DTOutput(ns("TABLE_POUR_SELECTION"))
-                                                  #actionButton(inputId="APPLICATE_SUBSET", label = "Appliquer les conditions"),
-                                                  
-                                                  #tableOutput("SUBSET_OUTPUT"),
-                                                  #textOutput("SUBSET_BY_PAQUET_OUTPUT"),
-                                                  #textOutput("SUBSET_G_OUTPUT"),
-                                                  #DTOutput("DATA_OF_SUBSET_CONTROL")
                                                 )
-                                              ),
-                                              textOutput(ns("LENGTH_IND_SUBS")),
-                                              textOutput(ns("LENGTH_SUBSETTED")),
-                                              textOutput(ns("LENGTH_BIGLIST")),
-                                              textOutput(ns("LENGTH_BIGLIST1")),
+                                              )#,
+                                              #### CONTROLS A AJOUTER ####
+                                              #textOutput(ns("LENGTH_IND_SUBS")),
+                                              #textOutput(ns("LENGTH_SUBSETTED")),
+                                              #textOutput(ns("LENGTH_BIGLIST")),
+                                              #textOutput(ns("LENGTH_BIGLIST1"))#,
+                                              #,#,
+                                              #DT::dataTableOutput(ns("NROW_BIGLIST2"))#,
                                               
-                                              shiny::downloadButton(outputId = "downlist", label = "Enregistrer le jeu de données sur le disque (pour réutilisation ultérieure)")
+                                              #shiny::downloadButton(outputId = "downlist", label = "Enregistrer le jeu de données sur le disque (pour réutilisation ultérieure)")
                                               
                                               #)
                                 )
@@ -529,18 +527,19 @@ module_data <- function(input, output, session) {
   
   output$MSSG_DUPLI<-renderUI({
     ns <- session$ns
+    if(is.null(control_dupli_na()))
     req(control_dupli_na())
     if(class(control_dupli_na())=="data.frame"){
       h3("Attention: la variable d'identifiant contient des foublons et/ou des NA.")
     } else {h3("OK : pas de doublons ou NA dans la varible d'identifiant.")}
   })
   
-  output$DATA_DUPLI<-renderDataTable({
-    req(control_dupli_na())
-    if(class(control_dupli_na())=="data.frame"){
-      control_dupli_na()
-    }
-  })
+  #output$DATA_DUPLI<-renderDataTable({
+  #  req(control_dupli_na())
+  #  if(class(control_dupli_na())=="data.frame"){
+  #    control_dupli_na()
+  #  }
+  #})
   
   output$DELETE_DUPLI_NA<-renderUI({
     ns <- session$ns
@@ -551,13 +550,13 @@ module_data <- function(input, output, session) {
   })
   
   
-  BIGLIST<-reactive({
+  BIGLIST2<-reactive({
     req( control_dupli_na() )
     req(input$INDVAR)
     if(input$DataType=="objet"|input$DataType=="fichier"){
       if(class(control_dupli_na())=="data.frame"){
         req(input$deleteNA_DUPLI)
-        if(input$deleteNA_DUPLI){
+        if(input$deleteNA_DUPLI==TRUE){
           lapply(BIGLIST1(), FUN = function(bi){
             bi1<-subset(bi, !is.na(bi[ , input$INDVAR]))
             bi2<-subset(bi1, !duplicated( bi1[ , input$INDVAR] ) )
@@ -570,6 +569,45 @@ module_data <- function(input, output, session) {
     }
   })
   
+  #output$TEXTE_NROW_BIGLIST_AVANT_APRES<-renderUI({
+  #  req(BIGLIST2())
+  #  req(control_dupli_na())
+  #  if(class(control_dupli_na())=="data.frame"){
+  #h4("Nombre de lignes avant et après la supression des doublons/NA dans la variable d'identifiant : ")
+  #  }
+  #})
+  
+  output$NROW_BIGLIST_AVANT_APRES<-renderUI({
+    req(BIGLIST2())
+    req(control_dupli_na())
+    if(class(control_dupli_na())=="data.frame"){
+    data.frame(lapply(BIGLIST1(), nrow))->df1
+    data.frame(lapply(BIGLIST2(), nrow))->df2
+    control_dupli_na()->dfnadoub
+    row.names(dfnadoub)<-dfnadoub$DATE
+    names(dfnadoub)[names(dfnadoub)=="NA_values"]<-"Nb de NA dans variable d'ID"
+    names(dfnadoub)[names(dfnadoub)=="Duplicated"]<-"Nb de doublons dans variable d'OD"
+    data.frame(t(head(dfnadoub)), stringsAsFactors = FALSE)->dfnadoub
+    message("coucou 588")
+    message(names(dfnadoub))
+    message(names(df1))
+    rbind(
+      dfnadoub,
+      "Nb de lignes avant suppression"=df1,
+      "Nb de lignes après supression"=df2
+    )->df
+    output$dtdoublons<-DT::renderDataTable(DT::datatable(df, caption = ""))
+    DT::DTOutput(ns("dtdoublons"))
+    }
+  })
+  
+  output$NROW_BIGLIST2<-renderDataTable({
+    req(BIGLIST2())
+    data.frame(lapply(BIGLIST2(), nrow))->df
+    DT::datatable(df)
+  })
+  
+##### DEBUT BIGLIST 2 #####
   ####
   
   reactive({
@@ -577,11 +615,11 @@ module_data <- function(input, output, session) {
     
     if(length(input$DATE_FOR_SELECT)>1){
       
-      BIGLIST1()[names( BIGLIST1())%in%DATE_FOR_SELECT]->tempdf
+      BIGLIST2()[names( BIGLIST2())%in%DATE_FOR_SELECT]->tempdf
   
     } else {
       
-      BIGLIST1()[[input$DATE_FOR_SELECT]]->tempdf
+      BIGLIST2()[[input$DATE_FOR_SELECT]]->tempdf
       
     }
     
@@ -674,7 +712,7 @@ module_data <- function(input, output, session) {
   
   observe({
     req(input$DATE_FOR_SELECT)
-    BIGLIST1()[[input$DATE_FOR_SELECT[1]]]->tempdf
+    BIGLIST2()[[input$DATE_FOR_SELECT[1]]]->tempdf
     print(names(tempdf))
     updateSelectInput(session=session, inputId = "MERGEORIGINVAR", choices = names(tempdf), selected=NULL)
   })
@@ -942,7 +980,7 @@ module_data <- function(input, output, session) {
                     #disable = list(columns = c(1, 2))
     )
   )
-  
+  #### MARQUEUR DEFINE SUBSET #### BIGLIST2() ####
   shiny::reactive({
     req(  values$DF_subset_initial )
     data_of_subset <-  values$DF_subset_initial
@@ -953,7 +991,7 @@ module_data <- function(input, output, session) {
         
         paste(sapply(vecda, function(vecda.i){
           
-          paste("BIGLIST()$", vecda.i, sep="" )->dfvar
+          paste("BIGLIST2()$", vecda.i, sep="" )->dfvar
           if(data_of_subset$TYPE[i]=="factor"){
             paste( dfvar, "$", data_of_subset$VARIABLE[i], 
                    "%in%",  data_of_subset$FACTOR_LEVELS[i], sep = "")
@@ -995,7 +1033,7 @@ module_data <- function(input, output, session) {
         
         
       } else {
-      paste("BIGLIST()$", data_of_subset$DATE[i], sep="" )->dfvar
+      paste("BIGLIST2()$", data_of_subset$DATE[i], sep="" )->dfvar
       if(data_of_subset$TYPE[i]=="factor"){
         paste( dfvar, "$", data_of_subset$VARIABLE[i], 
                "%in%",  data_of_subset$FACTOR_LEVELS[i], sep = "")
@@ -1074,7 +1112,7 @@ module_data <- function(input, output, session) {
       print(STRING_FOR_SUB())
       if(nrow(STRING_FOR_SUB())<2&STRING_FOR_SUB()$string_for_sub[1]=="nosub"){
         message("COUCOU 790")
-        lapply(BIGLIST(), function(bil){
+        lapply(BIGLIST2(), function(bil){
           bil[ , INDVAR()]
         })->list.ind.no.subset
         unique(unlist(list.ind.no.subset))
@@ -1085,18 +1123,18 @@ module_data <- function(input, output, session) {
       #subset(STRING_FOR_SUB(), STRING_FOR_SUB()$string_for_sub[1]!="nosub")->dfsub
       list.of.inf.by.cond<-lapply(1:nrow(STRING_FOR_SUB() ), function(i){
         if(STRING_FOR_SUB()$string_for_sub[i]=="nosub"){
-          BIGLIST()[[STRING_FOR_SUB()$DATE[i]]][ , INDVAR()]
+          BIGLIST2()[[STRING_FOR_SUB()$DATE[i]]][ , INDVAR()]
         } else {
           
           message("coucou 1084")
           print(STRING_FOR_SUB())
           message("coucou 1086")
-          print(names(BIGLIST()))
+          print(names(BIGLIST2()))
           message("coucou 1088")
           print(STRING_FOR_SUB()$DATE[i])
-          print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST()))
+          print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST2()))
           
-        subset(BIGLIST()[[STRING_FOR_SUB()$DATE[i]]], 
+        subset(BIGLIST2()[[STRING_FOR_SUB()$DATE[i]]], 
                eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
         }
       })
@@ -1118,7 +1156,7 @@ module_data <- function(input, output, session) {
       ind.all.paq
       }
     } else {
-      lapply(BIGLIST(), function(bil){
+      lapply(BIGLIST2(), function(bil){
         bil[ , INDVAR()]
       })->list.ind.no.subset
       unique(unlist(list.ind.no.subset))
@@ -1126,21 +1164,21 @@ module_data <- function(input, output, session) {
   })
   
   reactive({
-    req(BIGLIST() )
+    req(BIGLIST2() )
     if(input$addCONDS==TRUE){
       req(INDIVIDUELS() )
-      lapply(BIGLIST(), FUN = function(bi){
+      lapply(BIGLIST2(), FUN = function(bi){
         subset(bi, bi[ , INDVAR()]%in%INDIVIDUELS())
       })
     } else {
-      BIGLIST()
+      BIGLIST2()
     }
   })->SUBSETTED_LIST
   
   output$LENGTH_IND_SUBS<-renderText({ length( INDIVIDUELS() )    }) 
-  output$LENGTH_BIGLIST<-renderText({ length( BIGLIST() )    }) 
+  output$LENGTH_BIGLIST<-renderText({ length( BIGLIST2() )    }) 
   output$LENGTH_SUBSETTED<-renderText({ length( SUBSETTED_LIST() )    }) 
-  output$LENGTH_BIGLIST1<-renderText({ length( BIGLIST1() )    }) 
+  output$LENGTH_BIGLIST2<-renderText({ length( BIGLIST2() )    }) 
   
   
   
@@ -1158,7 +1196,7 @@ module_data <- function(input, output, session) {
   
 
   #### Chargement premier fichier de données ####
-  renderPrint(print(length(SUBSETTED_LIST())))->output$CONTROLDATA
+  #renderPrint(print(length(SUBSETTED_LIST())))->output$CONTROLDATA
 
   #### Paramétrage des trajectoires ####
   ####  DATE DEBUT ET FIN POUR TRAJ ####
@@ -1269,11 +1307,12 @@ module_data <- function(input, output, session) {
   data.seq<-eventReactive(eventExpr = input$ValidParametres, {
     #### SI FICHOER ####
     if(input$DataType=="fichier"){
-        # updateNumericInput(session=session, inputId = "PAStrate",value=1)
-        s<-seqdef(DR_POUR_SEQ_OBJ()[,input$timecol],cpal = NULL,id = DR_POUR_SEQ_OBJ()[,input$INDVAR],
+        # updateNumericInput(session=session, inputId = "PAStrate",value=1) 
+        s<-seqdef_modgap(DR_POUR_SEQ_OBJ()[,input$timecol],cpal = NULL,id = DR_POUR_SEQ_OBJ()[,input$INDVAR],
                   gaps = input$TEXT_GAP,
                   right = input$TEXT_RIGHT,
-                  left = input$TEXT_LEFT,nr = "RMA")
+                  left = input$TEXT_LEFT,nr = "RMA", 
+                  minimal.gap = input$criterNb, regle.pour.faux.gap = "after")
         return(s)
         
       } else {
@@ -1428,7 +1467,14 @@ module_data <- function(input, output, session) {
         data.frame(
           lapply(names(x), function(xi){rep(NA, times=length(notpresents))}), 
           stringsAsFactors = FALSE)->dfx.add
-    dfx.add[ , input$INDVAR]<-notpresents
+        names(dfx.add)<-names(x)
+        message("coucou1433")
+        message(names(dfx.add))
+    dfx.add[ , which(names(dfx.add)==input$INDVAR)]<-notpresents
+    message("coucou1436")
+    message(names(dfx.add))
+    message("coucou1438")
+    message(names(x))
     data.frame(rbind(x, dfx.add), stringsAsFactors = FALSE)->dfx
       } else {
         x->dfx
