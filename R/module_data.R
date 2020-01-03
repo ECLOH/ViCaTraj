@@ -36,7 +36,8 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                                                "Un objet RData contenant un objet seqdata"="objseq",
                                                                                "Un fichier .csv unique contenant les données"="fichier" 
                                                                    ), 
-                                                                   multiple = FALSE, selected = "fichier")
+                                                                   multiple = FALSE, selected = "fichier"),
+                                                helpText("Voir les trois fichiers d'example qui illustrent les différents types de données : data(package = 'ViCaTraj') ")
                                   ),
                                   shiny::column(width = 6,
                                                 
