@@ -34,7 +34,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                 shiny::selectInput(inputId = ns("DataType"), label = "Choix du type de données", 
                                                                    choices = c("Un objet RData contenant de multiples data.frame"="objet", 
                                                                                "Un objet RData contenant un objet seqdata"="objseq",
-                                                                               "Un seul fichier.csv contenant des données prêtes à l'emploi"="fichier" 
+                                                                               "Un fichier .csv unique contenant les données"="fichier" 
                                                                    ), 
                                                                    multiple = FALSE, selected = "fichier")
                                   ),
@@ -49,7 +49,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                                      choices=c("Virgule" = ",","Point-Virgule" = ";","Tabulation" = "\t"), selected=","),
                                                   shiny::selectInput(inputId=ns("dec"), label= "Séparateur décimal", 
                                                                      choices=c("Virgule" = ",","Point" = "."), selected="."),
-                                                  shiny::selectInput(inputId=ns("endoding"), label= "Comment est codé le fichier ? Les accents sont-ils correctement lus ?", 
+                                                  shiny::selectInput(inputId=ns("endoding"), label= "Comment est codé le fichier ?", 
                                                                      choices=c(UTF8 = "UTF-8", Latin1 = "latin1"), selected = "UTF-8", multiple = FALSE, width = "50%"),
                                                   shiny::checkboxInput(inputId = ns("header"), label="La première ligne correspond-elle aux noms des variables ?",
                                                                        value=TRUE),  
@@ -65,7 +65,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                 conditionalPanel(
                                                   #condition = "input.DataType == 'objet'",
                                                   condition = paste0("input['", ns("DataType"), "'] == 'objet'"),
-                                                  h5("INFO: pour des raisons de sécurité il n'est pas possible de charger directement un dossier dans un navigateur web. Vous pouvez utiliser la fonction LIST_MULTIPLE_CSV du package ViCaTraj pour créer l'objet RData à partir de mulitples fichiers .csv"),
+                                                  helpText("INFO: pour des raisons de sécurité il n'est pas possible de charger directement un dossier dans un navigateur web. Vous pouvez utiliser la fonction LIST_MULTIPLE_CSV du package ViCaTraj pour créer l'objet RData à partir de mulitples fichiers .csv"),
                                                   fileInput(inputId=ns("LIST_SOURCE_BIG_DF"), 
                                                             label="Sélectionner l'objet .RData contenant les multiples data.frame", 
                                                             multiple = FALSE, accept = NULL, width = NULL)
@@ -77,7 +77,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   #condition = "input.DataType == 'objseq'",
                                                   condition = paste0("input['", ns("DataType"), "'] == 'objseq'"),
                                                   
-                                                  h5("INFO: vous pouvez charger un objet .RData contenant une liste d'objet, dont au moins un objet de type seqdata, et éventuellement un ou des data.frames complémentaires"),
+                                                  helpText("INFO: vous pouvez charger un objet .RData contenant une liste d'objet, dont au moins un objet de type seqdata, et éventuellement un ou des data.frames complémentaires (si plusieurs : un par date)"),
                                                   fileInput(inputId=ns("LIST_SEQ"), 
                                                             label="Sélectionner l'objet .RData contenant l'objet seqdata", 
                                                             multiple = FALSE, accept = NULL, width = NULL)
@@ -203,6 +203,10 @@ module_data_UI <- function(id){#label = "CSV file") {
                                     shiny::textInput(inputId = ns("TEXT_GAP"), label = "Label pour les 'gaps' : ", value = "GAP"),
                                     shiny::textInput(inputId = ns("TEXT_RIGHT"), label = "Label pour les censures à droite : ", value = "CENSURE"),
                                     shiny::textInput(inputId = ns("TEXT_LEFT"), label = "Label pour les départs tardifs : ", value = "LEFT"),
+                                    shiny::selectInput(inputId = ns("MISSING_forseq"), 
+                                                       label = "Etats présents dans les données et considérés comme des états manquants dans les trajectoires", 
+                                                       choices = NULL, selected = NULL, multiple = TRUE),
+                                    helpText("Les états considérés comme manquants seront supprimés des trajectoires et remplacés par le codage prévu pour les valeurs manquantes"),
                                     shiny::numericInput(inputId = ns("criterNb"), label = "Critère de sortie : nombre de mois consécutifs",value = 3, min = 1, max = 36, step = 1),
                                     uiOutput(ns("CONTROL_DUPLICATED_ID"))
                                   ))
@@ -1349,17 +1353,49 @@ module_data <- function(input, output, session) {
     
   })
   
+  observe({
+    if(input$DataType=="objet"){
+      lapply(BIGLIST2(), function(dt){
+        dt[ , input$timecol]
+      })->li.var
+      as.character(unique(unlist(li.var)))->choix.missing
+    } else {
+      as.character(unique(unlist(DR_POUR_SEQ_OBJ()[,input$timecol])))->choix.missing
+    }
+    updateSelectInput(session = session, inputId = "MISSING_forseq", 
+                      choices = c("aucun", choix.missing), selected = NULL)#"aucun")
+  })
   
+  missing_codes<-reactive({
+     
+     if(length(input$MISSING_forseq)<1|is.null(input$MISSING_forseq)){
+       NA
+     } else {
+       if(length(input$MISSING_forseq)==1&input$MISSING_forseq=="aucun"){
+         NA
+       } else {
+         input$MISSING_forseq
+       }
+     }
+   })
   
   data.seq<-eventReactive(eventExpr = input$ValidParametres, {
+    
     #### SI FICHOER ####
     if(input$DataType=="fichier"){
         # updateNumericInput(session=session, inputId = "PAStrate",value=1) 
-        s<-seqdef_modgap(DR_POUR_SEQ_OBJ()[,input$timecol],cpal = NULL,id = DR_POUR_SEQ_OBJ()[,input$INDVAR],
+      DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
+      dataforseq[]<-lapply(dataforseq, as.character)
+      for(miss.i in missing_codes()){
+        dataforseq[dataforseq==miss.i]<-NA
+      }
+        s<-seqdef_modgap(data = dataforseq,
+                         cpal = NULL,
+                         id = DR_POUR_SEQ_OBJ()[,input$INDVAR],
                   gaps = input$TEXT_GAP,
                   right = input$TEXT_RIGHT,
                   left = input$TEXT_LEFT,
-                  missing=argna(),
+                  missing=NA,
                   nr = "RMA", 
                   minimal.gap = input$criterNb, regle.pour.faux.gap = "after")
         return(s)
@@ -1374,11 +1410,18 @@ module_data <- function(input, output, session) {
         print(DR_POUR_SEQ_OBJ()[ , input$INDVAR][duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR])])
         
         if(!is.null(DR_POUR_SEQ_OBJ())){
+          
+          DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
+          dataforseq[]<-lapply(dataforseq, as.character)
+          for(miss.i in missing_codes()){
+            dataforseq[dataforseq==miss.i]<-NA
+          }
+          
           seqdef(id = DR_POUR_SEQ_OBJ()[ , input$INDVAR], 
-                 data = DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR],
+                 data = dataforseq,
                  gaps = input$TEXT_GAP,
                  right = input$TEXT_RIGHT,
-                 left = input$TEXT_LEFT,nr = "RMA"
+                 left = input$TEXT_LEFT,nr = "RMA", missing=NA
           )->s
         } else {s<-NULL}
       } else {
