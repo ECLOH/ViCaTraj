@@ -11,7 +11,8 @@ module_data_UI <- function(id){#label = "CSV file") {
   
   tabPanel("Les données",
            shiny::actionButton(inputId = ns("ValidParametres"), label = "Je valide ces trajectoires"),
-           shiny::downloadButton(outputId = "downseq", label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : " ),
+           shiny::downloadButton(outputId = ns("DOWNSEQ"), 
+                                 label = "Enregistrer les trajectoires et leurs données complémentaires sur le disque : " ),
            uiOutput(ns("DES_TRAJ_OBJ")),
            hr(),
            #### SUB-PANEL: PARAMETRAGE ####
@@ -1362,15 +1363,7 @@ module_data <- function(input, output, session) {
     })
     #summary(data.seq())
   })
-  
-  
-  observe({
-    list("SEQ"=data.seq(), "DATA"=DR_POUR_SEQ_OBJ())->list.to.save
-    output$downseq <- shiny::downloadHandler(filename = "mes_trajectoires.RData", 
-                                             content =  function(file) {
-                                               save(list.to.save, file = file)
-                                             } )
-  })
+
   
   nom_var_seq<-reactive({
     names( data.seq() )
@@ -1446,6 +1439,31 @@ module_data <- function(input, output, session) {
   })->data_for_res2
   
 
+  
+  res<-reactive({
+    req(data.seq())
+    req(data_for_res2())
+    list("SEQ"=data.seq(), "DATA"=data_for_res2())->res
+    res
+  })
+  
+  output$DOWNSEQ <- downloadHandler(
+    filename =  function(){
+      paste("mes_trajectoires.RData")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      dat<-res()
+      shiny::withProgress(
+        message = "Veuillez patienter, le téléchargement des données est en cours",
+        value = 0,
+        {
+          save(dat, file=file)
+          shiny::incProgress(1)
+        })
+    } 
+  )
+  
   
   return(reactive({
     list("SEQ_OBJ"=data.seq(), 

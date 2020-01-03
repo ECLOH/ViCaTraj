@@ -684,6 +684,7 @@ return(res)
     # This function should write data to a file given to it by
     # the argument 'file'.
     content = function(file) {
+      
       shiny::withProgress(
         message = "Veuillez patienter, le téléchargement de votre fichier est en cours",
         value = 0,

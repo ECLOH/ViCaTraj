@@ -32,7 +32,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                          tabPanel("Présentation", 
                                   tags$div(
                                     tags$p("Cette application vise à faciliter la manipulation de données de trajectoires à partir du logiciel de traitement statistique 'R'. Elle permet aux personnes qui ne sont pas familières de ce langage de pouvoir utiliser un certain nombre de fonctions particulièrement utiles pour la manipulation de données de trajectoires."), 
-                                    h3("1. Construction d'un jeu de données : "),
+                                    h4("1. Construction d'un jeu de données : "),
                                     tags$p("L'application permet dans un premier temps de construire des trajectoires à partir de données 'brutes' (dans l'onglet 'les données'). "),
                                     tags$p("Trois types de fichiers peuvent être chargés dans l'application : "),
                                     tags$ul(
@@ -40,14 +40,16 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                         tags$li("un fichier .Rdata comportant une liste ('list()') avec un objet 'trajectoire' créé par la fonction seqdef() et une data.frrame comportant des données complémentaires. Dans ce cas, les noms de ligne (row.names()) des trajectoires doivent correspondre avec une colonne de variable d'identifiant individuel dans le data.frame."),
                                         tags$li("un fichier .Rdata comportant une liste ('list()') avec pour chaque date (chaque mois, chaque année, chaque jour, etc) un data.frame avec les valeurs correspondantes. Dans ce cas, les trajectoires pourront être générées à partir de n'importe quel nom de variable commun aux différentes dates.")
                                        ),
-                                    tags$p("A partir de ces différentes sources, certaines possibilités de sélections d'individus sont offertes. Chaque sélection constituée dans l'application et qui a donné lieu à la constitution de trajectoires peut être enregistrée sur le disque."),
-                                    h3("2. Indicateurs statistiques : "),
-                                    tags$p("Une fois que les trajectoires sont construites et validées différents onglets permettent d'obtenir des indicateurs statistiques qui ces trajectoires. "),
+                                    tags$p("A partir de ces différentes sources, certaines possibilités de sélection d'individus sont offertes. Chaque sélection constituée dans l'application et qui a donné lieu à la constitution de trajectoires peut être enregistrée localement et réutilisée."),
+                                    h4("2. Indicateurs statistiques : "),
+                                    tags$p("Une fois que les trajectoires sont construites et validées différents onglets permettent d'obtenir des indicateurs statistiques sur les trajectoires et les données complémentaires."),
                                     tags$ul(
-                                      tags$li("Les taux de transition : "),
-                                        tags$li("Les principaux indicateurs de base fournis dans le package R 'TraMineR', croisés avec les données complémentaires"),
-                                      tags$li("Des tableaux de donnés (tableaux croisés ou simples) sur l'ensemble des données générées,  y compris les données complémentaires (à venir)")
+                                      tags$li("Les taux de transition : calcul des taux de transitions entre états selon différents paramètres."),
+                                        tags$li("Les principaux indicateurs de base fournis dans le package R 'TraMineR', croisés avec les données complémentaires (chronogramme des états, temps moyen passé dans chaque état, événements, états modaux, représentations en tapis, graphiques de flux, etc."),
+                                      tags$li("Des tableaux de donnés (tris à plat ou tableau croisés) sur l'ensemble des données générées, y compris les données complémentaires.")
                                     ),
+                                    h4("3. Classification des trajectoires : "),
+                                    tags$p("L'application permet aussi de générer des classes de trajectoires à partir de méthodes basiques (Optimal Matching et ses dérivés principalement). Néanmoins, pour une classification fine et pleinement paramétrable, il serais préférable d'utiliser directement les diverses fonctions existantes dans une interface R classique."),
                                     tags$hr(),
                                     tags$h4("Licence et références :  "),
                                     tags$p("Application sous licence CC BY-NC-SA.  Adresse du code source : ", tags$a("https://github.com/ECLOH/ViCaTraj")),
