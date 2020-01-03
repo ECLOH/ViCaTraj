@@ -68,12 +68,24 @@ seqdef_modgap<-function (data, var = NULL, informat = "STS", stsep = NULL, alpha
   ####
   gapmin<-minimal.gap; fauxgapcode<-regle.pour.faux.gap
   ###
+  message("coucou 71")
+  message(missing)
+  message(is.na(missing))
+  
   if ((is.na(missing) && any(is.na(seqdata))) || ((!is.na(missing)) && 
                                                   any(seqdata == missing, na.rm = TRUE))) {
     message(" [>] found missing values ('", missing, "') in sequence data")
     seqdata.code <- seqprep.modgap(seqdata, left = left, gaps = gaps, 
                        right = right, missing = missing, void = void, nr = nr, 
                        minimal.gap=minimal.gap, regle.pour.faux.gap=regle.pour.faux.gap)
+  } else {
+    if( (is.na(missing) && !any(is.na(seqdata))) ||  ((!is.na(missing)) && 
+                                                      !any(seqdata == missing, na.rm = TRUE))   ){
+      message(" [>] WARNING : no missing values ('", missing, "') in sequence data")
+      seqdata.code <- seqprep.modgap(seqdata, left = left, gaps = gaps, 
+                                     right = right, missing = missing, void = void, nr = nr, 
+                                     minimal.gap=minimal.gap, regle.pour.faux.gap=regle.pour.faux.gap)
+    }
   }
   seqdata <- as.data.frame(seqdata.code)
   class(seqdata) <- c("stslist", "data.frame")

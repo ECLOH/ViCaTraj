@@ -53,7 +53,8 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                                      choices=c(UTF8 = "UTF-8", Latin1 = "latin1"), selected = "UTF-8", multiple = FALSE, width = "50%"),
                                                   shiny::checkboxInput(inputId = ns("header"), label="La première ligne correspond-elle aux noms des variables ?",
                                                                        value=TRUE),  
-                                                  shiny::selectInput(inputId = ns("na"), label = "Codage des valeurs manquantes", choices = c("Vide" , "Espace" = " ", "NA" = "NA"), 
+                                                  shiny::selectInput(inputId = ns("na"), label = "Codage des valeurs manquantes", 
+                                                                     choices = c("Vide" , "Espace" = " ", "NA" = "NA"), 
                                                                      selected = "NA", multiple = TRUE, selectize = TRUE),
                                                   
                                                   fileInput(inputId=ns("file1"), label="Sélectionnez votre fichier source:", 
@@ -1357,7 +1358,9 @@ module_data <- function(input, output, session) {
         s<-seqdef_modgap(DR_POUR_SEQ_OBJ()[,input$timecol],cpal = NULL,id = DR_POUR_SEQ_OBJ()[,input$INDVAR],
                   gaps = input$TEXT_GAP,
                   right = input$TEXT_RIGHT,
-                  left = input$TEXT_LEFT,nr = "RMA", 
+                  left = input$TEXT_LEFT,
+                  missing=argna(),
+                  nr = "RMA", 
                   minimal.gap = input$criterNb, regle.pour.faux.gap = "after")
         return(s)
         
