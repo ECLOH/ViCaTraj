@@ -615,7 +615,7 @@ module_data <- function(input, output, session) {
     
     if(length(input$DATE_FOR_SELECT)>1){
       
-      BIGLIST2()[names( BIGLIST2())%in%DATE_FOR_SELECT]->tempdf
+      BIGLIST2()[names( BIGLIST2())%in%input$DATE_FOR_SELECT]->tempdf
   
     } else {
       
@@ -925,7 +925,7 @@ module_data <- function(input, output, session) {
     }
     isolate(input$DATE_FOR_SELECT)->datesse
     if(length(datesse)>1){
-      paste("c(" ,paste(datesse, collapse=","), ")")->resudatess
+      paste("c('" ,paste(datesse, collapse="','"), "')", sep = "")->resudatess
     } else {
       datesse->resudatess
     }
@@ -1134,8 +1134,49 @@ module_data <- function(input, output, session) {
           print(STRING_FOR_SUB()$DATE[i])
           print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST2()))
           
-        subset(BIGLIST2()[[STRING_FOR_SUB()$DATE[i]]], 
-               eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
+          if(grepl(pattern = ",", x = STRING_FOR_SUB()$DATE[i], fixed = TRUE)){
+            as.character(STRING_FOR_SUB()$string_for_sub[i])->multidatesub
+            strsplit(x = multidatesub, split = "&", fixed = TRUE)[[1]]->multconditionsdates
+            sapply(multconditionsdates, function(cond.i){
+              
+              sapply(names(BIGLIST2()), function(dat.i){
+                regexpr (pattern = dat.i, text = cond.i, fixed = TRUE)->datinfo
+                substr(cond.i, start = datinfo[1], stop = ((datinfo[1]+ attributes(datinfo)$match.length)-1) )->thedat
+                thedat
+              })->thedat
+              
+              sapply(thedat, function(di){
+                subset(BIGLIST2()[[di]], 
+                       eval(parse(text = cond.i )) )[ , INDVAR()]->res.di
+                res.di
+              })->resdi
+              resdi[lengths(resdi) != 0]->resdi
+              Reduce(intersect, resdi)->res
+              message("close 1154")
+              message("cond.i")
+              print(cond.i)
+              message("thedat")
+              print(thedat)
+              message("resdi")
+              print(resdi)
+              message("res")
+              print(res)
+              return(res)
+              
+              
+            })->IND.BY.DATE.COND
+            
+            Reduce(intersect, IND.BY.DATE.COND)
+             ### CONDIRTON ET
+            
+            #BIGLIST2()$D2017_01_01$RSA_simple%in%c( 'NO.RSA','RSA' )&BIGLIST2()$D2018_01_01$RSA_simple%in%c( 'NO.RSA','RSA' )
+            
+          } else {
+            subset(BIGLIST2()[[STRING_FOR_SUB()$DATE[i]]], 
+                   eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
+          }
+          
+
         }
       })
       #names(list.of.inf.by.cond)<-
