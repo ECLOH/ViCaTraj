@@ -514,7 +514,7 @@ module_select_and_plot <- function(input, output, session, data) {
       }
     }
     
-    if(!is.null(input$size_text_plot)){
+    if(!is.null(input$size_text_plot)&length(p$theme$text$size)>0){
       p<-p+theme(text = element_text(size = p$theme$text$size+input$size_text_plot))
     }
     }
@@ -573,7 +573,7 @@ module_select_and_plot <- function(input, output, session, data) {
         data$SEQ_OBJ[the.grups()==levi , ]->seqi
         seqi[!is.na(seqi[ , 1]) , ]->seqi
         DONNEES_POUR_PLOT(TYPE = input$plottype, objseq = seqi,
-                          pmin.sup=input$pminsup, STR.SUBS=input$select_event)
+                          pmin.sup=input$pminsup, STR.SUBS=input$select_event,input$select_col_time_flux )
         
       })->listdat
       #
@@ -595,7 +595,7 @@ module_select_and_plot <- function(input, output, session, data) {
         if(class(listdat[[li]])=="list"){
           message("coucou 409")
           lapply(1:length(listdat[[li]]), function(li2){ 
-            output[[ paste("l", li, li2, sep="")]]<-DT::renderDataTable(datatable(listdat[[li]][[li2]]))
+            output[[ paste("l", li, li2, sep="")]]<-DT::renderDataTable(datatable(listdat[[li]][[li2]], filter="top"))
 
               list(
             h3( names(listdat[[li]])[li2]),
@@ -611,7 +611,7 @@ module_select_and_plot <- function(input, output, session, data) {
           #print(head(listdat[[li]]))
           message("coucou 424")
           
-          output[[ paste("l1", li, sep="") ]]<-DT::renderDataTable(datatable(data.frame(listdat[[li]])))
+          output[[ paste("l1", li, sep="") ]]<-DT::renderDataTable(datatable(data.frame(listdat[[li]]), filter="top"))
           
           list(
             h3( names(listdat)[li]),

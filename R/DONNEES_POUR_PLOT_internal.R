@@ -4,7 +4,7 @@ DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2,
                                      col.selected.r1=NULL, pmin.sup1=0.05, STR.SUBS.1=NULL){
   
   if(!is.null(col.selected.r1)){
-    actcal.seq[ , which(names(actcal.seq)%in%col.selected.r1)]
+    objseq.r1[ , which(names(objseq.r1)%in%col.selected.r1)]->objseq.r1
   }
   
   tye<-TYPE.r1
@@ -31,7 +31,7 @@ reshape(res2, varying = list(names(res2)), direction='long', ids = row.names(res
 res2df$id%>%
   gsub(pattern = ' ->]', replacement = '', fixed = TRUE)%>%
   gsub(pattern = '[', replacement = '', fixed = TRUE)->res2df$FROM
-  
+
 res2df$time%>%
   gsub(pattern = '[-> ', replacement = '', fixed = TRUE)%>%
   gsub(pattern = ']', replacement = '', fixed = TRUE)%>%
@@ -41,7 +41,10 @@ res2df$TO<-sapply(1:nrow(res2df), function(i){strsplit(res2df$TO.G[i], split = '
 
 names(res2df)[!names(res2df)%in%c('time' , 'id',  'FROM' , 'TO.G'  , 'SEQTIME', 'TO')]<-'Taux.transition'
 
-data.frame(t(res1))->res1bis;
+t(res1)->res1bis;
+colnames(res1bis)->save.colnames;
+data.frame(res1bis)->res1bis;
+names(res1bis)<-save.colnames;
 reshape(res1bis, direction='long', varying = list(names(res1bis)), times = names(res1bis), ids = row.names(res1bis) )->res1bis.long;
 res1bis.long$SEQTIME<-gsub(pattern = 'repartition', replacement = '', fixed = TRUE, x = res1bis.long$id);
 names(res1bis.long)[!names(res1bis.long)%in%c('time', 'id', 'SEQTIME')]<-'Fréquences';
@@ -51,6 +54,7 @@ names(res1bis.long)[names(res1bis.long)==c('time')]<-'FROM';
 left_join(res1bis.long, res2df, by=c('SEQTIME', 'FROM'))->resG;
 resG[ , c('SEQTIME' , 'FROM', 'TO', 'Fréquences', 'Taux.transition')]->resG;
 names(resG)[names(resG)=='time']<-'Etats';
+names(resG)[names(resG)=='FROM.y']<-'FROM';
 resG"
   ), ncol=2, byrow = TRUE), stringsAsFactors = FALSE)->df
   

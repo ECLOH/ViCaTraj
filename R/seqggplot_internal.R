@@ -23,7 +23,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
     lapply(1:length(unique(grup_var.r1)), FUN = function(i){
       objseq.r1[grup_var.r1==unique(grup_var.r1)[i] , ]->objseq.r1.i
       objseq.r1.i[!is.na(objseq.r1.i[ , 1]) , ]->objseq.r1.i
-      DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1.i, arrondi=2,pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1)->dats
+      DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1.i, arrondi=2,pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1, col.selected = col_selected.r1)->dats
       as.data.frame(dats)->dats
       dats$level<-unique(grup_var.r1)[i]
       dats$ID<-row.names(dats)

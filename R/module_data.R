@@ -208,7 +208,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                        label = "Etats présents dans les données et considérés comme des états manquants dans les trajectoires", 
                                                        choices = NULL, selected = NULL, multiple = TRUE),
                                     helpText("Les états considérés comme manquants seront supprimés des trajectoires et remplacés par le codage prévu pour les valeurs manquantes"),
-                                    shiny::numericInput(inputId = ns("criterNb"), label = "Critère de sortie : nombre de mois consécutifs",value = 3, min = 1, max = 36, step = 1),
+                                    shiny::numericInput(inputId = ns("criterNb"), label = "Critère de sortie : nombre de mois consécutifs",value = 1, min = 1, max = 36, step = 1),
                                     uiOutput(ns("CONTROL_DUPLICATED_ID"))
                                   ))
                        ),
@@ -1379,6 +1379,24 @@ module_data <- function(input, output, session) {
        }
      }
    })
+  
+  
+  observe({
+    req(DR_POUR_SEQ_OBJ())
+    req(input$INDVAR)
+    req(input$timecol)
+    
+    
+    if(input$DataType=="fichier"){
+    DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
+    } else {
+      if(input$DataType=="objet"){
+        DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
+      }
+    }
+    
+    updateNumericInput(session = session, inputId = "criterNb", max = (ncol(dataforseq)-1))
+  })
   
   data.seq<-eventReactive(eventExpr = input$ValidParametres, {
     

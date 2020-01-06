@@ -3,6 +3,10 @@
 
 seqggplot<-function(TYPE="d", objseq = actcal.seq, groupes=NULL, merge_mods, col.selected=c("1", "2"), pmin.sup=0.05 , str.subs=NULL){
   
+  if(TYPE=="flux"&length(col.selected)==1){
+    stop("ATTENTION : veuillez sélectionner au moins deux moments pour le calcul du graphique de flux")
+  }
+  
   if(sum(class(objseq)!=c("stslist", "data.frame"))==0){
     #p<-
       seqggplot.internal(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=groupes, 
