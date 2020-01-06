@@ -507,7 +507,7 @@ module_select_and_plot <- function(input, output, session, data) {
                  groupes = the.grups(), 
                  merge_mods = input$merge_moda, 
                  col.selected = input$select_col_time_flux, pmin.sup = input$pminsup, str.subs = input$select_event)
-    
+    if(inherits(x = p, what = "ggplot")){
     if(length(input$theme_select)>0){
       if(input$theme_select!="choix par défaut"){
       p<-p+eval(parse(text = input$theme_select))
@@ -516,6 +516,7 @@ module_select_and_plot <- function(input, output, session, data) {
     
     if(!is.null(input$size_text_plot)){
       p<-p+theme(text = element_text(size = p$theme$text$size+input$size_text_plot))
+    }
     }
                   
     } else {NULL}
