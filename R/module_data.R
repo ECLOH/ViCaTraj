@@ -594,12 +594,16 @@ module_data <- function(input, output, session) {
     if(class(control_dupli_na())=="data.frame"){
     data.frame(lapply(BIGLIST1(), nrow))->df1
     data.frame(lapply(BIGLIST2(), nrow))->df2
+    message("control 597")
+    print(control_dupli_na())
     control_dupli_na()->dfnadoub
     row.names(dfnadoub)<-dfnadoub$DATE
     names(dfnadoub)[names(dfnadoub)=="NA_values"]<-"Nb de NA dans variable d'ID"
-    names(dfnadoub)[names(dfnadoub)=="Duplicated"]<-"Nb de doublons dans variable d'OD"
-    data.frame(t(head(dfnadoub)), stringsAsFactors = FALSE)->dfnadoub
+    names(dfnadoub)[names(dfnadoub)=="Duplicated"]<-"Nb de doublons dans variable d'ID"
+    data.frame(t(dfnadoub), stringsAsFactors = FALSE)->dfnadoub
     message("coucou 588")
+    print(dfnadoub)
+    
     message(names(dfnadoub))
     message(names(df1))
     rbind(

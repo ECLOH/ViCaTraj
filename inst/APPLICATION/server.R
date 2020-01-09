@@ -321,7 +321,7 @@ observeEvent(eventExpr = DATAs()$SEQ_OBJ,{
   })
   
   ####### Graphique sous séquence ####
-  ####### Création des graphiques pour les deux types de sous-séquences ###
+  ####### Création des graphiques pour les deux types de sous-séquences ####
   
   sousSeqPlot<-reactive({
     req(seq.select1())

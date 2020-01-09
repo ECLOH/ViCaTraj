@@ -8,6 +8,10 @@
 #
 
 library(shiny)
+library(shinycssloaders)
+library(shinyWidgets)
+
+
 library(ViCaTraj)
 library(DT)
 source('C:/Users/elie/Desktop/ViCaTraj/R/module_select_and_plot.R', encoding = 'UTF-8')
@@ -34,9 +38,10 @@ tabsetPanel(
 shiny::tabPanel(title = "tab2",
 module_select_and_plot_UI(id = "id2")),
 shiny::tabPanel(title = "tab3",
-module_tabdes_UI(id = "id3"))
+module_tabdes_UI(id = "id3")),
+shiny::tabPanel(title = "tab4",
+                module_tabdes_UI(id = "id4"))
 )
-    
 )
 
 # Define server logic required to draw a histogram
