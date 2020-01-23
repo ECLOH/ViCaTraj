@@ -10,8 +10,6 @@
 library(shiny)
 library(shinycssloaders)
 library(shinyWidgets)
-
-
 library(ViCaTraj)
 library(DT)
 source('C:/Users/elie/Desktop/ViCaTraj/R/module_select_and_plot.R', encoding = 'UTF-8')

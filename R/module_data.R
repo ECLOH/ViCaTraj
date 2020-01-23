@@ -317,7 +317,7 @@ module_data <- function(input, output, session) {
     req( LIST_OBJSEQ())
     req(CLASS_LIST_OBJSEQ())
     LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<1)]]->df.pour.seq
-    if(length(df.pour.seq)==1){
+    if(class(df.pour.seq)=="data.frame"){
     list("Table.unique"=df.pour.seq)->res
     } else {
       res<-df.pour.seq
@@ -485,7 +485,23 @@ module_data <- function(input, output, session) {
         
       } else {
         if(input$DataType=="objseq"){
-          names( OBJSEQ_COMPLEMENT()[[1]] )->glona
+          #if( OBJSEQ_COMPLEMENT())
+          #names( BIGLIST1()[[1]] )->glona
+          message("ERROR 490")
+          message(length(BIGLIST1()))
+          message(class(BIGLIST1()))
+          message(names(BIGLIST1()))
+          lapply(BIGLIST1(), function(bi){
+            names(bi)
+          })->lina
+          unique(unlist(lina))->glona
+          
+          
+           lapply(BIGLIST1(), function(bi){
+            names(bi)
+          })->lina
+          unique(unlist(lina))->glona
+          print(glona)
           message<-h5("Renseignez la variable dans les données complémentaires qui correspond à l'attribut row.names de l'objet seqdata")
         } else {
           if(input$DataType=="fichier"){
@@ -1017,9 +1033,9 @@ module_data <- function(input, output, session) {
             } else {
               if(data_of_subset$TYPE[i]%in%c("numeric", "integer") ){
                 paste("(", 
-                      paste(dfvar, "$", data_of_subset$VARIABLE[i], ">=", data_of_subset$min[i]),
+                      paste(dfvar, "$", data_of_subset$VARIABLE[i], ">=", data_of_subset$min[i], sep = ""),
                       "&",
-                      paste(dfvar, "$", data_of_subset$VARIABLE[i], "<=", data_of_subset$max[i]),
+                      paste(dfvar, "$", data_of_subset$VARIABLE[i], "<=", data_of_subset$max[i], sep = ""),
                       ")", sep="")
               } else {
                 if(data_of_subset$TYPE[i]=="Date" ){
@@ -1059,9 +1075,9 @@ module_data <- function(input, output, session) {
         } else {
           if(data_of_subset$TYPE[i]%in%c("numeric", "integer") ){
             paste("(", 
-                  paste(dfvar, "$", data_of_subset$VARIABLE[i], ">=", data_of_subset$min[i]),
+                  paste(dfvar, "$", data_of_subset$VARIABLE[i], ">=", data_of_subset$min[i], sep = ""),
                   "&",
-                  paste(dfvar, "$", data_of_subset$VARIABLE[i], "<=", data_of_subset$max[i]),
+                  paste(dfvar, "$", data_of_subset$VARIABLE[i], "<=", data_of_subset$max[i], sep = ""),
                   ")", sep="")
           } else {
             if(data_of_subset$TYPE[i]=="Date" ){
@@ -1146,13 +1162,17 @@ module_data <- function(input, output, session) {
           message("coucou 1086")
           print(names(BIGLIST2()))
           message("coucou 1088")
+          
           print(STRING_FOR_SUB()$DATE[i])
           print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST2()))
           
           if(grepl(pattern = ",", x = STRING_FOR_SUB()$DATE[i], fixed = TRUE)){
             as.character(STRING_FOR_SUB()$string_for_sub[i])->multidatesub
             strsplit(x = multidatesub, split = "&", fixed = TRUE)[[1]]->multconditionsdates
-            sapply(multconditionsdates, function(cond.i){
+            lapply(multconditionsdates, function(cond.i){
+              
+              message("coucou1158")
+              message(cond.i)
               
               sapply(names(BIGLIST2()), function(dat.i){
                 regexpr (pattern = dat.i, text = cond.i, fixed = TRUE)->datinfo
@@ -1160,6 +1180,15 @@ module_data <- function(input, output, session) {
                 thedat
               })->thedat
               
+              message("coucou1162")
+              if(sum(gregexpr("(", cond.i, fixed=TRUE)[[1]] > 0)!=sum(gregexpr(")", cond.i, fixed=TRUE)[[1]] > 0)){
+              if(startsWith(cond.i, "(")==TRUE&endsWith(cond.i, ")")==FALSE){
+                substr(cond.i, start=2, stop=nchar(cond.i))->cond.i
+              }
+              if(startsWith(cond.i, "(")==FALSE&endsWith(cond.i, ")")==TRUE){
+                substr(cond.i, start=1, stop=(nchar(cond.i)-1) )->cond.i
+              }
+              }
               sapply(thedat, function(di){
                 subset(BIGLIST2()[[di]], 
                        eval(parse(text = cond.i )) )[ , INDVAR()]->res.di
@@ -1181,7 +1210,7 @@ module_data <- function(input, output, session) {
               
             })->IND.BY.DATE.COND
             
-            Reduce(intersect, IND.BY.DATE.COND)
+            return(Reduce(intersect, IND.BY.DATE.COND))
              ### CONDIRTON ET
             
             #BIGLIST2()$D2017_01_01$RSA_simple%in%c( 'NO.RSA','RSA' )&BIGLIST2()$D2018_01_01$RSA_simple%in%c( 'NO.RSA','RSA' )
@@ -1195,6 +1224,7 @@ module_data <- function(input, output, session) {
         }
       })
       #names(list.of.inf.by.cond)<-
+      
       print(list.of.inf.by.cond)
       message("COUCOU 809")
       
@@ -1264,8 +1294,10 @@ module_data <- function(input, output, session) {
     #} else {
       if(input$DataType=="objet"|input$DataType=="fichier"){
         names(SUBSETTED_LIST())->names.pick
+        message("coucou1279")
         mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = SUBSETTED_LIST(), FUN = names))),
                                  use.names = FALSE))
+        print(mycolumns)
         if(length(SUBSETTED_LIST())>1){
           updateSelectInput(session = session, inputId = "timecol", choices = mycolumns, label = "Choisir la variable commune aux data.frame utilisée pour construire les trajectoires:")
         list(
