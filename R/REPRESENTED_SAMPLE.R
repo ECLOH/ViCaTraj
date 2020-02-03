@@ -1,10 +1,10 @@
 #' @export
 
-REPRESENTED_SAMPLE<-function(data, interact.var, SIZE, id.var){
+REPRESENTED_SAMPLE<-function(interact.var, SIZE, id.var){
   if(!is.null(interact.var)){
   data.frame(
-    "INTERACTION"=interaction(data[ , interact.var]),
-    "IDROW"=1:nrow(data)
+    "INTERACTION"=interact.var,
+    "IDROW"=1:length(interact.var)
   )->df.interact
   prop.table(table(df.interact$INTERACTION))->props
   df.interact$PROPS<-sapply(1:nrow(df.interact), FUN = function(i){
@@ -19,7 +19,7 @@ REPRESENTED_SAMPLE<-function(data, interact.var, SIZE, id.var){
   if(is.null(id.var)){
     SAMres<-SAM1
   } else {
-    SAMres<-data[SAM1 , id.var]
+    SAMres<-id.var[SAM1]
   }
   return(SAMres)
 }

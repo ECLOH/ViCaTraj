@@ -10,7 +10,8 @@ EXAMPLES_DATA<-function(){
   })->EXAMPLE_LIST
   names(EXAMPLE_LIST)<-namevar
   #####
-  seqdef(data = biofam[ , namevar], id = row.names(biofam))->SEQ
+  biofam[!duplicated(biofam$idhous)&!is.na(biofam$idhous) , ]->datforseq
+  seqdef(data = datforseq[ , namevar], id = datforseq$idhous)->SEQ
   biofam->COMP
   list("SEQ"=SEQ, "COMP"=COMP)->EXAMPLE.OBJET.SEQ
   ####

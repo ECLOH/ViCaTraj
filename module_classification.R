@@ -7,63 +7,72 @@
 module_classification_UI <- function(id){#label = "CSV file") {
   ns <- NS(id)
  ####
-  textOutput("id_module_output"),
+  #textOutput("id_module_output"),
   tabsetPanel(
     #tabsetPanel(
     tabPanel(title="Matrice de distance",
              fluidRow(
                column(3,
                       h4("Paramètres généraux de la classification :"),
-                      shiny::selectInput(inputId = ns("selection_rows"), label = "Sur quelles données voulez-vous travailler?", 
-                                         c("Un echantillon"="Sample", 
+                      shiny::selectInput(inputId = ns("selection_rows"), 
+                                         label = "Sur quelles données voulez-vous travailler?", 
+                                         choices = c("Un echantillon"="Sample", 
                                            "Des trajectoires uniques avec leurs poids"="unique.traj", 
-                                           "Toutes les trajectoires"="all"), selected = "all", multiple = FALSE),
-                      shiny::uiOutput("TEXT_NB_UNIQUE_TRAJS"),
+                                           "Toutes les trajectoires"="all"), 
+                                         selected = "all", multiple = FALSE),
+                      uiOutput(ns("SELECT_SAMPLE")),
+                      #uiOutput(ns("SELECTED_SELECTION")),
+                      #uiOutput(ns("SELECTED_SELECTION2")),
+                      #uiOutput(ns("TRAJS_FOR_CLASS_CONTROL")),
+                      #DTOutput(ns("TABLE_ECH")),
+                      uiOutput(ns("TEXT_NB_UNIQUE_TRAJS")),
+                      uiOutput(ns("TEXT_NB_SELECT_TRAJS"))%>% withSpinner(color="#0dc5c1"),
                       hr(),
-                      uiOutput(ns("SAMPLING_INPUTS")),
-                      
-                      shiny::uiOutput("TEXT_NB_SELECTED_TRAJS") %>% withSpinner(color="#0dc5c1"),
                       textOutput("CONTROL_ID_MATCHING")
                ),
                column(4,
                       h4("Type de distance :"),
-                      shiny::selectInput(inputId = "type_distance", label = "", c("Edition de trajectoires"="edit", "Attributs communs"="common_attributes", "Distribution d'états"="distrib"), multiple = FALSE),
+                      shiny::selectInput(inputId = ns("type_distance"), 
+                                         label = "", c("Edition de trajectoires"="edit", 
+                                                       "Attributs communs"="common_attributes", 
+                                                       "Distribution d'états"="distrib"), multiple = FALSE),
                       hr(),
-                      conditionalPanel(condition = "input.type_distance=='edit'",
+                      conditionalPanel(condition = "input.type_distance=='edit'",ns = ns,
                                        h4("Paramètres des coûts :"),
-                                       shiny::uiOutput("InfobulleCout"),
+                                       shiny::uiOutput(ns("InfobulleCout")),
                                        #method [seqcost(method = )]
-                                       selectInput(inputId = "method_edit_cost", label = NULL,
+                                       selectInput(inputId = ns("method_edit_cost"), label = NULL,
                                                    choices = c("CONSTANT" , "TRATE", "FUTURE" , "FEATURES" , "INDELS", "INDELSLOG"),
                                                    selected = "TRATE", multiple = FALSE),
-                                       uiOutput("SEQCOST_INPUTS") %>% withSpinner(color="#0dc5c1"),
-                                       shiny::actionButton(inputId = "calculCouts", label = "Calcul des couts"))
+                                       uiOutput(ns("SEQCOST_INPUTS")) %>% withSpinner(color="#0dc5c1"),
+                                       shiny::actionButton(inputId = ns("calculCouts"), label = "Calcul des couts"))
                ),
                
                column(4,
                       h4("Paramètres de la matrice de distance :"),
-                      shiny::uiOutput("InfobulleMatDistance"),
+                      shiny::uiOutput(ns("InfobulleMatDistance")),
                       #Quelle méthode voulez-vous choisir pour calculer la matrice de distance entre les trajectoires? 
-                      shiny::selectInput(inputId = "classtype", label = NULL, choices = c("OM", "LCS", "HAM"), selected = "OM", multiple = FALSE),
-                      uiOutput("SEQDIST_INPUTS") %>% withSpinner(color="#0dc5c1"),
+                      shiny::selectInput(inputId = ns("classtype"), label = NULL, 
+                                         choices = c("OM", "LCS", "HAM"), selected = "OM", multiple = FALSE),
+                      uiOutput(ns("SEQDIST_INPUTS")) %>% withSpinner(color="#0dc5c1"),
                       hr(),
-                      uiOutput("PRINTTIMEDIST") %>% withSpinner(color="#0dc5c1"),
+                      uiOutput(ns("PRINTTIMEDIST")) %>% withSpinner(color="#0dc5c1"),
                       hr(),
-                      shiny::actionButton(inputId = "calculDist", label = "Calcul de la matrice de distance"),
+                      shiny::actionButton(inputId = ns("calculDist"), label = "Calcul de la matrice de distance"),
                       #conditionalPanel(condition = "input.calculDist",
-                      uiOutput("PRINTSEQDIST") %>% withSpinner(color="#0dc5c1")
+                      uiOutput(ns("PRINTSEQDIST")) %>% withSpinner(color="#0dc5c1")
                       #)
                )
              ),
-             conditionalPanel(condition = "input.type_distance=='edit'",
+             conditionalPanel(condition = "input.type_distance=='edit'",ns = ns,
                               
                               fluidRow(
                                 h3("Affichage des coûts calculés:"),
                                 hr(),
                                 h4("Coûts 'indel' :" ),
-                                uiOutput("PRINTINDEL") %>% withSpinner(color="#0dc5c1"),
+                                uiOutput(ns("PRINTINDEL")) %>% withSpinner(color="#0dc5c1"),
                                 h4("Coûts de substitution :" ),
-                                uiOutput("PRINTSUBST") %>% withSpinner(color="#0dc5c1")
+                                uiOutput(ns("PRINTSUBST")) %>% withSpinner(color="#0dc5c1")
                               )
              ),
              uiOutput("ATTR_TRAJ_FORCLASS")
@@ -78,45 +87,43 @@ module_classification_UI <- function(id){#label = "CSV file") {
                        br(),
                        shiny::uiOutput("InfobulleClassif"),
                        # Quelle méthode voulez-vous utiliser pour regrouper les séquences ? partir de la matrice de dissemblance?
-                       shiny::selectInput(inputId = "cluster_type", label = NULL, 
+                       shiny::selectInput(inputId = ns("cluster_type"), label = NULL, 
                                           choices = c("Hierarchical Clustering"="CAH", "FAST Hierarchical Clustering"="fastCAH", "Partitionning Around Medoid"="PAM","Combinaison de la CAH et de PAM"="CAHPAM"), selected = "CAHPAM", multiple = FALSE)),
                 column(4,br(),
-                       conditionalPanel(condition = "input.cluster_type=='CAH' | input.cluster_type=='CAHPAM'",
+                       conditionalPanel(condition = "input.cluster_type=='CAH' | input.cluster_type=='CAHPAM'",ns=ns,
                                         shiny::uiOutput("InfobulleClassifCAH"),
                                         #Choix de la méthode (CAH) :
-                                        shiny::selectInput(inputId = "agnes_method", choices = c("average", "single", "complete", "ward", "weighted", "flexible", "gaverage"), label = NULL, selected = "ward", multiple = FALSE)),
-                       conditionalPanel(condition = "input.cluster_type=='fastCAH'",
+                                        shiny::selectInput(inputId = ns("agnes_method"), choices = c("average", "single", "complete", "ward", "weighted", "flexible", "gaverage"), label = NULL, selected = "ward", multiple = FALSE)),
+                       conditionalPanel(condition = "input.cluster_type=='fastCAH'", ns=ns,
                                         shiny::uiOutput("InfobulleClassiffastCAH"),
                                         # Choix de la méthode (FAST CAH) :
-                                        shiny::selectInput(inputId = "fastclust_method", choices = c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" ,"centroid"), label = NULL, selected = "ward.D2", multiple = FALSE))
+                                        shiny::selectInput(inputId = ns("fastclust_method"), choices = c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" ,"centroid"), label = NULL, selected = "ward.D2", multiple = FALSE))
                 ),
                 # 
                 
                 column(2,
                        br(),br(),
-                       shiny::actionButton(inputId = "calculCLUST", label = "Calcul de la classification")
+                       shiny::actionButton(inputId = ns("calculCLUST"), label = "Calcul de la classification")
                 )),
               fluidRow(useShinyjs(),
-                       uiOutput("classif_grp"),
+                       uiOutput(ns("classif_grp")),
                        column(2,
-                              textOutput("textCluster")),
+                              textOutput(ns("textCluster"))),
                        column(2,
-                              conditionalPanel(condition = "input.Bouton_Clustering",
-                                               shiny::radioButtons(inputId = "TypeFichierDownload", label = "Extension du fichier",choices=c("csv","txt"),selected = "csv"),
+                              conditionalPanel(condition = "input.Bouton_Clustering", ns=ns, 
+                                               shiny::radioButtons(inputId = ns("TypeFichierDownload"), label = "Extension du fichier",choices=c("csv","txt"),selected = "csv"),
                                                downloadButton('ButtondownloadData', 'Télécharger les données')
                               )
                        ),
                        column(4,
-                              shiny::uiOutput("TexteClassif"))
+                              shiny::uiOutput(ns("TexteClassif")))
               ),
-              uiOutput("classif"),
-              uiOutput("tabind")
+              uiOutput(ns("classif")),
+              uiOutput(ns("tabind"))
               
     )
   )
 }
-}
-
 #' server function
 #'
 #' @param input internal
@@ -133,148 +140,149 @@ module_classification <- function(input, output, session, data) {
   library(ggplot2)
   library(ggthemes)
   ns <- session$ns
-  ####
-  observe({
-    x <- input$type_distance
-    names(
-      seqdist.args[[x]])->listed_names_methods
-    # Can also set the label and select items
-    updateSelectInput(session=session, inputId = "classtype",
-                      label ="Quel méthode voulez-vous choisir pour calculer la matrice de distance entre les trajectoires? ",
-                      choices = listed_names_methods
-    )
-  })
-  
-  ### Infobulle pour donner des informations sur les méthodes de calcul de la matrice de distance
-  
-  titreInfobulleMatDistance<-reactive({
-    return(paste("Vous avez choisi la méthode",input$classtype))
-  })
-  
-  contenuInfobulleMatDistance<-reactive({
-    ifelse(input$classtype =="OM",paste("<p> Vous avez selectionné la méthode",input$classtype,paste('<a href=','https://www.insee.fr/fr/accueil','> INSEE </a> ',sep='"'),"</p>"),
-           ifelse(input$classtype=="OMloc",paste("<p> Vous avez selectionné la méthode",input$classtype,"</p>"),
-                  ifelse(input$classtype=="HAM",paste("<p> Vous avez selectionné la méthode",input$classtype,"</p>"),
-                         ifelse(input$classtype=="DHD",paste("<p> Vous avez selectionné la méthode",input$classtype,"</p>"),
-                                ifelse(input$classtype=="LCS",paste("<p> Vous avez selectionné la méthode",input$classtype,"</p>"),
-                                       ifelse(input$classtype=="LCP",paste("<p> Vous avez selectionné la méthode",input$classtype,"</p>"),
-                                              ifelse(input$classtype=="RLCP",paste("<p> Vous avez selectionné la méthode",input$classtype,"</p>"),"")))))))
-    
-  })
-  
-  output$InfobulleMatDistance<-renderUI({
-    span("Quelle méthode voulez-vous choisir pour calculer la matrice de distance entre les trajectoires? ",
-         popify(el = icon(name = "info-circle", lib = "font-awesome"),trigger="click",placement = "right",title = titreInfobulleMatDistance() ,content = contenuInfobulleMatDistance())
-    )
-  })
-  
-  #### SEQCOST and SEQDIST input ####
-  observeEvent(eventExpr = input$method_edit_cost, {
-    shiny::renderUI({
-      cost.args[[input$method_edit_cost]]->arg2
-      edit.cost.inputs[names(edit.cost.inputs)%in%arg2]
-    })->output$SEQCOST_INPUTS
-  })
-  #
-  shiny::renderUI({
-    seqdist.args[[input$type_distance]][[input$classtype]]->arg2
-    seqdist.inputs[names(seqdist.inputs)%in%arg2]
-  })->output$SEQDIST_INPUTS
-  
-  output$id_module_output<-renderPrint({
-    paste(" print(data$ID_VAR) : ",  print(data$ID_VAR), "| dim(data$DATA_COMP) : ", dim(data$DATA_COMP), sep="")
-    
-    #print(data$ID_VAR)
-  })
-  
-  MATCH_SEQ_DATA_C0NTROL<-reactive({
-    if(sum(attributes(data$SEQ_OBJ)$row.names!=unique(unlist(lapply(data$DATA_COMP, FUN = function(x){ x[ , data$ID_VAR ] }))) )==0){
-      1 
-    } else {
-      0
-    }
-  })
-  output$CONTROL_ID_MATCHING<-renderPrint({ MATCH_SEQ_DATA_C0NTROL() })
-  
   ###trajs.forclass  ####
   
   renderUI({
     if(input$selection_rows=="Sample"){
       list(
-    shiny::numericInput(inputId = ns("sample_prop"), label = "Taille de l'échantillon", value = 0.1, min = 0.05, max = 0.95, step = 0.05),
-    shiny::column(
-      width = 4,
-      list(
-      shiny::selectInput(inputId = ns("SELECTDATE1"), label = "Date (1) : ",
-                         choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
-                         selected=NULL),
-      shiny::selectInput(inputId = ns("VARDATE1"), label = "Variable (1) : ",
-                         choices = NULL, multiple = FALSE, width = "100%",
-                         selected=NULL)
-      )
-      ),
-    shiny::column(
-      width = 4,
-      list(
-        shiny::selectInput(inputId = ns("SELECTDATE2"), label = "Date (2) : ",
-                           choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
-                           selected=NULL),
-        shiny::selectInput(inputId = ns("VARDATE2"), label = "Variable (2) : ",
-                           choices = NULL, multiple = FALSE, width = "100%",
-                           selected=NULL)
-      )
-    ),
-    shiny::column(
-      width = 4,
-      list(
-        shiny::selectInput(inputId = ns("SELECTDATE3"), label = "Date (3) : ",
-                           choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
-                           selected=NULL),
-        shiny::selectInput(inputId = ns("VARDATE3"), label = "Variable (3) : ",
-                           choices = NULL, multiple = FALSE, width = "100%",
-                           selected=NULL)
-      )
-    )
+        shiny::numericInput(inputId = ns("sample_prop"), label = "Taille de l'échantillon", value = 0.1, min = 0.05, max = 0.95, step = 0.05),
+        h4("Variables utilisées pour la représentativité : "), 
+        shiny::column(
+          width = 4,
+          list(
+            shiny::selectInput(inputId = ns("SELECTDATE1"), label = "Date (1) : ",
+                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
+                               selected=NULL),
+            shiny::selectInput(inputId = ns("VARDATE1"), label = "Variable (1) : ",
+                               choices = NULL, multiple = FALSE, width = "100%",
+                               selected=NULL)
+          )
+        ),
+        shiny::column(
+          width = 4,
+          list(
+            shiny::selectInput(inputId = ns("SELECTDATE2"), label = "Date (2) : ",
+                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
+                               selected=NULL),
+            shiny::selectInput(inputId = ns("VARDATE2"), label = "Variable (2) : ",
+                               choices = NULL, multiple = FALSE, width = "100%",
+                               selected=NULL)
+          )
+        ),
+        shiny::column(
+          width = 4,
+          list(
+            shiny::selectInput(inputId = ns("SELECTDATE3"), label = "Date (3) : ",
+                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
+                               selected=NULL),
+            shiny::selectInput(inputId = ns("VARDATE3"), label = "Variable (3) : ",
+                               choices = NULL, multiple = FALSE, width = "100%",
+                               selected=NULL)
+          )
+        )
       )
     }
-  })->SELECT_SAMPLE
-
+  })->output$SELECT_SAMPLE
   
- reactive({
-   if(input$selection_rows=="Sample"){
-     lapply(1:length(c(input$SELECTDATE1, input$SELECTDATE2, input$SELECTDATE3)), FUN = function(i){
-       dat.i<-c(input$SELECTDATE1, input$SELECTDATE2, input$SELECTDATE3)[i]
-       if(!is.null(dat.i)){
-         if(dat.i!="Pas de sélection"){
-           data$DATA_COMP[[dat.i]][ , paste(VARDATE, i, sep="")]
-         }
-       }
-     })->list.var.sample
-     list.var.sample[lengths(list.var.sample) != 0]->list.var.sample
-     data.frame(do.call("cbind", list.var.sample))->list.var.sample
-     interaction(lapply(1:ncol(list.var.sample), function(j){list.var.sample[ , j]}))->interaction.var
-     return(interaction.var)
-   }
- })->interaction.var
+  observe({
+    if(!is.null(input$SELECTDATE1)){
+      if(input$SELECTDATE1!="Pas de sélection"){
+        names(data$DATA_COMP[[input$SELECTDATE1]])->NAMES1
+        updateSelectInput(session = session, inputId = "VARDATE1",choices = NAMES1)
+        
+      }
+    }
+  })
+    
+  observe({
+      if(!is.null(input$SELECTDATE2)){
+      if(input$SELECTDATE2!="Pas de sélection"){
+        names(data$DATA_COMP[[input$SELECTDATE2]])->NAMES2
+        updateSelectInput(session = session, inputId = "VARDATE2",choices = NAMES2)
+        
+      }
+      }
+  })
+    
+  observe({
+    if(!is.null(input$SELECTDATE3)){
+      if(input$SELECTDATE3!="Pas de sélection"){
+        names(data$DATA_COMP[[input$SELECTDATE3]])->NAMES3
+        updateSelectInput(session = session, inputId = "VARDATE3",choices = NAMES3)
+        
+      }
+    }
+  })
+  
+  
+  output$SELECTED_SELECTION<-renderUI({
+    message("COUCOU 212")
+    h3(input$selection_rows)
+  })
+  
+  reactive({
+    if(input$selection_rows=="Sample"){
+      dati<-c(input$SELECTDATE1, input$SELECTDATE2, input$SELECTDATE3)
+      vali<-c(input$VARDATE1, input$VARDATE2, input$VARDATE3)
+#      if(length(unique(dati))==1&unique(dati)=="Pas de sélection"){
+#        NULL
+#      } else { 
+      print(vali)
+      print(names(data))
+      print(names(data$DATA_COMP))
+      print(names(data$DATA_COMP[[1]]))
+      print(head(data$DATA_COMP[[1]]))
+      
+      lapply(X = 1:3, FUN = function(i){
+        dati[i]->dat.i
+        print(dat.i)
+        print(vali[i])
+        if(!is.null(dat.i)){
+          if(dat.i!="Pas de sélection"){
+            message("coucou 221")
+            print(data$DATA_COMP[[dat.i]][ , vali[i] ])
+            as.character(data$DATA_COMP[[dat.i]][ , vali[i] ])->res
+            return(res)
+          } else {
+            print("Walou!")
+            #print(class(data$DATA_COMP[[1]]))
+            #print(data$DATA_COMP[[dat.i]])
+            
+            rep("1", times=nrow(data$DATA_COMP[[1]]))
+          }
+        }
+      })->list.var.sample
+      print(list.var.sample)
+      
+      list.var.sample[lengths(list.var.sample) != 0]->list.var.sample
+      data.frame(do.call("cbind", list.var.sample), stringsAsFactors = FALSE)->list.var.sample
+      interaction(lapply(1:ncol(list.var.sample), function(j){list.var.sample[ , j]}))->interaction.var
+      
+      return(interaction.var)
+ #     }
+    } else {
+      message("215")
+      return(NULL)
+    }
+    })->selected_react
+  
+  
+  output$SELECTED_SELECTION2<-renderUI({
+    message("COUCOU 223")
+    h3(selected_react())
+  })
+  
   
   trajs.forclass<-reactive({
-    req(MATCH_SEQ_DATA_C0NTROL())
-    if(MATCH_SEQ_DATA_C0NTROL()==1){
       if(input$selection_rows=="Sample"){
-        if(#input$sample_var==""|
-          is.null(input$sample_var)#|length(input$sample_var)<1
-        ){
-          REPRESENTED_SAMPLE(data = data$DATA_COMP, interact.var = NULL, SIZE = input$sample_prop*nrow(data$SEQ_OBJ), id.var = data$ID_VAR)->vec.sample
-        } else {
-          REPRESENTED_SAMPLE(data = data$DATA_COMP, 
-                             interact.var = interaction.var(), 
-                             SIZE = input$sample_prop*nrow( data$DATA_COMP ), id.var=data$ID_VAR)->vec.sample
-        }
+          REPRESENTED_SAMPLE(interact.var = selected_react(), 
+                             SIZE = input$sample_prop*nrow( data$SEQ_OBJ ), id.var=row.names(data$SEQ_OBJ))->vec.sample
+        print(vec.sample)
         seqdef(data$SEQ_OBJ[row.names(data$SEQ_OBJ)%in%vec.sample , ], 
                left = data$CODAGE_MANQUANT$LEFT,#input$TEXT_LEFT, 
                right = data$CODAGE_MANQUANT$RIGHT,#input$TEXT_RIGHT, 
                gaps = data$CODAGE_MANQUANT$GAP,#input$TEXT_GAP, nr = "RMA",
-               id = row.names( data$SEQ_OBJ[row.names(data$SEQ_OBJ)%in%vec.sample , ] ))
+               id = row.names( data$SEQ_OBJ[row.names(data$SEQ_OBJ)%in%vec.sample , ] ))->trajsforclass
         
       } else {
         if(input$selection_rows=="unique.traj"){
@@ -283,20 +291,85 @@ module_classification <- function(input, output, session, data) {
           #cpal(seqdata = data$SEQ_OBJ)<-cpal.seq
           seqtab(data$SEQ_OBJ, idxs = 0, format = "STS")->unique.trajs
           data.frame(unique.trajs)->unique.trajs.df
-          seqdef(data = unique.trajs.df, weights = attributes(unique.trajs)$freq$Percent, cpal = cpal.seq, 
-                 gaps = data$CODAGE_MANQUANT$GAP,
-                 right = data$CODAGE_MANQUANT$RIGHT,
-                 left = data$CODAGE_MANQUANT$LEFT, nr = "RMA")->unique.trajs.seq
-          unique.trajs.seq
+          
+          seqdef(data = unique.trajs.df, weights = attributes(unique.trajs)$freq$Percent, 
+                 #gaps = data$CODAGE_MANQUANT$GAP,
+                 #right = data$CODAGE_MANQUANT$RIGHT,
+                 #left = data$CODAGE_MANQUANT$LEFT, 
+                 nr = attributes(data$SEQ_OBJ)$nr)->trajsforclass
+          print(length(attributes(data$SEQ_OBJ)$cpal))
+          cpal(seqdata = trajsforclass)<-attributes(data$SEQ_OBJ)$cpal
         } else {
           if(input$selection_rows=="all"){
-            data$SEQ_OBJ
+            data$SEQ_OBJ->trajsforclass
           }
         }
+      }
+    message("coucou 259")
+    message(dim(trajsforclass))
+    return(trajsforclass)
+    })
+  
+  output$TABLE_ECH<-renderDataTable({
+    if(input$selection_rows=="Sample"){
+    as.data.frame.array(
+      t(rbind(
+    "Effectifs"=table(selected_react())->tab1,
+    "Poids"=round(prop.table(tab1), 4)
+    )
+    ))->df
+    DT::datatable(df)
+    } else {
+      if(input$selection_rows=="unique.traj"){
+        seqtab(data$SEQ_OBJ, idxs = 0, format = "STS")->unique.trajs
+        data.frame(unique.trajs)->unique.trajs.df
+        DT::datatable(unique.trajs.df)
+        
       }
     }
   })
   
+  ####
+  #### NOMBRE DE TRAJECTOIRES: TOTAL ET  SELECTIONNEES  ####
+  NB_TRAJS<-shiny::reactive({
+    nrow(data$SEQ_OBJ)
+  })
+  unique.trajs<-shiny::reactive({
+    seqtab(data$SEQ_OBJ[ , ], idxs = 0, format = "STS")
+  })
+  
+  NB_UNIQUE_TRAJS<-shiny::reactive({
+    length(attributes(unique.trajs())$row.name)
+  })
+  
+  renderUI(expr = tags$sub(
+    paste("Pour information, il y a",NB_TRAJS(), "trajectoires, et",   NB_UNIQUE_TRAJS(), "trajectoires uniques dans le jeu de données",sep=" "))
+  )->output$TEXT_NB_UNIQUE_TRAJS
+  
+  NB_SELECT_TRAJS<-shiny::reactive({
+    nrow(trajs.forclass())
+  })
+  
+  renderUI(expr = tags$sub(
+    paste("Vous avez sélectionné",NB_SELECT_TRAJS(), "trajectoires", sep=" "))
+  )->output$TEXT_NB_SELECT_TRAJS
+  
+  
+  output$TRAJS_FOR_CLASS_CONTROL<-renderUI({
+    message("COUCOU 223")
+    h3(dim(trajs.forclass()))
+  })
+  
+  
+  
+  # observe({
+  #   req(trajs.forclass())
+  #   print("message 262")
+  #   
+  #   print(dim(trajs.forclass()))
+  #   print(head(trajs.forclass()))
+  #   
+  # })
   
   output$ATTR_TRAJ_FORCLASS<-renderUI({
     attributes(trajs.forclass() )->list.attr
@@ -311,17 +384,57 @@ module_classification <- function(input, output, session, data) {
     #summary(data$SEQ_OBJ)
   })
   
-  #   ### SEQCOST  ###
-  #
+  #### COST AND DIST ####
+  #### -> INPUTS ####
+  ##### seqcost inputs #####
+  observeEvent(eventExpr = input$method_edit_cost, {
+    shiny::renderUI({
+  edit.cost.inputs<-list(
+    "cval"=sliderInput(label = "Coûts de substitution: rapport aux coûts indel (1)", inputId = ns("subst_ratio"), min = 0.1, max = 5, step = 0.1, value = 2, width = "80%"),
+    "time.varying"=checkboxInput(inputId=ns("time_varying_substitution_costs"), 
+                                 label="Les taux de transitions sont-ils dépendants du temps?", 
+                                 value = FALSE, width = NULL),
+    "transition"=selectInput(inputId = ns("transition_substitution_costs"), label = "Type de transition", choices = c("previous" , "next", "both"), selected = "both", multiple = FALSE),
+    "lag"=shiny::numericInput(inputId = ns("lag_subst_cost"), label ="Pas de temps pour le calcul des taux de transition", value = 1, min = 1, max = 36, step = 1)
+  )
+  cost.args[[input$method_edit_cost]]->arg2
+  edit.cost.inputs[names(edit.cost.inputs)%in%arg2]
+    })->output$SEQCOST_INPUTS
+  })
+  ##### seqdist inputs ######
+  shiny::renderUI({
+  seqdist.inputs<-list(
+    "norm"=selectInput(inputId = ns("norm_seqdist"), label = "seqdist(norm = )", 
+                       choices = c("none" , "auto","maxlength", "gmean", "maxdist", "YujianBo"), 
+                       selected = "none", multiple = FALSE),
+    "refseq"=list(
+      shiny::checkboxInput(inputId = ns("refseq_LOG_seqdist"), 
+                           label = "Calculer les distance par rapport à une trajectoire de référence?",value = FALSE),
+      conditionalPanel(condition = "input.refseq_LOG_seqdist == 1", ns = ns, 
+                       shiny::numericInput(inputId = ns("refseq_seqdist"), 
+                                           label ="Trajectoire de référence", 
+                                           value=0, min = 0, step = 1))),
+    "expcost"=shiny::numericInput(inputId = ns("expcost_seqdist"), label ="Coût de modification de la taille des séquences", value = 0.5, min = 0, step = 0.1),
+    "context"=shiny::numericInput(inputId = ns("context_seqdist"), label ="Coût d'insertion (default: 1-2*expcost)", value = 1-2*0.5, min = 0, step = 0.1)
+  )
+  seqdist.args[[input$type_distance]][[input$classtype]]->arg2
+  seqdist.inputs[names(seqdist.inputs)%in%arg2]
+  })->output$SEQDIST_INPUTS
+  
+  #### CALCUL COUTS ####
+  
   SEQCOST<-eventReactive(eventExpr = input$calculCouts, {
     req(trajs.forclass())
+    print("COUCOU 428")
     seqcost(seqdata=trajs.forclass(),
             method = input$method_edit_cost,
             cval = input$subst_ratio,
             time.varying=input$time_varying_substitution_costs,
             transition=input$transition_substitution_costs,
-            lag=input$lag_subst_cost, weighted = TRUE, with.missing = FALSE)
+            lag=input$lag_subst_cost, weighted = TRUE, with.missing = FALSE)->cost
+    return(cost)
   })
+  observe({print(SEQCOST())})
   #
   #    #### PRINT COSTS ####
   output$PRINTINDEL<-renderUI({
@@ -330,10 +443,10 @@ module_classification <- function(input, output, session, data) {
     if(length(the.indels)>1){
       the.indels<-data.frame("Etats"=alphabet(trajs.forclass()), "Cout(s)_INDEL"=round(the.indels, 2))
       DT::renderDataTable(the.indels)->output$bb
-      dataTableOutput("bb", width = "80%")
+      dataTableOutput(outputId = ns("bb"), width = "80%")
     } else {
       renderText(as.character(the.indels))->output$bb
-      textOutput("bb")
+      textOutput(ns("bb"))
     }
   })
   #
@@ -342,43 +455,42 @@ module_classification <- function(input, output, session, data) {
     SEQCOST()$sm->the.sm
     if(class(the.sm)=="matrix"){
       DT::renderDataTable(the.sm)->output$aa
-      dataTableOutput("aa")
+      dataTableOutput(outputId = ns("aa"))
     } else {
       renderPrint(the.sm)->output$aa
-      shiny::verbatimTextOutput ("aa")
+      shiny::verbatimTextOutput (outputId = ns("aa"))
     }
   })
   
-  ### Infobulle sur les méthodes proposées ###
-  titreInfobulleCout<-reactive({
-    return(paste("Vous avez choisi la méthode",input$method_edit_cost))
-  })
   
-  contenuInfobulleCout<-reactive({
-    ifelse(input$method_edit_cost =="CONSTANT",paste("<p> Vous avez selectionné la valeur",input$method_edit_cost,paste('<a href=','https://www.insee.fr/fr/accueil','> INSEE </a>',sep='"'),"</p>"),
-           ifelse(input$method_edit_cost=="TRATE",paste("<p> Vous avez selectionné la valeur",input$method_edit_cost,"</p>"),
-                  ifelse(input$method_edit_cost=="FUTURE",paste("<p> Vous avez selectionné la valeur",input$method_edit_cost,"</p>"), 
-                         ifelse(input$method_edit_cost=="FEATURES",paste("<p> Vous avez selectionné la valeur",input$method_edit_cost,"</p>"), 
-                                ifelse(input$method_edit_cost=="INDELS",paste("<p> Vous avez selectionné la valeur",input$method_edit_cost,"</p>"), 
-                                       ifelse(input$method_edit_cost=="INDELSLOG",paste("<p> Vous avez selectionné la valeur",input$method_edit_cost,"</p>"), "" ))))))
-    
-  })
-  
-  output$InfobulleCout<-renderUI({
-    span("method [seqcost(method = )]",
-         popify(el = icon(name = "info-circle", lib = "font-awesome"),trigger="click",placement = "right",title = titreInfobulleCout() ,content = contenuInfobulleCout())
-    )
-  })
-  
-  # #
+  ##### SEQDIST CALC #####
   #### SEQDIST  ####
   output$PRINTTIMEDIST<-renderUI({
+    
+    
+    predict.time.dist<-function(df=calculated.times.for.dist, nb.sequences=10000){
+        library(stats)
+        fit_nls <- nls(time ~ a*(amplit ^ b), data = df[ , ], start =  c(a=0.5, b = 1), trace = F, control=nls.control(maxiter=1000))
+        pp<-ggplot(data = df)+geom_point(aes(x=amplit, y=time))+
+          geom_line(aes(y=predict(fit_nls, newdata = data.frame(amplit = amplit)), x=amplit))
+        #
+        fit_nls$m$predict(newdata = data.frame(amplit=1:nb.sequences))->c.predict
+        nb.secondes<-round(c.predict[nb.sequences]/1000, 2)
+        nb.minutes<-round(nb.secondes/60, 2)
+        message(paste("Nombre de secondes pour", nb.sequences, "trajectoires :", nb.secondes, sep=" "))
+        message(paste("\n nombre de minutes :",  nb.minutes, sep=" "))
+        message(paste(sep=" ", "Estimation réalisée sur", nrow(calculated.times.for.dist), "lancements de seqdist()", "pour un nombre de trajectoires allant de", min(df$amplit), "à", max(df$amplit)))
+        res<-list("nb.secondes"=nb.secondes, "nb.minutes"=nb.minutes, "pp"=pp)
+        return(res)
+      }
+    
     req(NB_SELECT_TRAJS())
     predict.time.dist(nb.sequences = NB_SELECT_TRAJS())->pred.data
     paste("Pour", NB_SELECT_TRAJS(), "trajectoires, le temps de calcul estimé pour la fonction seqdist() est de", pred.data$nb.secondes, "secondes, soit", pred.data$nb.minutes, "minutes")->thetext
     renderText(thetext)->output$thetext
-    textOutput("thetext")
+    textOutput(ns("thetext"))
   })
+  
   SEQDIST<-eventReactive(eventExpr = input$calculDist, {
     req(input$refseq_seqdist,trajs.forclass(),SEQCOST(),input$norm_seqdist)
     if(input$refseq_seqdist==FALSE){REFSEQ<-NULL} else {REFSEQ<-input$refseq_seqdist==FALSE}
@@ -391,11 +503,12 @@ module_classification <- function(input, output, session, data) {
     output$PRINTSEQDIST<-renderUI({
       req(SEQDIST())
       renderText(paste("Création d'un objet 'dist' comportant", length(SEQDIST()), "élements. La distance minimale est de", min(SEQDIST()), "la distance maximale de", max(SEQDIST()), "et la distance moyenne de", round(sum(SEQDIST())/length(SEQDIST()), 2), sep = " "))->output$cc
-      textOutput("cc") #%>% withSpinner(color="#0dc5c1")
+      textOutput(ns("cc")) #%>% withSpinner(color="#0dc5c1")
     })
   })
-  
-  ### CLASSIFICATION ####
+  #### CLASSIFICATION   ####
+  #### 
+  #### CREATION DUE LA CLASSIFICATION
   SEQCLASS<-eventReactive(eventExpr = input$calculCLUST, {
     req(SEQDIST())
     if(input$cluster_type=="CAH" | input$cluster_type=="CAHPAM"){
@@ -408,57 +521,16 @@ module_classification <- function(input, output, session, data) {
       }
     }
   })
-  ### Infobulle sur les différents types de classification (CAH,PAM,...) ###
-  titreInfobulleClassif<-reactive({
-    return(paste("Vous avez choisi la méthode",input$cluster_type))
-  })
   
-  contenuInfobulleClassif<-reactive({
-    ifelse(input$cluster_type =="CAH",paste("<p> Vous avez selectionné la méthode",input$cluster_type,paste('<a href=','https://www.insee.fr/fr/accueil','> INSEE </a> ',sep='"'),"</p>"),
-           ifelse(input$cluster_type=="fastCAH",paste("<p> Vous avez selectionné la méthode",input$cluster_type,"</p>"),
-                  ifelse(input$cluster_type=="PAM",paste("<p> Vous avez selectionné la méthode",input$cluster_type,"</p>"),
-                         ifelse(input$cluster_type=="CAHPAM",paste("<p> Vous avez selectionné la méthode",input$cluster_type,"</p>"),""))))
-    
-  })
+  #### PLOT DENDOGRAM
   
-  output$InfobulleClassif<-renderUI({
-    span("Quelle méthode voulez-vous utiliser pour regrouper les séquences ? partir de la matrice de dissemblance?",
-         popify(el = icon(name = "info-circle", lib = "font-awesome"),trigger="click",placement = "right",title = titreInfobulleClassif() ,content = contenuInfobulleClassif())
-    )
-  })
-  
-  ### Infobulle sur les méthodes de classification (ward,...) ###
-  titreInfobulleClassif2<-reactive({
-    return(paste("Vous avez choisi la méthode",input$cluster_type))
-  })
-  
-  contenuInfobulleClassif2<-reactive({
-    ifelse(input$cluster_type =="CAH",paste("<p> Vous avez selectionné la méthode",input$cluster_type,paste('<a href=','https://www.insee.fr/fr/accueil','> INSEE </a> ',sep='"'),"</p>"),
-           ifelse(input$cluster_type=="fastCAH",paste("<p> Vous avez selectionné la méthode",input$cluster_type,"</p>"),
-                  ifelse(input$cluster_type=="CAHPAM",paste("<p> Vous avez selectionné la méthode",input$cluster_type,"</p>"),"")))
-    
-  })
-  ### CAH et CAHPAM ###
-  output$InfobulleClassifCAH<-renderUI({
-    span("Choix de la méthode (CAH) :",
-         popify(el = icon(name = "info-circle", lib = "font-awesome"),trigger="click",placement = "right",title = titreInfobulleClassif2() ,content = contenuInfobulleClassif2())
-    )
-  })
-  ### fastCAH ###
-  output$InfobulleClassiffastCAH<-renderUI({
-    span("Choix de la méthode (FAST CAH) :",
-         popify(el = icon(name = "info-circle", lib = "font-awesome"),trigger="click",placement = "right",title = titreInfobulleClassif2() ,content = contenuInfobulleClassif2())
-    )
-  })
-  
-  ##### Graphiques (dendogramme et inertie) #####
   output$classif<- renderUI({
     input$calculCLUST
     isolate({
       req(SEQCLASS())
       if (input$cluster_type=="CAH" | input$cluster_type=="fastCAH"){
         renderPlot(plot(SEQCLASS(), which.plots = 2))->output$dd
-        return(plotOutput("dd") %>% withSpinner(color="#0dc5c1"))
+        return(plotOutput(ns("dd")) %>% withSpinner(color="#0dc5c1"))
       }
       if(input$cluster_type=="CAHPAM"){
         output$dendo<-renderPlot({
@@ -470,11 +542,11 @@ module_classification <- function(input, output, session, data) {
         
         
         return(tagList(
-          noUiSliderInput(inputId = "SliderGrp",label="Nombre de groupes",min=2,max=10,value = c(4,6),limit=2,step=1,margin=2,behaviour = "drag"),
+          noUiSliderInput(inputId = ns("SliderGrp"),label="Nombre de groupes",min=2,max=10,value = c(4,6),limit=2,step=1,margin=2,behaviour = "drag"),
           fluidRow(column(12,
                           splitLayout(
-                            plotOutput("dendo") %>% withSpinner(color="#0dc5c1"),
-                            plotOutput("inertie") %>% withSpinner(color="#0dc5c1"))))
+                            plotOutput(ns("dendo")) %>% withSpinner(color="#0dc5c1"),
+                            plotOutput(ns("inertie")) %>% withSpinner(color="#0dc5c1"))))
           
         ))
         
@@ -482,12 +554,6 @@ module_classification <- function(input, output, session, data) {
     })
     
   })
-  
-  # output$DENDOGRAM<-renderUI({
-  #   req(SEQCLASS())
-  #   renderPlot(plot(SEQCLASS(), which.plots = 2))->output$dd
-  #   plotOutput("dd") %>% withSpinner(color="#0dc5c1")
-  # })
   
   
   #### Tableau indicateurs pour évaluer la qualité des classifiactions testées ####
@@ -518,10 +584,10 @@ module_classification <- function(input, output, session, data) {
         req(input$SliderGrp)
         return(tagList(
           column(2,
-                 shiny::numericInput(inputId = "nb_cluster",label="Nombre de groupes choisi",step=1,value = min(input$SliderGrp,na.rm=TRUE)+1,min=min(input$SliderGrp,na.rm=TRUE),max=max(input$SliderGrp,na.rm=TRUE))
+                 shiny::numericInput(inputId = ns("nb_cluster"),label="Nombre de groupes choisi",step=1,value = min(input$SliderGrp,na.rm=TRUE)+1,min=min(input$SliderGrp,na.rm=TRUE),max=max(input$SliderGrp,na.rm=TRUE))
           ),
           column(2,
-                 shiny::actionButton(inputId = "Bouton_Clustering",label = "Faire les groupes")
+                 shiny::actionButton(inputId = ns("Bouton_Clustering"),label = "Faire les groupes")
           )
         ))
         
@@ -529,10 +595,10 @@ module_classification <- function(input, output, session, data) {
       if(input$cluster_type=="CAH"){
         return(tagList(
           column(2,
-                 shiny::numericInput(inputId = "nb_cluster",label="Nombre de groupes choisi",step=1,value = 2,min=2 ,max=10)
+                 shiny::numericInput(inputId = ns("nb_cluster"),label="Nombre de groupes choisi",step=1,value = 2,min=2 ,max=10)
           ),
           column(2,
-                 shiny::actionButton(inputId = "Bouton_Clustering",label = "Faire les groupes")
+                 shiny::actionButton(inputId = ns("Bouton_Clustering"),label = "Faire les groupes")
           )
         ))
       }
@@ -540,30 +606,36 @@ module_classification <- function(input, output, session, data) {
   })
   
   
+  DATA_COMPc<-eventReactive(eventExpr = input$calculDist,{
+    
+    if(input$selection_rows=="Sample"){
+      lapply(data$DATA_COMP, function(dat.i){
+        subset(dat.i, dat.i[ , data$ID_VAR]%in%row.names(trajs.forclass()))
+      })->DATA_COMPc
+      return(DATA_COMPc)
+    } else  {
+    return(data$DATA_COMP)
+    }
+  })
+  
+  
+  
   dataCluster<-eventReactive(eventExpr = input$Bouton_Clustering,{
     
     req(SEQCLASS())
     
     
-    if(input$selection_rows=="Sample"){
-      
-      data$DATA_COMP[data$DATA_COMP[ , data$ID_VAR]%in%row.names(trajs.forclass()) , ]->df_pour_class
-      
-    } else {data$DATA_COMP->df_pour_class}
-    
     if (input$cluster_type=="CAHPAM"){
-      
-      
-      
       
       indicateur<-Creation_indicateur(nb_cluster_min=min(input$SliderGrp,na.rm=TRUE),
                                       nb_cluster_max=max(input$SliderGrp,na.rm=TRUE)
                                       ,mat_dist=SEQDIST(),
                                       intialclust=SEQCLASS())
       #return(
-      data_cluster(indicateur,
-                   df_pour_class,#data$DATA_COMP,
-                   input$nb_cluster)->res_def
+      lapply(X = DATA_COMPc(), function(x){data_cluster(tabl_ind = indicateur, data = x, nb_groupe = input$nb_cluster)   })->DATA_COMPc2
+      #data_cluster(indicateur,
+      #             ,#DATAs()$DATA_COMP,
+      #             input$nb_cluster)->res_def
     } else {
       if(input$cluster_type=="CAH"){
         
@@ -574,12 +646,17 @@ module_classification <- function(input, output, session, data) {
           
           data.frame("ID"=row.names(trajs.forclass()), "Clustering"=clusterCAH.class)->df
           
-          merge(df_pour_class, df, by.x=data$ID_VAR, by.y="ID", all.x=TRUE)->dataCopieCAH
+          lapply(X = DATA_COMPc(), function(x){
+            merge(x, df, by.x=data$ID_VAR, by.y="ID", all.x=TRUE)
+          })->DATA_COMPc2
           
         } else {
           if(input$selection_rows=="all"){
-            df_pour_class->dataCopieCAH
-            dataCopieCAH[,"Clustering"]<-clusterCAH.class
+            data.frame("ID"=row.names(data$SEQ_OBJ), "Clustering"=clusterCAH.class)->df
+            lapply(X = DATA_COMPc(), function(x){
+              merge(x, df, by.x=data$ID_VAR, by.y="ID")
+            })->DATA_COMPc2
+            
           } else {
             if(input$selection_rows=="unique.traj"){
               
@@ -591,69 +668,46 @@ module_classification <- function(input, output, session, data) {
               )->df2
               
               merge(df2, df, by.x="ID", by.y="ID")->df3
+              lapply(X = DATA_COMPc(), function(x){
+                merge(x, df3, by.x=data$ID_VAR, by.y="IDVAR")
+              })->DATA_COMPc2
               
-              merge(df_pour_class, df3, by.x=data$ID_VAR, by.y="IDVAR")->dataCopieCAH #INDVAR_UNI()
             }
           }
         }
-        dataCopieCAH->res_def
       }
       
       
     }
-    data.frame(lapply(res_def, function(x){if(is.character(x)){as.factor(x)} else {x}}))->res_def
-    #as.data.frame(dataCopieCAH, stringsAsFactors = TRUE)->dataCopieCAH
-    #dataCopieCAH<-data.frame(lapply(dataCopieCAH, FUN = function(x){
-    #   if(is.character(x)|is.factor(x)){
-    #     as.factor(as.character(x))
-    #   } else {x}
-    # }))
+    ####
+    #lapply(DATA_COMPc2, function(x){
+    #  data.frame(lapply(x, function(x){if(is.character(x)){as.factor(x)} else {x}}))
+    #})->res_def
+    DATA_COMPc2->res_def
     return(res_def)
-    #return(dataCopieCAH)
   })
   
+  observe({print(dataCluster())})
+  observe({print(dim(dataCluster()))})
+  observe({print(class(dataCluster()))})
+  observe({for(ji in dataCluster() ){ print(dim(ji) ) } })
   
-  output$textCluster<-renderText({
-    input$Bouton_Clustering
-    isolate({
-      req(dataCluster())
-      return(paste("Vous avez créé",length(levels(dataCluster()[,"Clustering"])),"groupes"))
-    })
-    
-  })
   
-  ### Télécharger le fichier de données avec la classification ###
-  
-  output$ButtondownloadData <- downloadHandler(
-    
-    # This function returns a string which tells the client
-    # browser what name to use when saving the file.
-    filename = function() {
-      paste("DataCluster",input$TypeFichierDownload,sep = ".")
-    },
-    
-    # This function should write data to a file given to it by
-    # the argument 'file'.
-    content = function(file) {
-      shiny::withProgress(
-        message = "Veuillez patienter, le téléchargement de votre fichier est en cours",
-        value = 0,
-        {
-          # Write to a file specified by the 'file' argument
-          if (input$rowname == TRUE){
-            write.table(dataCluster(), file, sep = input$sepcol,row.names=TRUE,col.names = NA,dec = input$dec,fileEncoding = input$endoding, na = argna())
-          }else{
-            write.table(dataCluster(), file, sep = input$sepcol,row.names = FALSE,dec = input$dec,fileEncoding = input$endoding, na = argna())
-          }
-          shiny::incProgress(1)
-        })
+  trajs.forclass.output<-reactive({
+    if(input$selection_rows=="Sample"){
+      trajs.forclass()
+    } else {
+      data$SEQ_OBJ
     }
-  )
-  
-  output$TexteClassif<-renderUI({
-    hidden(p(id="texteClassification",paste0("Si l'application n'est pas ouverte dans un navigateur internet, il faut ajouter manuellement l'extension du fichier (",input$TypeFichierDownload," ). Pour ouvrir l'application avec un navigateur internet, il faut mettre Run External avant de lancer l'application ou appuyer sur Open in Browser en haut de l'application.")))
   })
   
-  onevent("mouseleave", 'ButtondownloadData', hide("texteClassification"))
-  onevent("mouseenter", 'ButtondownloadData', show("texteClassification"))
+  return(reactive({
+    list("SEQ_OBJ"=trajs.forclass.output(), 
+         "DATA_COMP"=dataCluster(), 
+         "TYPE_SOURCE"=data$TYPE_SOURCE, 
+         "CODAGE_MANQUANT"=data$CODAGE_MANQUANT,
+         "ID_VAR"=data$ID_VAR
+    )
+  }))
+  
 }

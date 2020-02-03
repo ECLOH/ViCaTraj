@@ -1307,7 +1307,7 @@ observeEvent(input$calculDist, {
    # })
 
    
-          #### Tableau indicateurs pour évaluer la qualité des classifiactions testées ####
+    #### Tableau indicateurs pour évaluer la qualité des classifiactions testées ####
    
    output$tabind<-renderUI({
      req(SEQCLASS(),input$SliderGrp)
