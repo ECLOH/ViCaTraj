@@ -45,7 +45,7 @@ module_classification_UI <- function(id){#label = "CSV file") {
                                        selectInput(inputId = ns("method_edit_cost"), label = NULL,
                                                    choices = c("CONSTANT" , "TRATE", "FUTURE" , "FEATURES" , "INDELS", "INDELSLOG"),
                                                    selected = "TRATE", multiple = FALSE),
-                                       uiOutput(ns("SEQCOST_INPUTS")) %>% withSpinner(color="#0dc5c1"),
+                                       uiOutput(ns("SEQCOST_INPUTS")),# %>% withSpinner(color="#0dc5c1"),
                                        shiny::actionButton(inputId = ns("calculCouts"), label = "Calcul des couts"))
                ),
                
@@ -84,48 +84,57 @@ module_classification_UI <- function(id){#label = "CSV file") {
     )
     ,tabPanel(title="Classification",
               fluidRow(
-                shinyjs::useShinyjs(), 
-                id=ns("form"),
-                shiny::actionButton(inputId = ns("refresh"), label = "Réinitialiser les paramètres de clustering"),
-                column(4,
+                #shinyjs::useShinyjs(), 
+                #id=ns("form"),
+                #shiny::actionButton(inputId = ns("refresh"), label = "Réinitialiser les paramètres de clustering"),
+                column(6,
                        br(),
                        shiny::uiOutput("InfobulleClassif"),
                        # Quelle méthode voulez-vous utiliser pour regrouper les séquences ? partir de la matrice de dissemblance?
                        shiny::selectInput(inputId = ns("cluster_type"), label = NULL, 
-                                          choices = c("Hierarchical Clustering"="CAH", "FAST Hierarchical Clustering"="fastCAH", "Partitionning Around Medoid"="PAM","Combinaison de la CAH et de PAM"="CAHPAM"), selected = "CAHPAM", multiple = FALSE)),
-                column(4,br(),
+                                          choices = c("Hierarchical Clustering"="CAH", 
+                                                      "FAST Hierarchical Clustering"="fastCAH", 
+                                                      "Partitionning Around Medoid"="PAM",
+                                                      "Combinaison de la CAH et de PAM"="CAHPAM"), 
+                                          selected = "CAHPAM", multiple = FALSE),
                        conditionalPanel(condition = "input.cluster_type=='CAH' | input.cluster_type=='CAHPAM'",ns=ns,
                                         shiny::uiOutput("InfobulleClassifCAH"),
                                         #Choix de la méthode (CAH) :
-                                        shiny::selectInput(inputId = ns("agnes_method"), choices = c("average", "single", "complete", "ward", "weighted", "flexible", "gaverage"), label = NULL, selected = "ward", multiple = FALSE)),
+                                        shiny::selectInput(inputId = ns("agnes_method"), choices = c("average", "single", "complete", "ward", "weighted", "flexible", "gaverage"), 
+                                                           label = NULL, selected = "ward", multiple = FALSE)),
                        conditionalPanel(condition = "input.cluster_type=='fastCAH'", ns=ns,
                                         shiny::uiOutput("InfobulleClassiffastCAH"),
                                         # Choix de la méthode (FAST CAH) :
-                                        shiny::selectInput(inputId = ns("fastclust_method"), choices = c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" ,"centroid"), label = NULL, selected = "ward.D2", multiple = FALSE))
-                ),
-                # 
-                
-                column(2,
-                       br(),br(),
+                                        shiny::selectInput(inputId = ns("fastclust_method"), choices = c("ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" ,"centroid"), 
+                                                           label = NULL, selected = "ward.D2", multiple = FALSE)),
                        shiny::actionButton(inputId = ns("calculCLUST"), label = "Calcul de la classification")
-                )),
-              fluidRow(useShinyjs(),
+                ),
+                column(width = 6),
+                column(width = 12, 
+                hr(),
+                hr()
+                ),
+              column(width=12,
+                #useShinyjs(),
+              #column( width = 6,
+                      useShinyjs(),
+                      uiOutput(ns("classif")),
                        uiOutput(ns("classif_grp")),
-                       column(2,
-                              textOutput(ns("textCluster"))),
-                       column(2,
+                       #column(2,
+                              textOutput(ns("textCluster")),#),
+                      # column(2,
                               conditionalPanel(condition = "input.Bouton_Clustering", ns=ns, 
                                                shiny::radioButtons(inputId = ns("TypeFichierDownload"), label = "Extension du fichier",choices=c("csv","txt"),selected = "csv"),
                                                downloadButton('ButtondownloadData', 'Télécharger les données')
-                              )
-                       ),
-                       column(4,
-                              shiny::uiOutput(ns("TexteClassif")))
+                              ),
+                       
+                       #column(4,
+                              shiny::uiOutput(ns("TexteClassif"))
               ),
-              uiOutput(ns("classif")),
               uiOutput(ns("tabind"))
               
     )
+  )
   )
 }
 #' server function
@@ -146,9 +155,9 @@ module_classification <- function(input, output, session, data) {
   ns <- session$ns
   ###trajs.forclass  ####
   
-  observeEvent(input$refresh, {
-    shinyjs::reset("form")
-  })
+  #observeEvent(input$refresh, {
+  #  shinyjs::reset("form")
+  #})
   
   
   renderUI({
@@ -400,16 +409,19 @@ module_classification <- function(input, output, session, data) {
   ##### seqcost inputs #####
   observeEvent(eventExpr = input$method_edit_cost, {
     shiny::renderUI({
-  edit.cost.inputs<-list(
-    "cval"=sliderInput(label = "Coûts de substitution: rapport aux coûts indel (1)", inputId = ns("subst_ratio"), min = 0.1, max = 5, step = 0.1, value = 2, width = "80%"),
-    "time.varying"=checkboxInput(inputId=ns("time_varying_substitution_costs"), 
+  edit.cost.inputs.local<-list(
+    "cval"=shiny::numericInput(
+                        label = "Coûts de substitution: rapport aux coûts indel (1)", 
+                       inputId = ns("subst_ratio"), 
+                       min = 0.1, max = 5, step = 0.1, value = 2, width = "20%"),
+    "time.varying"=shiny::checkboxInput(inputId=ns("time_varying_substitution_costs"), 
                                  label="Les taux de transitions sont-ils dépendants du temps?", 
                                  value = FALSE, width = NULL),
-    "transition"=selectInput(inputId = ns("transition_substitution_costs"), label = "Type de transition", choices = c("previous" , "next", "both"), selected = "both", multiple = FALSE),
+    "transition"=shiny::selectInput(inputId = ns("transition_substitution_costs"), label = "Type de transition", choices = c("previous" , "next", "both"), selected = "both", multiple = FALSE),
     "lag"=shiny::numericInput(inputId = ns("lag_subst_cost"), label ="Pas de temps pour le calcul des taux de transition", value = 1, min = 1, max = 36, step = 1)
   )
   cost.args[[input$method_edit_cost]]->arg2
-  edit.cost.inputs[names(edit.cost.inputs)%in%arg2]
+  return(edit.cost.inputs.local[names(edit.cost.inputs.local)%in%arg2])
     })->output$SEQCOST_INPUTS
   })
   ##### seqdist inputs ######
@@ -534,7 +546,7 @@ module_classification <- function(input, output, session, data) {
   })
   
   #### PLOT DENDOGRAM
-  
+  observeEvent(input$calculCLUST, {
   output$classif<- renderUI({
     input$calculCLUST
     isolate({
@@ -564,6 +576,7 @@ module_classification <- function(input, output, session, data) {
       }
     })
     
+  })
   })
   
   

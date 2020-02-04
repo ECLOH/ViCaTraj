@@ -11,11 +11,13 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
     
 #  shiny::fluidRow(
     fluidPage(
-      shinyjs::useShinyjs(), 
-      id=ns("form"),
-      shiny::actionButton(inputId = ns("refresh"), label = "Réinitialiser les paramètres du module"),
-      hr(),
-    tabsetPanel(id = "tabs1", type = "pills",
+    tabsetPanel(id = ns("tabs1"), type = "pills",
+                
+                #shinyjs::useShinyjs(), 
+                #id=ns("form"),
+                #shiny::actionButton(inputId = ns("refresh"), label = "Réinitialiser la sélection"),
+                #hr(),
+                
                 tabPanel(title = "Sélection des données et des indicateurs : ", 
   #div(
   #  id="form",
@@ -127,9 +129,9 @@ module_select_and_plot <- function(input, output, session, data) {
  #return(reactive(class(data() )))
   #renderPlot({
   
-  observeEvent(input$refresh, {
-    shinyjs::reset("form")
-  })
+  #observeEvent(input$refresh, {
+  #  shinyjs::reset("tabs1")
+  #})
   
   
   output$DATE_server_created<-renderUI({
@@ -192,7 +194,7 @@ module_select_and_plot <- function(input, output, session, data) {
   
   
   
-  
+  observeEvent(input$classSelect, {
   output$MOD_SELECT_server_created<-renderUI({
     ns <- session$ns
     req(input$VAR_SELECT_M1)
@@ -257,6 +259,7 @@ module_select_and_plot <- function(input, output, session, data) {
       }
     }
     }
+  })
   })
   
   
