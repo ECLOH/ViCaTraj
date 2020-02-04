@@ -120,17 +120,23 @@ module_classification_UI <- function(id){#label = "CSV file") {
                       useShinyjs(),
                       uiOutput(ns("classif")),
                        uiOutput(ns("classif_grp")),
-                       #column(2,
-                              textOutput(ns("textCluster")),#),
+                              textOutput(ns("textCluster"))
+              ),
+              column(width=12,#),
+                              shiny::downloadButton(outputId = ns("DOWNSEQ"), 
+                                    label = "Enregistrer les trajectoires, la classification, et les données complémentaires sur le disque : " )
+              ),
+              column(width=12,
                       # column(2,
-                              conditionalPanel(condition = "input.Bouton_Clustering", ns=ns, 
-                                               shiny::radioButtons(inputId = ns("TypeFichierDownload"), label = "Extension du fichier",choices=c("csv","txt"),selected = "csv"),
-                                               downloadButton('ButtondownloadData', 'Télécharger les données')
-                              ),
+                              #conditionalPanel(condition = "input.Bouton_Clustering", ns=ns, 
+                              #                 shiny::radioButtons(inputId = ns("TypeFichierDownload"), label = "Extension du fichier",choices=c("csv","txt"),selected = "csv"),
+                              #                 downloadButton('ButtondownloadData', 'Télécharger les données')
+                              #),
                        
                        #column(4,
                               shiny::uiOutput(ns("TexteClassif"))
               ),
+              
               uiOutput(ns("tabind"))
               
     )
@@ -763,6 +769,32 @@ module_classification <- function(input, output, session, data) {
   })
   
 
+  res<-reactive({
+    req(trajs.forclass.output())
+    req(dataCluster())
+    list("SEQ"=trajs.forclass.output(), "DATA"=dataCluster())->res
+    res
+  })
+  
+  output$DOWNSEQ <- downloadHandler(
+    filename =  function(){
+      paste("mes_trajectoires_clustering.RData")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      dat<-res()
+      shiny::withProgress(
+        message = "Veuillez patienter, le téléchargement des données est en cours",
+        value = 0,
+        {
+          save(dat, file=file)
+          shiny::incProgress(1)
+        })
+    } 
+  )
+  
+  
+  
   
   return(reactive({
     list("SEQ_OBJ"=trajs.forclass.output(), 

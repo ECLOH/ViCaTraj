@@ -1657,23 +1657,6 @@ module_data <- function(input, output, session) {
     } 
   )
   
-  print("1660 1")
-  observe({
-    print(head(data_for_res2()))
-  })
-  print("1660 over")
-  
-  print("1660 2")
-  observe({
-    print(head(data_for_res()))
-  })
-  print("1660 over")
-  
-  print("1660 3")
-  observe({
-    print(head(data2()))
-  })
-  print("1660 over")
   
   return(reactive({
     list("SEQ_OBJ"=data.seq(), 
