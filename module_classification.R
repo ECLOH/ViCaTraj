@@ -11,6 +11,7 @@ module_classification_UI <- function(id){#label = "CSV file") {
   tabsetPanel(
     #tabsetPanel(
     tabPanel(title="Matrice de distance",
+             
              fluidRow(
                column(3,
                       h4("Paramètres généraux de la classification :"),
@@ -83,6 +84,9 @@ module_classification_UI <- function(id){#label = "CSV file") {
     )
     ,tabPanel(title="Classification",
               fluidRow(
+                shinyjs::useShinyjs(), 
+                id=ns("form"),
+                shiny::actionButton(inputId = ns("refresh"), label = "Réinitialiser les paramètres de clustering"),
                 column(4,
                        br(),
                        shiny::uiOutput("InfobulleClassif"),
@@ -141,6 +145,11 @@ module_classification <- function(input, output, session, data) {
   library(ggthemes)
   ns <- session$ns
   ###trajs.forclass  ####
+  
+  observeEvent(input$refresh, {
+    shinyjs::reset("form")
+  })
+  
   
   renderUI({
     if(input$selection_rows=="Sample"){
@@ -255,10 +264,12 @@ module_classification <- function(input, output, session, data) {
       print(list.var.sample)
       
       list.var.sample[lengths(list.var.sample) != 0]->list.var.sample
+      if(length(list.var.sample)>0){
       data.frame(do.call("cbind", list.var.sample), stringsAsFactors = FALSE)->list.var.sample
       interaction(lapply(1:ncol(list.var.sample), function(j){list.var.sample[ , j]}))->interaction.var
       
       return(interaction.var)
+      }
  #     }
     } else {
       message("215")
@@ -564,7 +575,9 @@ module_classification <- function(input, output, session, data) {
     input$SliderGrp
     isolate({
       if(input$cluster_type=="CAHPAM"){
-        indicateur<-Creation_indicateur(nb_cluster_min=min(input$SliderGrp,na.rm=TRUE),nb_cluster_max=max(input$SliderGrp,na.rm=TRUE),mat_dist=SEQDIST(),intialclust=SEQCLASS())
+        indicateur<-Creation_indicateur(nb_cluster_min=min(input$SliderGrp,na.rm=TRUE),
+                                        nb_cluster_max=max(input$SliderGrp,na.rm=TRUE),
+                                        mat_dist=SEQDIST(),intialclust=SEQCLASS())
         output$tabIndicateur<-renderFormattable(tableau_cluster(indicateurs=indicateur$dataFrame))
         return(fluidRow(column(12,
                                formattableOutput("tabIndicateur"))))
@@ -575,6 +588,8 @@ module_classification <- function(input, output, session, data) {
   
   
   ### Création d'une variable "Clustering" donnant la classification choisie ###
+
+  
   output$classif_grp<-renderUI({
     req(SEQCLASS())
     input$calculCLUST
@@ -590,7 +605,7 @@ module_classification <- function(input, output, session, data) {
                  shiny::actionButton(inputId = ns("Bouton_Clustering"),label = "Faire les groupes")
           )
         ))
-        
+
       }
       if(input$cluster_type=="CAH"){
         return(tagList(
@@ -604,6 +619,37 @@ module_classification <- function(input, output, session, data) {
       }
     })
   })
+  
+  
+    # output$classif_grp<-renderUI({
+  #   req(SEQCLASS())
+  #   input$calculCLUST
+  #   input$SliderGrp
+  #   isolate({
+  #     if (input$cluster_type=="CAHPAM"){
+  #       req(input$SliderGrp)
+  #       return(tagList(
+  #         column(2,
+  #                shiny::numericInput(inputId = ns("nb_cluster"),label="Nombre de groupes choisi",step=1,value = min(input$SliderGrp,na.rm=TRUE)+1,min=min(input$SliderGrp,na.rm=TRUE),max=max(input$SliderGrp,na.rm=TRUE))
+  #         ),
+  #         column(2,
+  #                shiny::actionButton(inputId = ns("Bouton_Clustering"),label = "Faire les groupes")
+  #         )
+  #       ))
+  #       
+  #     }
+  #     if(input$cluster_type=="CAH"){
+  #       return(tagList(
+  #         column(2,
+  #                shiny::numericInput(inputId = ns("nb_cluster"),label="Nombre de groupes choisi",step=1,value = 2,min=2 ,max=10)
+  #         ),
+  #         column(2,
+  #                shiny::actionButton(inputId = ns("Bouton_Clustering"),label = "Faire les groupes")
+  #         )
+  #       ))
+  #     }
+  #   })
+  # })
   
   
   DATA_COMPc<-eventReactive(eventExpr = input$calculDist,{
@@ -641,6 +687,7 @@ module_classification <- function(input, output, session, data) {
         
         clusterCAH<-as.factor(cutree(SEQCLASS(),k = input$nb_cluster))
         clusterCAH.class<-factor(clusterCAH,labels = paste0("G",1:input$nb_cluster))
+        clusterCAH.class<-as.character(clusterCAH.class)
         
         if(input$selection_rows=="Sample"){
           
@@ -680,10 +727,11 @@ module_classification <- function(input, output, session, data) {
       
     }
     ####
-    #lapply(DATA_COMPc2, function(x){
-    #  data.frame(lapply(x, function(x){if(is.character(x)){as.factor(x)} else {x}}))
-    #})->res_def
-    DATA_COMPc2->res_def
+    lapply(DATA_COMPc2, function(xdf){
+      xdf[]<-lapply(X = xdf, as.character)#data.frame(lapply(x, function(x){if(is.character(x)){as.factor(x)} else {x}}))
+      xdf
+      })->res_def
+    #DATA_COMPc2->res_def
     return(res_def)
   })
   
@@ -700,6 +748,8 @@ module_classification <- function(input, output, session, data) {
       data$SEQ_OBJ
     }
   })
+  
+
   
   return(reactive({
     list("SEQ_OBJ"=trajs.forclass.output(), 

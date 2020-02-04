@@ -42,13 +42,14 @@ module_tabdes_UI(id = "id3")),
 shiny::tabPanel(title = "tab4",
                 module_tabdes_UI(id = "id4")),
 shiny::tabPanel(title = "tab5", 
+                shiny::actionButton(inputId = "reactKlass", label = "Je valide la classification et les groupes"),
                 tabsetPanel(
                     
 shiny::tabPanel(title = "tab51", 
                 module_classification_UI(id = "id5")),
 shiny::tabPanel(title = "tab2:clust",
                 module_select_and_plot_UI(id = "id25")),
-shiny::tabPanel(title = "tab3:vlust",
+shiny::tabPanel(title = "tab3:clust",
                 module_tabdes_UI(id = "id35"))
 )
 )
@@ -72,15 +73,24 @@ server <- function(input, output, session) {
     
     callModule(module = module_tabdes, data = DATAs(), id = "id3")
     
-    callModule(module = module_classification, data=DATAs(), id = "id5")->DATAs.c
+    #DATA.CLASSIF<-reactiveValues()
     
-    observe({
-    callModule(module = module_select_and_plot, data = DATAs.c(), id = "id25")
-    })
+    callModule(module = module_classification, data=DATAs(), id = "id5")->DATAs.c#DATA.CLASSIF$DATAs.c
     
-    observe({
-    callModule(module = module_tabdes, data = DATAs.c(), id = "id35")
+    #observe({
+    observeEvent(eventExpr = input$reactKlass, {
+    callModule(module = module_select_and_plot, data = DATAs.c(), #reactive(DATA.CLASSIF$DATAs.c), 
+                   id = "id25")
     })
+    #})
+    observeEvent(eventExpr = input$reactKlass, {
+        
+        callModule(module = module_tabdes, data = DATAs.c(), id = "id35")
+        
+       })
+    
+
+
 }
 
 # Run the application 

@@ -11,9 +11,15 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
     
 #  shiny::fluidRow(
     fluidPage(
+      shinyjs::useShinyjs(), 
+      id=ns("form"),
+      shiny::actionButton(inputId = ns("refresh"), label = "Réinitialiser les paramètres du module"),
+      hr(),
     tabsetPanel(id = "tabs1", type = "pills",
                 tabPanel(title = "Sélection des données et des indicateurs : ", 
-    shiny::column(width=6,
+  #div(
+  #  id="form",
+  shiny::column(width=6,
   shiny::selectInput(inputId = ns("plottype"), label = "Quel graphique voulez-vous représenter? ", 
                      choices = c("Chronogramme [seqplot(type = 'd')] "="d", "Séquences les plus fréquentes [seqplot(type = 'f')] "="f", 
                                  "Tapis [seqplot(type = 'I')] "="I", "Etat modal [seqplot(type = 'ms')] "="ms", 
@@ -34,6 +40,7 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
   uiOutput(ns("MERGED_SELECTED_mod")),
   uiOutput(ns("WARNING_LENGTH"))
   )
+  #)
   ),
   tabPanel(title = "Paramètres d'affichage du graphique",
           uiOutput(ns("SELECT_THEMES_UI")),
@@ -119,6 +126,12 @@ module_select_and_plot <- function(input, output, session, data) {
   
  #return(reactive(class(data() )))
   #renderPlot({
+  
+  observeEvent(input$refresh, {
+    shinyjs::reset("form")
+  })
+  
+  
   output$DATE_server_created<-renderUI({
     ns <- session$ns
     shiny::selectInput(inputId=ns("DATE_SELECT_M1"), label = "Date pour groupes : ", 
