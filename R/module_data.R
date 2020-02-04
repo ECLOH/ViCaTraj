@@ -100,6 +100,36 @@ module_data_UI <- function(id){#label = "CSV file") {
                                     uiOutput(ns("NROW_BIGLIST_AVANT_APRES")) %>% withSpinner(color="#0dc5c1"),
                                     uiOutput(ns("DELETE_DUPLI_NA"))
                                   )),
+                                
+                                #### AJOUT TIERS ####
+                                sidebarPanel( h3("Ajouts de variables issues d'un jeu de données tiers:"),width=12,
+                                  shiny::checkboxInput(inputId = ns("AJOUT_TIERS_LOG"), 
+                                                       label = "Ajout de variables issues d'un jeu de données tiers ?", 
+                                                       value = FALSE),
+                                  conditionalPanel(condition = "input.AJOUT_TIERS_LOG == 1", ns = ns, 
+                                                   
+                                  shiny::selectInput(inputId=ns("sepcolCOMP"), label= "Separateur de colonnes", 
+                                                                    choices=c("Virgule" = ",","Point-Virgule" = ";","Tabulation" = "\t"), selected=","),
+                                  shiny::selectInput(inputId=ns("decCOMP"), label= "Séparateur décimal", 
+                                                                      choices=c("Virgule" = ",","Point" = "."), selected="."),
+                                  shiny::selectInput(inputId=ns("endodingCOMP"), label= "Comment est codé le fichier ?", 
+                                                                      choices=c(UTF8 = "UTF-8", Latin1 = "latin1"), selected = "UTF-8", multiple = FALSE, width = "50%"),
+                                  shiny::checkboxInput(inputId = ns("headerCOMP"), label="La première ligne correspond-elle aux noms des variables ?",
+                                                                        value=TRUE),
+                                  shiny::fileInput(label = "Fichier complémentaire", 
+                                                   inputId = ns("FichComp"), multiple = FALSE, 
+                                                   accept = c("text/csv",
+                                                              "text/comma-separated-values,text/plain",
+                                                              ".csv")),
+                                  shiny::selectInput(label = "Variable servant de clé dans les données complémentaires", 
+                                                     inputId = ns("CleComp"), choices = NULL),
+                                  shiny::selectInput(label = "Variable servant de clé dans les données de base", 
+                                                     inputId = ns("CleBase"), choices = NULL)
+                                  )
+                                  
+                                ),
+                                              
+                                
                                 #hr(),
                                 #### FORMAT DONNNEES ####
                                 
@@ -154,7 +184,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   shiny::uiOutput(ns("UI_DATE_SELECT")),
                                                   helpText("ATTENTION : si vous sélectionnez plusieurs dates simultanément, ne seront retenus que les individus qui remplissent la condition pour TOUTES les dates sélectionnées."),
                                                   
-                                                  shiny::checkboxInput(inputId = ns("addvar"), label = "Ajouter une variable d'un jeu de donnée tiers?", value = FALSE),
+                                                  #shiny::checkboxInput(inputId = ns("addvar"), label = "Ajouter une variable d'un jeu de donnée tiers?", value = FALSE),
                                                   
                                                   shiny::uiOutput(ns("ADDDATA_CSV")),
                                                   
@@ -448,6 +478,7 @@ module_data <- function(input, output, session) {
     seq(from=base, to = top, by=input$PAS_TEMPS_BIGDATA)->SEQ
     print( names(BIGLIST1())[SEQ]  )
   })
+
   
   #### CONDITIONS ON INDIDIVUS
   ##### DEFINE DF #####
@@ -576,7 +607,70 @@ module_data <- function(input, output, session) {
     }
   })
   
+  #### AJOUTS TIERS 2 ####
+  dataCOMP<-reactive({
+    if ( is.null(input$FichComp)) return(NULL)
+    if(input$AJOUT_TIERS_LOG=="TRUE"){
+      userData <- read.csv(file = input$FichComp$datapath, 
+                           sep = input$sepcolCOMP, 
+                           encoding = input$endodingCOMP,
+                           header=input$headerCOMP,
+                           dec=input$decCOMP)
+      
+      names(userData)<-sapply(names(userData), 
+                              function(ni){if(substr(ni, 1, 1)%in%c("0", as.character(seq(1, 9, 1)))  ) paste("D", ni, sep=".") else ni })
+      names(userData)<-gsub(pattern = "-", replacement = "_", fixed = TRUE, x=names(userData))
+      return(userData)
+    } else {
+      return(NULL)
+    }
+  })
   
+  observe({
+    lapply(BIGLIST1(), function(bi){
+      names(bi)
+    })->lina
+    unique(unlist(lina))->glona
+      if(input$AJOUT_TIERS_LOG=="TRUE"){
+    updateSelectInput(session = session, inputId = "CleBase", choices = glona)
+      }
+  })
+  
+  observe({
+   names(dataCOMP())->compna
+      if(input$AJOUT_TIERS_LOG=="TRUE"){
+        updateSelectInput(session = session, inputId = "CleComp", choices = compna)
+      }
+  })
+  
+  
+  reactive({
+    req(BIGLIST1())
+    if(is.null(dataCOMP())) {
+      return(BIGLIST1())
+    } else {
+      if(input$AJOUT_TIERS_LOG=="TRUE"){
+        req(input$CleBase)
+        req(input$CleComp )
+        if(input$CleComp %in% names(dataCOMP())){
+        lapply(BIGLIST1(), function(bi){
+          merge(bi, dataCOMP(), by.x=input$CleBase, by.y=input$CleComp, all.x=TRUE)->df
+          df[]<-lapply(df, as.character)
+          return(df)
+        })->biglist.with.add.variable
+        return(biglist.with.add.variable)
+        } else {
+          return(BIGLIST1())
+          
+        }
+      } else {
+        return(BIGLIST1())
+      }
+    }
+  })->BIGLIST1.COMP
+  
+  
+  #### BIGLIST2()####
   BIGLIST2<-reactive({
     req( control_dupli_na() )
     req(input$INDVAR)
@@ -584,14 +678,14 @@ module_data <- function(input, output, session) {
       if(class(control_dupli_na())=="data.frame"){
         req(input$deleteNA_DUPLI)
         if(input$deleteNA_DUPLI==TRUE){
-          lapply(BIGLIST1(), FUN = function(bi){
+          lapply(BIGLIST1.COMP(), FUN = function(bi){
             bi1<-subset(bi, !is.na(bi[ , input$INDVAR]))
             bi2<-subset(bi1, !duplicated( bi1[ , input$INDVAR] ) )
             bi2
           })
         }
       } else {
-        BIGLIST1()
+        BIGLIST1.COMP()
       }
     }
   })
@@ -660,7 +754,7 @@ module_data <- function(input, output, session) {
     print("req(input$addvar) : ")
     print(input$addvar)
     print("end")
-  
+    if(!is.null(input$addvar)){
     if(input$addvar==TRUE){
       
       req(input$MERGEORIGINVAR, input$MERGEADDVAR)
@@ -673,10 +767,13 @@ module_data <- function(input, output, session) {
         
         if(length(input$DATE_FOR_SELECT)>1){
           lapply(tempdf, function(xi){
-            left_join(xi, ADDDATA(), by=c(input$MERGEORIGINVAR, input$MERGEADDVAR))
+            #left_join(xi, ADDDATA(), by=c(input$MERGEORIGINVAR, input$MERGEADDVAR))
+            merge(xi, ADDDATA(), by.x=input$MERGEORIGINVAR, by.y=input$MERGEADDVAR, all.x=TRUE)
           })->tempdf2
         } else {
-          left_join(tempdf, ADDDATA(), by=c(input$MERGEORIGINVAR, input$MERGEADDVAR))->tempdf2
+          #left_join(tempdf, ADDDATA(), by=c(input$MERGEORIGINVAR, input$MERGEADDVAR))->tempdf2
+          merge(tempdf, ADDDATA(), by.x=input$MERGEORIGINVAR, by.y=input$MERGEADDVAR, all.x=TRUE)->tempdf2
+          
         }
         
       } else {
@@ -689,6 +786,10 @@ module_data <- function(input, output, session) {
         tempdf->tempdf2
         print("COUCOU 470")
       }
+    }
+    } else {
+      tempdf->tempdf2
+      print("COUCOU 470")
     }
     
     #print("tempdf2")
@@ -703,6 +804,7 @@ module_data <- function(input, output, session) {
   output$ADDDATA_CSV<-renderUI({
     ns <- session$ns
     print(input$addvar)
+    if(!is.null(input$addvar)){
     if(input$addvar==TRUE){
       #req(input$addvar)
       
@@ -721,9 +823,11 @@ module_data <- function(input, output, session) {
       return(res)
     }
     #}
+    }
   })
   
   reactive({
+    if(!is.null(input$addvar)){
     if(req(input$addvar)==TRUE){
       req(input$CSVADDDATA, input$CSVTYPE)
       inFile <- input$CSVADDDATA
@@ -735,15 +839,23 @@ module_data <- function(input, output, session) {
       }
       datr
     }
+    }
   })->ADDDATA
   
   observe({
+    if(!is.null(input$addvar)){
     updateSelectInput(session=session, inputId = "MERGEADDVAR", choices = names(ADDDATA()), selected = NULL)
+    }
   })
   
   observe({
     req(input$DATE_FOR_SELECT)
-    BIGLIST2()[[input$DATE_FOR_SELECT[1]]]->tempdf
+    if(length(input$DATE_FOR_SELECT)<=1){
+      input$DATE_FOR_SELECT->dats
+    } else {
+      input$DATE_FOR_SELECT[1]->dats
+    }
+    BIGLIST2()[[dats]]->tempdf
     print(names(tempdf))
     updateSelectInput(session=session, inputId = "MERGEORIGINVAR", choices = names(tempdf), selected=NULL)
   })
