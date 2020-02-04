@@ -17,7 +17,7 @@ source('C:/Users/elie/Desktop/ViCaTraj/R/module_select_and_plot.R', encoding = '
 source('C:/Users/elie/Desktop/ViCaTraj/R/module_data.R', encoding = 'UTF-8')
 source('C:/Users/elie/Desktop/ViCaTraj/R/module_tabdes.R', encoding = 'UTF-8')
 
-source('C:/Users/elie/Desktop/ViCaTraj/module_classification.R', encoding = 'UTF-8')
+source('C:/Users/elie/Desktop/ViCaTraj/R/module_classification.R', encoding = 'UTF-8')
 
 
 source('C:/Users/elie/Desktop/ViCaTraj/R/seqggplot_internal.R', encoding = 'UTF-8')
