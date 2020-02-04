@@ -1,7 +1,7 @@
 #' @export
 
-predict.time.dist<-function(df=calculated.times.for.dist, nb.sequences=10000)
-  library(stats{
+predict.time.dist<-function(df=calculated.times.for.dist, nb.sequences=10000){
+  library(stats)
   fit_nls <- nls(time ~ a*(amplit ^ b), data = df[ , ], start =  c(a=0.5, b = 1), trace = F, control=nls.control(maxiter=1000))
   pp<-ggplot(data = df)+geom_point(aes(x=amplit, y=time))+
     geom_line(aes(y=predict(fit_nls, newdata = data.frame(amplit = amplit)), x=amplit))
