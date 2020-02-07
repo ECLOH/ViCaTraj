@@ -16,12 +16,6 @@ module_select_and_plot(input, output, session, data)
 
 \item{session}{internal}
 
-\item{input}{internal}
-
-\item{output}{internal}
-
-\item{session}{internal}
-
 \item{data.comp}{}
 }
 \description{

@@ -4,9 +4,20 @@
 \alias{flux_grp}
 \title{Title}
 \usage{
-flux_grp(data, seq.data, col_periode, label = NULL, cpal = NULL,
-  var_grp, label_grp, box_width = NULL, box_label_cex = NULL,
-  arrow_type = "simple", arrow_rez = NULL, title = NULL)
+flux_grp(
+  data,
+  seq.data,
+  col_periode,
+  label = NULL,
+  cpal = NULL,
+  var_grp,
+  label_grp,
+  box_width = NULL,
+  box_label_cex = NULL,
+  arrow_type = "simple",
+  arrow_rez = NULL,
+  title = NULL
+)
 }
 \arguments{
 \item{data}{}
@@ -32,6 +43,9 @@ flux_grp(data, seq.data, col_periode, label = NULL, cpal = NULL,
 \item{arrow_rez}{}
 
 \item{title}{}
+}
+\value{
+
 }
 \description{
 Title

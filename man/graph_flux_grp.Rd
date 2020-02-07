@@ -13,6 +13,9 @@ graph_flux_grp(seq_data, col_periode, group_var = actcal.seq[, 1])
 
 \item{group_var}{}
 }
+\value{
+
+}
 \description{
 Fonction pour faire des graphiques de flux pour un groupe d'individus donné
 }

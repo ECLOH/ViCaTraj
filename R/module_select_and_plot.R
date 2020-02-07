@@ -31,6 +31,11 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
                                  "Sous-séquences  [seqefsub()] "="sous.seq",
                                  "Séquences représentatives  [seqplot(type = 'r')] "="r"
                                  ), selected = "d", multiple = FALSE),
+  shiny::conditionalPanel(condition = "input.plottype=='I'", ns = ns, 
+                          selectInput(inputId = ns("tapis_order"), label = "Rangement des séquences : ", 
+                                      choices = c("Depuis le début"="from.start", "Depuis la fin"="from.end"), 
+                                      selected = "from.start", multiple = FALSE)
+                          ),
   uiOutput(ns("DATE_server_created")),
   uiOutput(ns("VAR_server_created")),
   uiOutput(ns("CLASS_SELECT_server_created")),
@@ -522,7 +527,8 @@ module_select_and_plot <- function(input, output, session, data) {
                  objseq = data$SEQ_OBJ, 
                  groupes = the.grups(), 
                  merge_mods = input$merge_moda, 
-                 col.selected = input$select_col_time_flux, pmin.sup = input$pminsup, str.subs = input$select_event)
+                 col.selected = input$select_col_time_flux, pmin.sup = input$pminsup, str.subs = input$select_event, 
+                 SORTV=input$tapis_order)
     if(inherits(x = p, what = "ggplot")){
     if(length(input$theme_select)>0){
       if(input$theme_select!="choix par défaut"){

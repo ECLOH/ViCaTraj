@@ -2,7 +2,7 @@
 
 seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL, 
                              col_selected.r1=col.selected, merge_mods.r1, 
-                             pmin.sup1=0.05, STR.SUBS.1=NULL){
+                             pmin.sup1=0.05, STR.SUBS.1=NULL, SORTV1=NULL){
   library(dplyr)
   attributes(objseq.r1)$cpal->col.i
   names(col.i)<-attributes(objseq.r1)$alphabet
@@ -218,7 +218,10 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
               return(gg)
               
           } else {
-    seqplot(seqdata =  objseq.r1, type=TYPE.r1, group = grup_var.r1)
+    seqplot(seqdata =  objseq.r1, type=TYPE.r1, group = grup_var.r1, sortv=SORTV1)
+            p <- recordPlot()
+            plot.new() 
+            p 
           }
         }
     }}

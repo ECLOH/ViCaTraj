@@ -4,10 +4,12 @@
 \alias{XML_TO_CSV}
 \title{La fonction "XML_TO_CSV"}
 \usage{
-
-  XML_TO_CSV(chemin.xml = "rsa.RSABEM.00122018.A0110442.xml/rsa.RSABEM.00122018.A0110442.xml",
-  chemin.destination = "RSABEM_201812.csv", return.df = FALSE,
-  save.csv = TRUE)
+XML_TO_CSV(
+  chemin.xml = "rsa.RSABEM.00122018.A0110442.xml/rsa.RSABEM.00122018.A0110442.xml",
+  chemin.destination = "RSABEM_201812.csv",
+  return.df = FALSE,
+  save.csv = TRUE
+)
 }
 \value{
 un df et un csv enregistré

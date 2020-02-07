@@ -4,13 +4,32 @@
 \alias{seqdef_modgap}
 \title{La fonction "seqdef_modgap"}
 \usage{
-seqdef_modgap(data, var = NULL, informat = "STS", stsep = NULL,
-  alphabet = NULL, states = NULL, id = NULL, weights = NULL,
-  start = 1, left = NA, right = "DEL", gaps = "gap",
-  missing = NA, void = "\%", nr = "*", cnames = NULL, xtstep = 1,
-  tick.last = FALSE, cpal = NULL, missing.color = "darkgrey",
-  labels = NULL, minimal.gap = 3, regle.pour.faux.gap = "before",
-  ...)
+seqdef_modgap(
+  data,
+  var = NULL,
+  informat = "STS",
+  stsep = NULL,
+  alphabet = NULL,
+  states = NULL,
+  id = NULL,
+  weights = NULL,
+  start = 1,
+  left = NA,
+  right = "DEL",
+  gaps = "gap",
+  missing = NA,
+  void = "\%",
+  nr = "*",
+  cnames = NULL,
+  xtstep = 1,
+  tick.last = FALSE,
+  cpal = NULL,
+  missing.color = "darkgrey",
+  labels = NULL,
+  minimal.gap = 3,
+  regle.pour.faux.gap = "before",
+  ...
+)
 }
 \arguments{
 \item{minimal.gap}{numeric. nombre minimum d'états manquant consécutifs pouvant être considérés comme un "vrai" gap (une sortie du RSA)}
