@@ -1101,16 +1101,12 @@ module_data <- function(input, output, session) {
     #  isolate(values$df <- rbind(values$df, newLine))
   })
   #### DELETE ROWS ####
-  observeEvent(input$delROW, {
-      #print(input$contents_rows_selected) #testing input
-    values$DF_subset_initial <- values$DF_subset_initial[-nrow(input$contents_TABLE_POUR_SELECTION),]
+  observeEvent(input$delROW,{
     
-    
-    
-    #df2 <- data()
-    values$DF_subset_initial <- values$DF_subset_initial[-as.numeric(input$contents_TABLE_POUR_SELECTION),] 
-    #data(df2)
-    
+    if (!is.null(input$TABLE_POUR_SELECTION_rows_selected)) {
+      
+      values$DF_subset_initial <- values$DF_subset_initial[-as.numeric(input$TABLE_POUR_SELECTION_rows_selected),]
+    }
   })
   
   output$TABLE_POUR_SELECTION<-DT::renderDataTable(
