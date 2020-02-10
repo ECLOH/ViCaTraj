@@ -37,7 +37,9 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                                                "Un fichier .csv unique contenant les données"="fichier" 
                                                                    ), 
                                                                    multiple = FALSE, selected = "fichier"),
-                                                helpText("Voir les trois fichiers d'example qui illustrent les différents types de données : data(package = 'ViCaTraj') ")
+                                                helpText("Voir les trois fichiers d'example qui illustrent les différents types de données : data(package = 'ViCaTraj') "),
+                                                helpText("ATTENTION : vous pouvez charger un objet .RData contenant déjà des trajectoires tout en choisissant l'option 'un objet .RData contenant de multiples data.frame' : dans ce cas, les trajectoires contenues dans l'objet sont supprimées, et les données complémentaires sont utilisées pour sélectionner des individus et reconstruire des trajectoires. ")
+                                                
                                   ),
                                   shiny::column(width = 6,
                                                 
@@ -302,13 +304,20 @@ module_data <- function(input, output, session) {
     e = new.env()
     name <- load(file, envir = e)
     data <- e[[name]]
+    data<-data[sapply(data, function(x){inherits(x, "stslist", which = FALSE)})==FALSE]
     #
     temp.lenght<-length(data)
     # b1<-names(temp.lenght)[1]
     # b.max<-names(temp.lenght)[temp.lenght]
     #print(data)
+    if(temp.lenght>1){
     names(data)<-sapply(names(data), function(ni){if(substr(ni, 1, 1)%in%c("0", as.character(seq(1, 9, 1)))  ) paste("D", ni, sep=".") else ni })
     names(data)<-gsub(pattern = "-", replacement = "_", fixed = TRUE, x=names(data))
+    } else {
+      if(temp.lenght==1){
+        names(data)<-"Table.unique"
+      }
+    }
     return(data)
   })
   
@@ -1101,12 +1110,14 @@ module_data <- function(input, output, session) {
     #  isolate(values$df <- rbind(values$df, newLine))
   })
   #### DELETE ROWS ####
+  
   observeEvent(input$delROW,{
     
     if (!is.null(input$TABLE_POUR_SELECTION_rows_selected)) {
       
       values$DF_subset_initial <- values$DF_subset_initial[-as.numeric(input$TABLE_POUR_SELECTION_rows_selected),]
     }
+    
   })
   
   output$TABLE_POUR_SELECTION<-DT::renderDataTable(
@@ -1428,7 +1439,8 @@ module_data <- function(input, output, session) {
   ####  data.seq ####
   
   DR_POUR_SEQ_OBJ<-reactive({# eventExpr = input$ValidParametres,  {
-    if(input$DataType=="objet"){
+    req(SUBSETTED_LIST())
+    if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
       req(SUBSETTED_LIST())
       req(input$timecol)
       
@@ -1472,7 +1484,7 @@ module_data <- function(input, output, session) {
       
       df.pour.seq
     } else {
-      if(input$DataType=="fichier"){
+      if(input$DataType=="fichier"|(input$DataType=="objet"&length(SUBSETTED_LIST())==1)){
         req(SUBSETTED_LIST())
         req(input$timecol)
         message("COUCOU 1242")
@@ -1499,7 +1511,7 @@ module_data <- function(input, output, session) {
   })
   
   observe({
-    if(input$DataType=="objet"){
+    if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
       lapply(BIGLIST2(), function(dt){
         dt[ , input$timecol]
       })->li.var
@@ -1531,10 +1543,10 @@ module_data <- function(input, output, session) {
     req(input$timecol)
     
     
-    if(input$DataType=="fichier"){
+    if(input$DataType=="fichier"|(input$DataType=="objet"&length(SUBSETTED_LIST())==1)){
     DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
     } else {
-      if(input$DataType=="objet"){
+      if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
         DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
       }
     }
@@ -1545,7 +1557,7 @@ module_data <- function(input, output, session) {
   data.seq<-eventReactive(eventExpr = input$ValidParametres, {
     
     #### SI FICHOER ####
-    if(input$DataType=="fichier"){
+    if(input$DataType=="fichier"|(input$DataType=="objet"&length(SUBSETTED_LIST())==1)){
         # updateNumericInput(session=session, inputId = "PAStrate",value=1) 
       DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
       dataforseq[]<-lapply(dataforseq, as.character)
@@ -1566,7 +1578,7 @@ module_data <- function(input, output, session) {
       } else {
       #### SI OBJET ####
       
-      if(input$DataType=="objet"){
+      if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
         
         DR_POUR_SEQ_OBJ()->df.pour.seq
         
