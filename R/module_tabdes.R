@@ -138,10 +138,10 @@ module_tabdes <- function(input, output, session, data) {
           df.ki$Répartition<-as.numeric(as.character(df.ki$Répartition))
           
           print(df.ki)
-          h3(names(listoftabs())[ki])->DISPO
+          names(listoftabs())[ki]->DISPO
 
           list(h3(DISPO),
-               renderDT(datatable(df.ki,rownames = FALSE, filter = "top"), #caption=unique(SELECTED_GLOVAR()),
+               renderDT(datatable(df.ki,rownames = FALSE, filter = "top", caption = DISPO), #caption=unique(SELECTED_GLOVAR()),
                         options=list(2, "desc"))
           )
           #list(DISPO,

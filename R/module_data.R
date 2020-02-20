@@ -357,8 +357,10 @@ module_data <- function(input, output, session) {
     req(CLASS_LIST_OBJSEQ())
     LIST_OBJSEQ()[[which(CLASS_LIST_OBJSEQ()<1)]]->df.pour.seq
     if(class(df.pour.seq)=="data.frame"){
-    list("Table.unique"=df.pour.seq)->res
+message("pb seq 360")    
+      list("Table.unique"=df.pour.seq)->res
     } else {
+      message("pb seq 363")    
       res<-df.pour.seq
     }
     return(res)
@@ -683,7 +685,7 @@ module_data <- function(input, output, session) {
   BIGLIST2<-reactive({
     req( control_dupli_na() )
     req(input$INDVAR)
-    if(input$DataType=="objet"|input$DataType=="fichier"){
+    # if(input$DataType=="objet"|input$DataType=="fichier")#{
       if(class(control_dupli_na())=="data.frame"){
         req(input$deleteNA_DUPLI)
         if(input$deleteNA_DUPLI==TRUE){
@@ -694,9 +696,14 @@ module_data <- function(input, output, session) {
           })
         }
       } else {
-        BIGLIST1.COMP()
+        message("CHERCHEZ l'ERREUR 1")
+        print(BIGLIST1.COMP())
+        return(BIGLIST1.COMP())
+        message("CHERCHEZ l'ERREUR 1")
+        
+        
       }
-    }
+    #}
   })
   
   #output$TEXTE_NROW_BIGLIST_AVANT_APRES<-renderUI({
