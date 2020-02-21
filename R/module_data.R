@@ -304,7 +304,12 @@ module_data <- function(input, output, session) {
     e = new.env()
     name <- load(file, envir = e)
     data <- e[[name]]
-    data<-data[sapply(data, function(x){inherits(x, "stslist", which = FALSE)})==FALSE]
+    
+    sapply(data, function(x){inherits(x, "stslist", which = FALSE)})->cherche.seq
+    if(TRUE%in%cherche.seq){
+      data[cherche.seq==FALSE]->data
+      data[[1]]->data
+    }
     #
     temp.lenght<-length(data)
     # b1<-names(temp.lenght)[1]
@@ -1467,7 +1472,7 @@ message("pb seq 360")
       
       
       
-      names(df_RSA.sampled)<-c(input$INDVAR, paste(1:(ncol(df_RSA.sampled)-1), "_VAR"))
+      names(df_RSA.sampled)<-c(input$INDVAR, names(SUBSETTED_LIST()))# c(input$INDVAR, paste(1:(ncol(df_RSA.sampled)-1), "_VAR"))
       
       print(head(df_RSA.sampled))
       
@@ -1554,7 +1559,7 @@ message("pb seq 360")
     DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
     } else {
       if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
-        DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
+        DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq#grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
       }
     }
     
@@ -1589,11 +1594,14 @@ message("pb seq 360")
         
         DR_POUR_SEQ_OBJ()->df.pour.seq
         
+        
         print(DR_POUR_SEQ_OBJ()[ , input$INDVAR][duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR])])
         
         if(!is.null(DR_POUR_SEQ_OBJ())){
           
-          DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
+         # DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
+          DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq
+        
           dataforseq[]<-lapply(dataforseq, as.character)
           for(miss.i in missing_codes()){
             dataforseq[dataforseq==miss.i]<-NA

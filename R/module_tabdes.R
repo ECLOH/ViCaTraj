@@ -119,6 +119,7 @@ module_tabdes <- function(input, output, session, data) {
       return(glodf.ni)
     })->list.of.tables
     #print(list.of.tables)
+    names(list.of.tables)<-input$VARSSELECT
     return(list.of.tables)
   })
   output$LISTOFTABLES<-renderPrint({print( listoftabs() )})
@@ -140,10 +141,10 @@ module_tabdes <- function(input, output, session, data) {
           print(df.ki)
           names(listoftabs())[ki]->DISPO
 
-          list(h3(DISPO),
+          #list(#h3(DISPO),
                renderDT(datatable(df.ki,rownames = FALSE, filter = "top", caption = DISPO), #caption=unique(SELECTED_GLOVAR()),
                         options=list(2, "desc"))
-          )
+          #)
           #list(DISPO,
           #     renderDT(df.ki, caption=SELECTED_GLOVAR()[[ki]])
           #)

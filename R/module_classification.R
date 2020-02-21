@@ -552,9 +552,12 @@ module_classification <- function(input, output, session, data) {
   })
   
   #### PLOT DENDOGRAM
-  observeEvent(input$calculCLUST, {
-  output$classif<- renderUI({
-    input$calculCLUST
+  #observe({
+  #  input$calculCLUST
+    
+  #isolate({
+    output$classif<- renderUI({
+      input$calculCLUST
     isolate({
       req(SEQCLASS())
       if (input$cluster_type=="CAH" | input$cluster_type=="fastCAH"){
@@ -583,7 +586,7 @@ module_classification <- function(input, output, session, data) {
     })
     
   })
-  })
+  #})
   
   
   #### Tableau indicateurs pour évaluer la qualité des classifiactions testées ####
