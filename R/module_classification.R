@@ -558,7 +558,7 @@ module_classification <- function(input, output, session, data) {
   #isolate({
     output$classif<- renderUI({
       input$calculCLUST
-    isolate({
+    #isolate({
       req(SEQCLASS())
       if (input$cluster_type=="CAH" | input$cluster_type=="fastCAH"){
         renderPlot(plot(SEQCLASS(), which.plots = 2))->output$dd
@@ -571,19 +571,19 @@ module_classification <- function(input, output, session, data) {
         output$inertie<-renderPlot({
           plot(sort(SEQCLASS()$height, decreasing=TRUE)[1:20], type="s", xlab="nb de classes", ylab="inertie")
         })
-        
-        
-        return(tagList(
-          noUiSliderInput(inputId = ns("SliderGrp"),label="Nombre de groupes",min=2,max=10,value = c(4,6),limit=2,step=1,margin=2,behaviour = "drag"),
+        res<-tagList(
+          shiny::sliderInput(inputId = ns("SliderGrp"),label="Nombre de groupes",min=2,max=10,value = c(4,6),step=1),
           fluidRow(column(12,
                           splitLayout(
                             plotOutput(ns("dendo")) %>% withSpinner(color="#0dc5c1"),
                             plotOutput(ns("inertie")) %>% withSpinner(color="#0dc5c1"))))
           
-        ))
+        )
+        
+        return(res)
         
       }
-    })
+    #})
     
   })
   #})
@@ -639,6 +639,22 @@ module_classification <- function(input, output, session, data) {
           )
         ))
       }
+      
+      if(input$cluster_type=="fastCAH"){
+        return(tagList(
+          column(2,
+                 shiny::numericInput(inputId = ns("nb_cluster"),label="Nombre de groupes choisi",step=1,value = 2,min=2 ,max=10)
+          ),
+          column(2,
+                 shiny::actionButton(inputId = ns("Bouton_Clustering"),label = "Faire les groupes")
+          )
+        ))
+      }
+      
+      
+      
+      
+      
     })
   })
   
@@ -684,6 +700,7 @@ module_classification <- function(input, output, session, data) {
     } else  {
     return(data$DATA_COMP)
     }
+    
   })
   
   
@@ -699,13 +716,21 @@ module_classification <- function(input, output, session, data) {
                                       nb_cluster_max=max(input$SliderGrp,na.rm=TRUE)
                                       ,mat_dist=SEQDIST(),
                                       intialclust=SEQCLASS())
+      
+      data_cluster(tabl_ind = indicateur, data =  trajs.forclass(), nb_groupe = input$nb_cluster)->dataclusts
+      data.frame(dataclusts)->dataclusts
+      dataclusts$ID<-row.names(dataclusts)
+      
+      lapply(X = DATA_COMPc(), function(x){
+        base::merge(x, dataclusts[ , c("ID", "Clustering")], by.x=data$ID_VAR, by.y="ID", all.x=TRUE)
+      })->DATA_COMPc2
       #return(
-      lapply(X = DATA_COMPc(), function(x){data_cluster(tabl_ind = indicateur, data = x, nb_groupe = input$nb_cluster)   })->DATA_COMPc2
+      #lapply(X = DATA_COMPc(), function(x){data_cluster(tabl_ind = indicateur, data = x, nb_groupe = input$nb_cluster)   })->DATA_COMPc2
       #data_cluster(indicateur,
       #             ,#DATAs()$DATA_COMP,
       #             input$nb_cluster)->res_def
     } else {
-      if(input$cluster_type=="CAH"){
+      if(input$cluster_type=="CAH"|input$cluster_type=="fastCAH"){
         
         clusterCAH<-as.factor(cutree(SEQCLASS(),k = input$nb_cluster))
         clusterCAH.class<-factor(clusterCAH,labels = paste0("G",1:input$nb_cluster))
@@ -799,13 +824,13 @@ module_classification <- function(input, output, session, data) {
   
   
   
-  return(reactive({
-    list("SEQ_OBJ"=trajs.forclass.output(), 
-         "DATA_COMP"=dataCluster(), 
-         "TYPE_SOURCE"=data$TYPE_SOURCE, 
-         "CODAGE_MANQUANT"=data$CODAGE_MANQUANT,
-         "ID_VAR"=data$ID_VAR
+  return(
+    list("SEQ_OBJ"=reactive({trajs.forclass.output()}), 
+         "DATA_COMP"=reactive({dataCluster()}), 
+         "TYPE_SOURCE"=reactive({data$TYPE_SOURCE}), 
+         "CODAGE_MANQUANT"=reactive({data$CODAGE_MANQUANT}),
+         "ID_VAR"=reactive({data$ID_VAR})
     )
-  }))
+  )
   
 }

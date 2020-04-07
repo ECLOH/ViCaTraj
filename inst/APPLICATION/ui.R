@@ -1,4 +1,6 @@
 #### packages ####
+library(ViCaTraj)
+
 library(shiny)
 library(TraMineR)
 library(ggplot2)
@@ -97,15 +99,15 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
               #### PANEL: classif ####
               
                                     tabPanel("Classification des trajectoires",
-                                                             shiny::actionButton(inputId = "reactKlass", label = "Je valide la classification et les groupes"),
+                                                             #shiny::actionButton(inputId = "reactKlass", label = "Je valide la classification et les groupes"),
                                                              tabsetPanel(
                                                                
                                                                shiny::tabPanel(title = "Classification et groupes", 
                                                                                module_classification_UI(id = "id5")),
                                                                shiny::tabPanel(title = "Représentation des trajectoires (groupes)",
-                                                                               module_select_and_plot_UI(id = "id25")),
+                                                                               module_select_and_plot2_UI(id = "id25")),
                                                                shiny::tabPanel(title = "Tables et tables de contingence (groupes)",
-                                                                               module_tabdes_UI(id = "id35"))
+                                                                               module_tabdes2_UI(id = "id35"))
                                                              )
                                              )
 )

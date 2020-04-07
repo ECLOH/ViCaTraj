@@ -9,7 +9,7 @@
 #### SERVER ####
 server <- function(input, output, session) {
 
-  
+  library(ViCaTraj)
   library(shiny)
   library(TraMineR)
   library(ggplot2)
@@ -220,15 +220,23 @@ observeEvent(eventExpr = DATAs()$SEQ_OBJ,{
   callModule(module = module_classification, data=DATAs(), id = "id5")->DATAs.c#DATA.CLASSIF$DATAs.c
   
   #observe({
-  observeEvent(eventExpr = input$reactKlass, {
-    callModule(module = module_select_and_plot, data = DATAs.c(), #reactive(DATA.CLASSIF$DATAs.c), 
-               id = "id25")
-  })
+  callModule(module = module_select_and_plot2, data = DATAs.c, #reactive(DATA.CLASSIF$DATAs.c), 
+             id = "id25")
+  callModule(module = module_tabdes2, data = DATAs.c, id = "id35")
+  
+ # observe({
+#    input$reactKlass
+#    isolate({
+#    callModule(module = module_select_and_plot, data = DATAs.c(), #reactive(DATA.CLASSIF$DATAs.c), 
+#               id = "id25")
+#    })
+#  })
   #})
-  observeEvent(eventExpr = input$reactKlass, {
-    
-    callModule(module = module_tabdes, data = DATAs.c(), id = "id35")
-    
-  })
+ # observe({
+#    input$reactKlass
+#    isolate({
+#    callModule(module = module_tabdes, data = DATAs.c(), id = "id35")
+#    })
+#  })
   
 }

@@ -5,7 +5,7 @@
 #' @param label fileInput label
 #' @importFrom stringr str_detect
 #' @export
-module_select_and_plot_UI <- function(id){#label = "CSV file") {
+module_select_and_plot2_UI <- function(id){#label = "CSV file") {
   ns <- NS(id)
 
     
@@ -92,7 +92,7 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
 #' @importFrom glue glue
 #' @export
 #' @rdname mod_csv_fileInput
-module_select_and_plot <- function(input, output, session, data) {
+module_select_and_plot2 <- function(input, output, session, data) {
   #data<-list()
   #data$DATA_COMP<-data$DATA_COMP()
   #data$SEQ_OBJ<-data$SEQ_OBJ()
@@ -149,7 +149,7 @@ module_select_and_plot <- function(input, output, session, data) {
   output$DATE_server_created<-renderUI({
     ns <- session$ns
     shiny::selectInput(inputId=ns("DATE_SELECT_M1"), label = "Date pour groupes : ", 
-                       choices = c("Pas de groupes", names(data$DATA_COMP)), 
+                       choices = c("Pas de groupes", names(data$DATA_COMP() )), 
                        selected = "Pas de groupes", multiple = FALSE)
   })
   reactive({
@@ -157,9 +157,9 @@ module_select_and_plot <- function(input, output, session, data) {
     message("COUCOU 50")
     print(input$DATE_SELECT_M1)
     if(input$DATE_SELECT_M1!="Pas de groupes"){
-      data$DATA_COMP[[as.character(input$DATE_SELECT_M1)]]
+      data$DATA_COMP()[[as.character(input$DATE_SELECT_M1)]]
     } else {
-      data$DATA_COMP[[1]]
+      data$DATA_COMP()[[1]]
     } 
     })->the.df
   
@@ -335,20 +335,20 @@ module_select_and_plot <- function(input, output, session, data) {
     if(input$DATE_SELECT_M1=="Pas de groupes"){
       the.df()->the.df.for.groupe
       the.df.for.groupe$Ensemble<-"Ensemble"
-      ordered.df<-the.df.for.groupe[match(row.names(data$SEQ_OBJ), the.df.for.groupe[ , data$ID_VAR]) , ]#order(the.df.for.groupe[ , 1][order(row.names(data$SEQ_OBJ))]) , ]
+      ordered.df<-the.df.for.groupe[match(row.names(data$SEQ_OBJ()), the.df.for.groupe[ , data$ID_VAR()]) , ]#order(the.df.for.groupe[ , 1][order(row.names(data$SEQ_OBJ))]) , ]
       grups<-ordered.df[ , "Ensemble"]
     } else {
       if(input$VAR_SELECT_M1=="Pas de groupes"){
         the.df()->the.df.for.groupe
         the.df.for.groupe$Ensemble<-"Ensemble"
-        ordered.df<-the.df.for.groupe[match(row.names(data$SEQ_OBJ), the.df.for.groupe[ , data$ID_VAR]) , ]#order(the.df.for.groupe[ , 1][order(row.names(data$SEQ_OBJ))]) , ]
+        ordered.df<-the.df.for.groupe[match(row.names(data$SEQ_OBJ()), the.df.for.groupe[ , data$ID_VAR()]) , ]#order(the.df.for.groupe[ , 1][order(row.names(data$SEQ_OBJ))]) , ]
         grups<-ordered.df[ , "Ensemble"]
       } else {
       #if(input$UserSelect==TRUE){
    #   if(input$UserSelect==FALSE){#&length(the.df()[ , data()$ID_VAR])<20){
-        the.df()[ , c(data$ID_VAR, input$VAR_SELECT_M1)]->the.df.for.groupe
+        the.df()[ , c(data$ID_VAR(), input$VAR_SELECT_M1)]->the.df.for.groupe
         subset(the.df.for.groupe, 
-               as.character(the.df.for.groupe[ , data$ID_VAR])%in%row.names(data$SEQ_OBJ))->the.df.for.groupe
+               as.character(the.df.for.groupe[ , data$ID_VAR()])%in%row.names(data$SEQ_OBJ()))->the.df.for.groupe
         #####
         if(input$classSelect=="character"){
           if(length(unique(the.df.for.groupe[ , input$VAR_SELECT_M1]))<20|length(input$CharPatSelect)<20){
@@ -403,7 +403,7 @@ module_select_and_plot <- function(input, output, session, data) {
         
         message("COUCOU 62")
         print(head(the.df.for.groupe))
-        row.names(data$SEQ_OBJ)[!row.names(data$SEQ_OBJ)%in%as.character(the.df.for.groupe[ , data$ID_VAR])]->id.not.in.groupes
+        row.names(data$SEQ_OBJ())[!row.names(data$SEQ_OBJ())%in%as.character(the.df.for.groupe[ , data$ID_VAR()])]->id.not.in.groupes
         if(length(id.not.in.groupes)>=1){
           data.frame(
             "id"=id.not.in.groupes, 
@@ -421,7 +421,7 @@ module_select_and_plot <- function(input, output, session, data) {
         message("COUCOU 250")
         
         #print(head(the.df.for.groupe))
-        ordered.df<-the.df.for.groupe[match(row.names(data$SEQ_OBJ), the.df.for.groupe[ , 1]) , ]#order(the.df.for.groupe[ , 1][order(row.names(data$SEQ_OBJ))]) , ]
+        ordered.df<-the.df.for.groupe[match(row.names(data$SEQ_OBJ()), the.df.for.groupe[ , 1]) , ]#order(the.df.for.groupe[ , 1][order(row.names(data$SEQ_OBJ))]) , ]
         grups<-ordered.df[ , "VARgrup"]
    ###########################################
   
@@ -483,7 +483,7 @@ module_select_and_plot <- function(input, output, session, data) {
     if(input$plottype=="flux"){
         shiny::selectInput(inputId = ns("select_col_time_flux"), 
                            label = "Temporalitées choisies pour le graphique de flux : ", 
-                           choices = names(data$SEQ_OBJ), selected = names(data$SEQ_OBJ)[1], multiple = TRUE)
+                           choices = names(data$SEQ_OBJ()), selected = names(data$SEQ_OBJ())[1], multiple = TRUE)
       
     }
   })
@@ -505,7 +505,7 @@ module_select_and_plot <- function(input, output, session, data) {
   observe({
     req(input$pminsup )
     req(input$nb_event)
-    seqecreate(data = data$SEQ_OBJ)->sese
+    seqecreate(data = data$SEQ_OBJ())->sese
     seqefsub(eseq = sese, pmin.support = 0.01 )->sese.sub
     
     shiny::updateNumericInput(session = session, inputId = "pminsup",max = max(sese.sub$data$Support))
@@ -514,7 +514,7 @@ module_select_and_plot <- function(input, output, session, data) {
   observe({
     req(input$pminsup )
     req(input$nb_event)
-    seqecreate(data = data$SEQ_OBJ)->sese
+    seqecreate(data = data$SEQ_OBJ())->sese
     seqefsub(eseq = sese, pmin.support = input$pminsup )->sese.sub
     sese.sub$subseq[order(sese.sub$data$Count, decreasing = TRUE), ]->choices.sese
     shiny::updateSelectInput(session = session, inputId = "select_event", choices = choices.sese)
@@ -531,7 +531,7 @@ module_select_and_plot <- function(input, output, session, data) {
     print(the.grups())
     if(length(unique(the.grups()))<20){
     p<-seqggplot(TYPE = input$plottype, 
-                 objseq = data$SEQ_OBJ, 
+                 objseq = data$SEQ_OBJ(), 
                  groupes = the.grups(), 
                  merge_mods = input$merge_moda, 
                  col.selected = input$select_col_time_flux, pmin.sup = input$pminsup, str.subs = input$select_event, 
@@ -599,7 +599,7 @@ module_select_and_plot <- function(input, output, session, data) {
       
       lapply(unique(the.grups()),FUN = function(levi){
         
-        data$SEQ_OBJ[the.grups()==levi , ]->seqi
+        data$SEQ_OBJ()[the.grups()==levi , ]->seqi
         seqi[!is.na(seqi[ , 1]) , ]->seqi
         DONNEES_POUR_PLOT(TYPE = input$plottype, objseq = seqi,
                           pmin.sup=input$pminsup, STR.SUBS=input$select_event,input$select_col_time_flux )

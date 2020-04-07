@@ -13,6 +13,7 @@ library(shinyWidgets)
 library(ViCaTraj)
 library(DT)
 source('C:/Users/elie/Desktop/ViCaTraj/R/module_select_and_plot.R', encoding = 'UTF-8')
+source('C:/Users/elie/Desktop/ViCaTraj/R/module_select_and_plot2.R', encoding = 'UTF-8')
 
 source('C:/Users/elie/Desktop/ViCaTraj/R/module_data.R', encoding = 'UTF-8')
 source('C:/Users/elie/Desktop/ViCaTraj/R/module_tabdes.R', encoding = 'UTF-8')
@@ -48,7 +49,7 @@ shiny::tabPanel(title = "tab5",
 shiny::tabPanel(title = "tab51", 
                 module_classification_UI(id = "id5")),
 shiny::tabPanel(title = "tab2:clust",
-                module_select_and_plot_UI(id = "id25")),
+                module_select_and_plot2_UI(id = "id25")),
 shiny::tabPanel(title = "tab3:clust",
                 module_tabdes_UI(id = "id35"))
 )
@@ -78,15 +79,19 @@ server <- function(input, output, session) {
     callModule(module = module_classification, data=DATAs(), id = "id5")->DATAs.c#DATA.CLASSIF$DATAs.c
     
     #observe({
-    observeEvent(eventExpr = input$reactKlass, {
-    callModule(module = module_select_and_plot, data = DATAs.c(), #reactive(DATA.CLASSIF$DATAs.c), 
+    #observeEvent(input$reactKlass , {
+        #input$reactKlass
+        
+    callModule(module = module_select_and_plot2, data = DATAs.c, #reactive(DATA.CLASSIF$DATAs.c), 
                    id = "id25")
-    })
+   #     })
     #})
-    observeEvent(eventExpr = input$reactKlass, {
-        
+    #})
+    observe({
+        input$reactKlass
+        isolate({
         callModule(module = module_tabdes, data = DATAs.c(), id = "id35")
-        
+        })
        })
     
 
