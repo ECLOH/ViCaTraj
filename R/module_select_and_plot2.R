@@ -37,9 +37,11 @@ module_select_and_plot2_UI <- function(id){#label = "CSV file") {
                                       selected = "from.start", multiple = FALSE)
                           ),
   uiOutput(ns("DATE_server_created")),
-  uiOutput(ns("VAR_server_created")),
-  uiOutput(ns("CLASS_SELECT_server_created")),
-  uiOutput(ns("MOD_SELECT_server_created"))
+  shiny::conditionalPanel(condition = "input.DATE_SELECT_M1!='Pas de groupes'", ns = ns, 
+                          uiOutput(ns("VAR_server_created")),
+                          uiOutput(ns("CLASS_SELECT_server_created")),
+                          uiOutput(ns("MOD_SELECT_server_created"))
+  )
   ),
   shiny::column(width=6,
   uiOutput(ns("SELECT_COL_TIME_FLUX")),
@@ -528,42 +530,42 @@ module_select_and_plot2 <- function(input, output, session, data) {
   
   THE_PLOT<-eventReactive(input$UPDATE_PLOT, {
     message("COUCOU 372")
-    print(the.grups())
-    if(length(unique(the.grups()))<20){
-    p<-seqggplot(TYPE = input$plottype, 
-                 objseq = data$SEQ_OBJ(), 
-                 groupes = the.grups(), 
-                 merge_mods = input$merge_moda, 
-                 col.selected = input$select_col_time_flux, pmin.sup = input$pminsup, str.subs = input$select_event, 
-                 SORTV=input$tapis_order)
-    if(inherits(x = p, what = "ggplot")){
-    if(length(input$theme_select)>0){
-      if(input$theme_select!="choix par défaut"){
-      p<-p+eval(parse(text = input$theme_select))
+    print(isolate(the.grups()))
+    if(length(unique(isolate(the.grups())))<20){
+      p<-seqggplot(TYPE = isolate(input$plottype), 
+                   objseq = data$SEQ_OBJ(), 
+                   groupes = isolate(the.grups()), 
+                   merge_mods = isolate(input$merge_moda), 
+                   col.selected = isolate(input$select_col_time_flux), pmin.sup = isolate(input$pminsup), str.subs = isolate(input$select_event), 
+                   SORTV=isolate(input$tapis_order))
+      if(inherits(x = p, what = "ggplot")){
+        if(length(input$theme_select)>0){
+          if(input$theme_select!="choix par défaut"){
+            p<-p+eval(parse(text = input$theme_select))
+          }
+        }
+        
+        if(!is.null(input$size_text_plot)&length(p$theme$text$size)>0){
+          p<-p+theme(text = element_text(size = p$theme$text$size+input$size_text_plot))
+        }
       }
-    }
-    
-    if(!is.null(input$size_text_plot)&length(p$theme$text$size)>0){
-      p<-p+theme(text = element_text(size = p$theme$text$size+input$size_text_plot))
-    }
-    }
-                  
+      
     } else {NULL}
     
     
-
     
     
-   return(p)
+    
+    return(p)
   })
   
   observeEvent(input$UPDATE_PLOT, {
     output$plot1_UI<-renderUI({
       
-      tailleGraph$height<-haut1(nb = length(unique(the.grups() ) ), type.of.plot = input$plottype )
+      tailleGraph$height<-haut1(nb = length(unique(isolate(the.grups() )) ), type.of.plot = isolate(input$plottype ))
       
       
-      output$PLOTi<-renderPlot({ THE_PLOT() })
+      output$PLOTi<-renderPlot({ isolate(THE_PLOT()) })
       
       plotOutput(ns("PLOTi"), height = tailleGraph$height)#->PLOT
       
@@ -593,25 +595,25 @@ module_select_and_plot2 <- function(input, output, session, data) {
   )
   
   THE_DATA_base1<-eventReactive(input$UPDATE_PLOT, {
-   
+    
     req(the.grups())
-    if(length(unique(the.grups()))<20){
+    if(length(unique(isolate(the.grups()) ))<20){
       
-      lapply(unique(the.grups()),FUN = function(levi){
+      lapply(unique(isolate(the.grups() )),FUN = function(levi){
         
-        data$SEQ_OBJ()[the.grups()==levi , ]->seqi
+        data$SEQ_OBJ()[isolate(the.grups())==levi , ]->seqi
         seqi[!is.na(seqi[ , 1]) , ]->seqi
-        DONNEES_POUR_PLOT(TYPE = input$plottype, objseq = seqi,
-                          pmin.sup=input$pminsup, STR.SUBS=input$select_event,input$select_col_time_flux )
+        DONNEES_POUR_PLOT(TYPE = isolate(input$plottype), objseq = seqi,
+                          pmin.sup=isolate(input$pminsup), STR.SUBS=isolate(input$select_event),isolate(input$select_col_time_flux) )
         
       })->listdat
       #
-      names(listdat)<-unique(the.grups())
+      names(listdat)<-unique(isolate(the.grups()))
       return(listdat)
       
     }
-      
-    })
+    
+  })
   
   THE_DATA_DToutput<-reactive({
     req(the.grups())

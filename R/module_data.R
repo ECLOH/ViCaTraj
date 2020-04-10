@@ -88,12 +88,40 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   #hr()
                                                   #shiny::textOutput("CONTROLDATA"))
                                                 )
+                                  )),
+                                  sidebarPanel( h3("Format des données"), 
+                                                width = 12,
+                                                #### condition = "input.DataType == 'fichier'"  ####
+                                                
+                                                #### condition = "input.DataType == 'objet'"  ####
+                                                
+                                                conditionalPanel(
+                                                  #condition = "input.DataType == 'objet'",
+                                                  condition = paste0("input['", ns("DataType"), "'] == 'objet'"),
+                                                  
+                                                  shiny::column(width = 4,
+                                                                shiny::selectInput( inputId = ns("MINTIMEBIG"), label = "Borne temporelle inférieure:", 
+                                                                                    multiple = FALSE, choices = "" , width = '100%')),
+                                                  shiny::column(width = 4,
+                                                                shiny::selectInput( inputId = ns("MAXTIMEBIG"), label = "Borne temporelle supérieure:", 
+                                                                                    multiple = FALSE , choices = "", width = '100%')),
+                                                  shiny::column(width = 4,
+                                                                shiny::numericInput(inputId = ns("PAS_TEMPS_BIGDATA"), label = "Pas de temps pour les données:", 
+                                                                                    value = 1, min = 1, step = 1, width = '100%')),
+                                                  shiny::column(width = 6, "Noms des data.frame sélectionnés : "),  
+                                                  shiny::column(width = 6, textOutput(ns("CONTROLNAMES"))),
+                                                  #shiny::column(width = 6, "Noms des data.frame sélectionnés : "),  
+                                                  #shiny::column(width = 6, textOutput(ns("SLIDERTEXT")))
+                                                )
                                   ),
+                                column(width = 12, 
                                   conditionalPanel(
                                     #condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
                                     condition = paste0(
                                       "input['", ns("DataType"), "'] == 'objet'||input['", ns("DataType"), "'] == 'objseq'||input['", ns("DataType"), "'] == 'fichier'"),
-                                    
+                                    #column(12, 
+                                    sidebarPanel( h3("Identifiant des individus"), width = 12,
+                                                  
                                     
                                     uiOutput(ns("UI_INDVAR_CHOOSE")),
                                     uiOutput(ns("MSSG_DUPLI")),
@@ -101,7 +129,10 @@ module_data_UI <- function(id){#label = "CSV file") {
                                     #uiOutput(ns("TEXTE_NROW_BIGLIST_AVANT_APRES")),
                                     uiOutput(ns("NROW_BIGLIST_AVANT_APRES")) %>% withSpinner(color="#0dc5c1"),
                                     uiOutput(ns("DELETE_DUPLI_NA"))
-                                  )),
+                                    )
+                                   # )
+                                  )
+                                  ),
                                 
                                 #### AJOUT TIERS ####
                                 sidebarPanel( h3("Ajouts de variables issues d'un jeu de données tiers:"),width=12,
@@ -135,31 +166,6 @@ module_data_UI <- function(id){#label = "CSV file") {
                                 #hr(),
                                 #### FORMAT DONNNEES ####
                                 
-                                sidebarPanel( h3("Format des données"), 
-                                              width = 12,
-                                              #### condition = "input.DataType == 'fichier'"  ####
-                        
-                                              #### condition = "input.DataType == 'objet'"  ####
-                                              
-                                              conditionalPanel(
-                                                #condition = "input.DataType == 'objet'",
-                                                condition = paste0("input['", ns("DataType"), "'] == 'objet'"),
-                                                
-                                                shiny::column(width = 4,
-                                                              shiny::selectInput( inputId = ns("MINTIMEBIG"), label = "Borne temporelle inférieure:", 
-                                                                                  multiple = FALSE, choices = "" , width = '100%')),
-                                                shiny::column(width = 4,
-                                                              shiny::selectInput( inputId = ns("MAXTIMEBIG"), label = "Borne temporelle supérieure:", 
-                                                                                  multiple = FALSE , choices = "", width = '100%')),
-                                                shiny::column(width = 4,
-                                                              shiny::numericInput(inputId = ns("PAS_TEMPS_BIGDATA"), label = "Pas de temps pour les données:", 
-                                                                                  value = 1, min = 1, step = 1, width = '100%')),
-                                                shiny::column(width = 6, "Noms des data.frame présents dans la base : "),  
-                                                shiny::column(width = 6, textOutput(ns("CONTROLNAMES"))),
-                                                shiny::column(width = 6, "Noms des data.frame sélectionnés : "),  
-                                                shiny::column(width = 6, textOutput(ns("SLIDERTEXT")))
-                                              )
-                                ),
                                 hr(),
                                 
                                 #### condition = "input.DataType == 'objet'"  ####
@@ -274,6 +280,7 @@ module_data <- function(input, output, session) {
   library(TraMineR)
   library(RColorBrewer)
   ns <- session$ns
+  r<-reactiveValues()
   
   #buttonInput <- function(FUN, len, id, ...) {
    # inputs <- character(len)
@@ -296,6 +303,24 @@ module_data <- function(input, output, session) {
     
   
   #### CHARGEMENT DES DONNEES : liste de df ####
+  reactive({
+    c(input$file1, input$LIST_SOURCE_BIG_DF, input$LIST_SEQ)
+  })->react.choice
+  
+  observeEvent(react.choice() , {
+    req(BIGLIST.FIRST())
+    r$origin.df<-BIGLIST.FIRST()
+    updateSelectInput(session = session, inputId = "MINTIMEBIG", 
+                      choices = names(isolate(isolate(BIGLIST.FIRST() )) ), 
+                      selected= names(isolate(BIGLIST.FIRST() ))[ 1])
+    updateSelectInput(session = session, inputId = "MAXTIMEBIG", 
+                                        choices = names(isolate(BIGLIST.FIRST() )) , 
+                                        selected= names(isolate(BIGLIST.FIRST() ))[length(  names(BIGLIST.FIRST() )  )])
+    updateNumericInput(session = session, inputId = "PAS_TEMPS_BIGDATA", value=1)
+    
+  })
+  
+  
   BIGLIST.FIRST<-reactive({
     if ( is.null(input$LIST_SOURCE_BIG_DF)) return(NULL)
     inFile <- input$LIST_SOURCE_BIG_DF
@@ -442,6 +467,8 @@ message("pb seq 360")
   
   #### CHARGEMENT DES DONNEES : BIGLIST1() ####
   
+  
+  
   BIGLIST1<-reactive({
     req(input$DataType)
     if(input$DataType=="fichier"){
@@ -453,9 +480,36 @@ message("pb seq 360")
         req(OBJSEQ_COMPLEMENT())
         return(OBJSEQ_COMPLEMENT())
       } else {
+        req(BIGLIST.FIRST())
+        
         if(input$DataType=="objet"){
           req(BIGLIST.FIRST())
-          return(BIGLIST.FIRST())
+          req(input$MINTIMEBIG)
+          req(input$MAXTIMEBIG)
+          req(input$PAS_TEMPS_BIGDATA)
+          vecsel<-1:length(BIGLIST.FIRST())
+          if(length(input$MAXTIMEBIG)>0&length(input$MINTIMEBIG)>0&length(input$PAS_TEMPS_BIGDATA)>0){
+          #if(input$MAXTIMEBIG!=""&input$MINTIMEBIG!=""&input$PAS_TEMPS_BIGDATA!=""){
+            req(input$PAS_TEMPS_BIGDATA)
+            req(input$MINTIMEBIG)
+            req(input$MAXTIMEBIG)
+            
+            if(input$MINTIMEBIG==""){FROM<-1} else {FROM<-which(names(BIGLIST.FIRST())==input$MINTIMEBIG)}
+            if(!is.numeric(FROM)|FROM<=0){FROM<-1}
+            
+            if(input$MAXTIMEBIG==""){TO<-1} else {TO<-which(names(BIGLIST.FIRST())==input$MAXTIMEBIG)}
+            if(!is.numeric(TO)|TO<=0){TO<-length(BIGLIST.FIRST())}
+            
+            if(length(input$PAS_TEMPS_BIGDATA)>0){
+            if(input$PAS_TEMPS_BIGDATA==""){bypas<-1} else {bypas<-input$PAS_TEMPS_BIGDATA}
+            if(!is.numeric(bypas)|bypas<=0){bypas<-1}
+            } else {bypas<-1}
+            
+            vecsel<-seq(FROM, TO, bypas) 
+          }
+            #}
+          BIGLIST.FIRST.SEL<-BIGLIST.FIRST()[vecsel]
+          return(BIGLIST.FIRST.SEL)
         } else {
           NULL}
       }
@@ -463,14 +517,14 @@ message("pb seq 360")
   })
   
   observe({updateSelectInput(session = session, inputId = "MINTIMEBIG", 
-                             choices = names(BIGLIST1() ) , 
-                             selected= names(BIGLIST1() )[ 1]
+                             choices = names(BIGLIST.FIRST() ) , 
+                             selected= names(BIGLIST.FIRST() )[ 1]
   )
     
   })#"names(BIGLIST1() ), selected =  names(BIGLIST1() )) })  
   observe({updateSelectInput(session = session, inputId = "MAXTIMEBIG", 
-                             choices = names(BIGLIST1() ) , 
-                             selected= names(BIGLIST1() )[length(  names(BIGLIST1() )  )]
+                             choices = names(BIGLIST.FIRST() ) , 
+                             selected= names(BIGLIST.FIRST() )[length(  names(BIGLIST.FIRST() )  )]
   )
   })#"names(BIGLIST1() ), selected =  names(BIGLIST1() )) })
   
@@ -495,6 +549,8 @@ message("pb seq 360")
     print( names(BIGLIST1())[SEQ]  )
   })
 
+  
+  
   
   #### CONDITIONS ON INDIDIVUS
   ##### DEFINE DF #####
@@ -604,7 +660,7 @@ message("pb seq 360")
     if(is.null(control_dupli_na()))
     req(control_dupli_na())
     if(class(control_dupli_na())=="data.frame"){
-      h3("Attention: la variable d'identifiant contient des foublons et/ou des NA.")
+      h3("Attention: la variable d'identifiant contient des doublons et/ou des NA.")
     } else {h3("OK : pas de doublons ou NA dans la varible d'identifiant.")}
   })
   
@@ -1435,7 +1491,7 @@ message("pb seq 360")
           shiny::selectInput(inputId = ns("PICKDATE1"), label = "Debut:",
                              choices = names.pick, multiple = FALSE),
           shiny::selectInput(inputId = ns("PICKDATE1"), label = "Fin:",
-                             choices = names.pick, multiple = FALSE))->the.ui
+                             choices = names.pick, multiple = FALSE, selected = names.pick[length(names.pick)] ))->the.ui
         } else {
           if(length(SUBSETTED_LIST())==1){
             updateSelectInput(session = session, inputId = "timecol", 
