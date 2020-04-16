@@ -17,9 +17,40 @@ DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2,
     "mt", "round(seqmeant(objseq.r1), arrondi)",
     "r", "seqrep(objseq.r1)",
     "sous.seq", "seqecreate(objseq.r1)->seqe.obj;
-    seqefsub(seqe.obj, pmin.support=pmin.sup1, str.subseq=STR.SUBS.1)->seqe.stat; 
-    seqe.stat$data$Support<-round(seqe.stat$data$Support*100, 2) ; 
-    cbind('event'=as.character(seqe.stat$subseq), seqe.stat$data)->res;res",
+    if(is.null(STR.SUBS.1)){
+        seqefsub(seqe.obj, pmin.support=pmin.sup1, str.subseq=STR.SUBS.1)->seqe.stat
+        seqe.stat$data$Support<-round(seqe.stat$data$Support*100, 2)
+    cbind('event'=as.character(seqe.stat$subseq), seqe.stat$data)->res
+    } else {
+    sapply(STR.SUBS.1,  function(str.x){sum(grepl(pattern = str.x, x = seqe.obj))})->str.control
+    STR.SUBS.1[str.control>0]->STR.SUBS.1.control
+    STR.SUBS.1[str.control<1]->STR.SUBS.1.NOcontrol
+    if(length(STR.SUBS.1.control)>0){
+      seqefsub(seqe.obj, pmin.support=pmin.sup1, str.subseq=STR.SUBS.1.control)->seqe.stat
+    seqe.stat$data$Support<-round(seqe.stat$data$Support*100, 2)
+    data.frame(cbind('event'=as.character(seqe.stat$subseq), seqe.stat$data), stringsAsFactors = FALSE)->restemp
+    }
+    if(length(STR.SUBS.1.NOcontrol)>0){
+    data.frame(do.call('rbind',  lapply(STR.SUBS.1.NOcontrol, function(nox){c('event'=nox, 'Support'=0, 'Count'=0)})),   stringsAsFactors = FALSE)->restemp.NO
+    restemp.NO$Support<-as.numeric(as.character(restemp.NO$Support))
+    restemp.NO$Count<-as.numeric(as.character(restemp.NO$Support))
+
+    }
+    if(length(STR.SUBS.1.control)>0&length(STR.SUBS.1.NOcontrol)>0){
+    res<-rbind(restemp, restemp.NO)
+    } else {
+        if(length(STR.SUBS.1.control)<1&length(STR.SUBS.1.NOcontrol)>0){
+        res<-restemp.NO
+        } else {
+        if(length(STR.SUBS.1.control)>0&length(STR.SUBS.1.NOcontrol)<1){
+        res<-restemp
+        } 
+        }
+    }
+    }
+    res$Support<-as.numeric(as.character(res$Support))
+    res$Count<-as.numeric(as.character(res$Support))
+    res",
     "flux", "seqstatd(objseq.r1)->objdat;round(objdat$Frequencies*100, arrondi)->res1;
 
 as.data.frame.array(round(seqtrate(seqdata = objseq.r1, time.varying = TRUE)*100, arrondi))->res2;

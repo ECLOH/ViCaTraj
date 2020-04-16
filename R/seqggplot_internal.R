@@ -19,7 +19,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
     if(is.factor(grup_var.r1)){
       grup_var.r1<-as.character(grup_var.r1)
     }
-    
+    #if(TYPE.r1!="sous.seq"){
     lapply(1:length(unique(grup_var.r1)), FUN = function(i){
       objseq.r1[grup_var.r1==unique(grup_var.r1)[i] , ]->objseq.r1.i
       objseq.r1.i[!is.na(objseq.r1.i[ , 1]) , ]->objseq.r1.i
@@ -34,11 +34,16 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
       
     })->lidat
     do.call("rbind", lidat)->dats
+    #}
     
     if(TYPE.r1=="sous.seq"){
       message("debug1")
       seqecreate(objseq.r1)->seqe2
+      if(is.null(STR.SUBS.1)){
       seqefsub(seqe2, str.subseq = unique(dats$event))->sub2
+      } else {
+        seqefsub(seqe2, str.subseq = STR.SUBS.1)->sub2
+      }
       print(sub2)
       print(seqe2)
       if(is.null(grup_var.r1)){
@@ -204,7 +209,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
             factor(dats$CodeValue)->dats$CodeValue
               gg<-ggplot(data=dats,aes(x=event,y=Support, fill= CodeValue)) +
                 geom_bar(stat='identity',width=0.9)+
-                geom_text(aes(label=paste(round(Support,2), "%", sep="")),
+                geom_text(aes(label=paste(round(as.numeric(Support),2), "%", sep="")),
                            hjust=-1, colour=gray(0.3), size=5/size.effect)+
                 scale_fill_manual(values = colpal)+
                 theme_hc()+
