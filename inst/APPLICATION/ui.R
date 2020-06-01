@@ -71,7 +71,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                   ),
                                     #### PANEL: STATISTIQUES ####
                                     tabPanel("Statistiques descriptives",
-                                             #tabsetPanel(
+                                             tabsetPanel(
                                                #### SUB-PANEL: transition ####
                                                # tabPanel(title = "Taux de transition ( et taux de sortie ) ",
                                                #          useShinyjs(),
@@ -96,7 +96,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                         tabPanel(title = "Tables et tables de contingence",
                                  module_tabdes_UI(id = "id3")
                                  
-                        )
+                        ))
                                     
                                     ),
               #### PANEL: classif ####
