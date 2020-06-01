@@ -26,11 +26,13 @@ library(classInt)
 library(shinyBS)
 library(forcats)
 library(ggthemes)
+library(tibble)
 options(shiny.maxRequestSize=700*1024^2)
 
 #### UI ####
 
-ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,theme=shinytheme("flatly"),#fluidPage(theme = shinytheme("flatly"),
+ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
+                         theme=shinytheme("sandstone"),#fluidPage(theme = shinytheme("flatly"),
                          tabPanel("Présentation", 
                                   tags$div(
                                     tags$p("Cette application vise à faciliter la manipulation de données de trajectoires à partir du logiciel de traitement statistique 'R'. Elle permet aux personnes qui ne sont pas familières de ce langage de pouvoir utiliser un certain nombre de fonctions particulièrement utiles pour la manipulation de données de trajectoires."), 

@@ -1,7 +1,8 @@
 #' @export
 
 DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2, 
-                                     col.selected.r1=NULL, pmin.sup1=0.05, STR.SUBS.1=NULL){
+                                     col.selected.r1=NULL, pmin.sup1=0.05, STR.SUBS.1=NULL, 
+                                     PAS.temps1=PAS.temps, TIME.varying1=TIME.varying, Pourc.eff1=Pourc.eff, Sens1=Sens){
   
   if(!is.null(col.selected.r1)){
     objseq.r1[ , which(names(objseq.r1)%in%col.selected.r1)]->objseq.r1
@@ -16,6 +17,45 @@ DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2,
     "ms", "seqmodst(objseq.r1)",
     "mt", "round(seqmeant(objseq.r1), arrondi)",
     "r", "seqrep(objseq.r1)",
+    "txtr", 'if(Sens1==TRUE){
+    objseq.r1<-objseq.r1[ , ncol(objseq.r1):1]
+    };
+    seqtrate(seqdata = objseq.r1, time.varying = TIME.varying1, lag = PAS.temps1 , count = Pourc.eff1 )->tr.tx;
+    if(Pourc.eff1==FALSE){
+    tr.tx<-round(tr.tx*100, 2)
+    }
+    namescol<-colnames(tr.tx)
+
+    if(class(tr.tx)=="array"){
+        lapply(seq(1,dim(tr.tx)[3]), function(x){
+        tr.tx[ , , x]->res
+        res<-as.data.frame.matrix(res)
+        res$DATE<-attributes(tr.tx)$dimnames[[3]][x]
+        rownames_to_column(res, var="Départ")->res
+        return(res)
+        })->list.trate
+      } else {
+      res<-as.data.frame.matrix(tr.tx)
+      res$DATE<-"Taux de transition moyens"
+      rownames_to_column(res, var="Départ")->res
+      res->list.trate
+      }
+      if(inherits(x = list.trate, what = "list")){
+      do.call("rbind", list.trate)->list.trate
+      }
+      list.trate$Départ<-gsub("[", "", list.trate$Départ, fixed=TRUE)
+      list.trate$Départ<-gsub("->]", "", list.trate$Départ, fixed=TRUE)
+      list.trate$Départ<-trimws(list.trate$Départ,"both")
+
+       names(list.trate)<-gsub("]", "", names(list.trate), fixed=TRUE)
+       names(list.trate)<-gsub("[->", "", names(list.trate), fixed=TRUE)
+       names(list.trate)<-trimws(names(list.trate),"both")
+       names(list.trate)[!names(list.trate)%in%c("Départ", "DATE")]<-paste("Arrivée_", 
+       names(list.trate)[!names(list.trate)%in%c("Départ", "DATE")],  
+       sep="")
+       
+       list.trate
+    ',
     "sous.seq", "seqecreate(objseq.r1)->seqe.obj;
     if(is.null(STR.SUBS.1)){
         seqefsub(seqe.obj, pmin.support=pmin.sup1, str.subseq=STR.SUBS.1)->seqe.stat

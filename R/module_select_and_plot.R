@@ -23,14 +23,15 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
   #  id="form",
   shiny::column(width=6,
   shiny::selectInput(inputId = ns("plottype"), label = "Quel graphique voulez-vous représenter? ", 
-                     choices = c("Chronogramme [seqplot(type = 'd')] "="d", "Séquences les plus fréquentes [seqplot(type = 'f')] "="f", 
+                     choices = c("Taux de transition [seqtrate()]"="txtr",
+                                 "Chronogramme [seqplot(type = 'd')] "="d", "Séquences les plus fréquentes [seqplot(type = 'f')] "="f", 
                                  "Tapis [seqplot(type = 'I')] "="I", "Etat modal [seqplot(type = 'ms')] "="ms", 
                                  "Durée moyenne dans chaque état [seqplot(type = 'mt')] "="mt",
                                  "Graphique d'entropie [seqplot(type = 'Ht')] "="Ht", 
                                  "Graphique de flux"="flux",
                                  "Sous-séquences  [seqefsub()] "="sous.seq",
                                  "Séquences représentatives  [seqplot(type = 'r')] "="r"
-                                 ), selected = "d", multiple = FALSE),
+                                 ), selected = "txtr", multiple = FALSE),
   shiny::conditionalPanel(condition = "input.plottype=='I'", ns = ns, 
                           selectInput(inputId = ns("tapis_order"), label = "Rangement des séquences : ", 
                                       choices = c("Depuis le début"="from.start", "Depuis la fin"="from.end"), 
@@ -45,6 +46,7 @@ module_select_and_plot_UI <- function(id){#label = "CSV file") {
   ),
   shiny::column(width=6,
   uiOutput(ns("SELECT_COL_TIME_FLUX")),
+  uiOutput(ns("SELECT_PARAM_TXTR")),
   uiOutput(ns("SELECT_EVENTS")),
   uiOutput(ns("MERGED_SELECTED_mod")),
   uiOutput(ns("WARNING_LENGTH"))
@@ -371,13 +373,14 @@ module_select_and_plot <- function(input, output, session, data) {
             if(length(unique(the.df.for.groupe[ , input$VAR_SELECT_M1]))<20){
             if(length(input$FactSelect)>=1){
               subset(the.df.for.groupe, 
-                   as.character(the.df.for.groupe[ , input$VAR_SELECT_M1])%in%input$FactSelect)->the.df.for.groupe
+                   as.character(the.df.for.groupe[ , input$VAR_SELECT_M1])%in%as.character(input$FactSelect))->the.df.for.groupe
               the.df.for.groupe$VARgrup<-as.character(the.df.for.groupe[ , input$VAR_SELECT_M1])
               
             } else {
               the.df.for.groupe$VARgrup<-as.character(the.df.for.groupe[ , input$VAR_SELECT_M1])
             }
-            } else {the.df.for.groupe$VARgrup<-"HORS SELECTION"}
+            } else {
+              the.df.for.groupe$VARgrup<-"HORS SELECTION"}
           } else {
             if(input$classSelect=="numeric"|input$classSelect=="integer"){
               subset(the.df.for.groupe, 
@@ -413,6 +416,8 @@ module_select_and_plot <- function(input, output, session, data) {
         message("COUCOU 62")
         print(head(the.df.for.groupe))
         row.names(data$SEQ_OBJ)[!row.names(data$SEQ_OBJ)%in%as.character(the.df.for.groupe[ , data$ID_VAR])]->id.not.in.groupes
+        print(length(id.not.in.groupes))
+        print(table(the.df.for.groupe$VARgrup))
         if(length(id.not.in.groupes)>=1){
           data.frame(
             "id"=id.not.in.groupes, 
@@ -478,12 +483,44 @@ module_select_and_plot <- function(input, output, session, data) {
     #req(input$VAR_SELECT_M1)
     #req(the.df())
     #req(input$classSelect)
+    req(data)
     if(input$VAR_SELECT_M1!="Pas de groupes"){
       if(input$classSelect=="factor"|input$classSelect=="character"){
       shiny::checkboxInput(inputId = ns("merge_moda"), label = "Le modalités sélectionnées doivent-elles être fusionnées?", value = FALSE)
     }
     }
   })
+  
+  output$SELECT_PARAM_TXTR<-renderUI({
+    if(input$plottype=="txtr"){
+      list(
+      shiny::numericInput(inputId = ns("PAStrate"), label = "Pas de temps pour le calcul des taux de transition",value = 1, min = 1, max = 36, step = 1),
+      shiny::checkboxInput(inputId = ns("TYPEtrate"), label = "Les taux de transitions varient-ils avec le temps?",value = FALSE),
+      shiny::checkboxInput(inputId = ns("TypeValeur"), label = "Afficher les effectifs plutôt que les pourcentages?",value=FALSE),
+      shiny::checkboxInput(inputId = ns("DebArr"),label="Calculer les taux de transition en partant de la fin?", value=FALSE)
+      )
+    }
+  })
+  
+  observe({
+    req(input$plottype)
+    if(input$plottype=="txtr"){
+      
+    updateNumericInput(session=session, inputId = "PAStrate",max=length(names(data$SEQ_OBJ))-1)
+      
+    }
+  })
+  
+  
+  observe({
+    req(input$pminsup )
+    req(input$nb_event)
+    seqecreate(data = data$SEQ_OBJ)->sese
+    seqefsub(eseq = sese, pmin.support = input$pminsup )->sese.sub
+    sese.sub$subseq[order(sese.sub$data$Count, decreasing = TRUE), ]->choices.sese
+    shiny::updateSelectInput(session = session, inputId = "select_event", choices = choices.sese)
+  })
+  
   
   output$SELECT_COL_TIME_FLUX<-renderUI({
     #req(input$VAR_SELECT_M1)
@@ -539,7 +576,11 @@ module_select_and_plot <- function(input, output, session, data) {
     message("COUCOU 372")
     print(isolate(the.grups()))
     if(length(unique(isolate(the.grups())))<20){
-    p<-seqggplot(TYPE = isolate(input$plottype), 
+    p<-seqggplot(TYPE = isolate(input$plottype),
+	PAS.temps = isolate(input$PAStrate), 
+	TIME.varying =isolate(input$TYPEtrate) ,
+    Pourc.eff = isolate(input$TypeValeur), 
+	Sens = isolate(input$DebArr),
                  objseq = data$SEQ_OBJ, 
                  groupes = isolate(the.grups()), 
                  merge_mods = isolate(input$merge_moda), 
@@ -569,7 +610,19 @@ module_select_and_plot <- function(input, output, session, data) {
   observeEvent(input$UPDATE_PLOT, {
     output$plot1_UI<-renderUI({
       
-      tailleGraph$height<-haut1(nb = length(unique(isolate(the.grups() )) ), type.of.plot = isolate(input$plottype ))
+      
+      if(isolate(input$plottype)=="txtr"){
+       if(isolate(input$TYPEtrate)==TRUE){
+         tailleGraph$height<-haut1(nb.time = ncol(isolate(data$SEQ_OBJ)), 
+                                   type.of.plot = isolate(input$plottype ))
+       } else {
+         tailleGraph$height<-haut1(nb.gr = length(unique(isolate(the.grups() )) ), type.of.plot = isolate(input$plottype ))
+         
+       } 
+      } else {
+        tailleGraph$height<-haut1(nb.gr = length(unique(isolate(the.grups() )) ), type.of.plot = isolate(input$plottype ))
+      }
+      
       
       
       output$PLOTi<-renderPlot({ isolate(THE_PLOT()) })
@@ -602,6 +655,8 @@ module_select_and_plot <- function(input, output, session, data) {
   )
   
   THE_DATA_base1<-eventReactive(input$UPDATE_PLOT, {
+    
+    #if(plottype!="txtr"){
    
     req(the.grups())
     if(length(unique(isolate(the.grups()) ))<20){
@@ -611,7 +666,9 @@ module_select_and_plot <- function(input, output, session, data) {
         data$SEQ_OBJ[isolate(the.grups())==levi , ]->seqi
         seqi[!is.na(seqi[ , 1]) , ]->seqi
         DONNEES_POUR_PLOT(TYPE = isolate(input$plottype), objseq = seqi,
-                          pmin.sup=isolate(input$pminsup), STR.SUBS=isolate(input$select_event),isolate(input$select_col_time_flux) )
+                          pmin.sup=isolate(input$pminsup), STR.SUBS=isolate(input$select_event),isolate(input$select_col_time_flux),
+                          PAS.temps = isolate(input$PAStrate), TIME.varying =isolate(input$TYPEtrate) , 
+                          Pourc.eff = isolate(input$TypeValeur), Sens = isolate(input$DebArr))
         
       })->listdat
       #
@@ -619,10 +676,16 @@ module_select_and_plot <- function(input, output, session, data) {
       return(listdat)
       
     }
-      
+    #}
     })
   
   THE_DATA_DToutput<-reactive({
+    if(input$plottype!="txtr"){
+      ROWFT<-TRUE
+      } else {
+        ROWFT<-FALSE
+      }
+      
     req(the.grups())
     req(THE_DATA_base1())
     THE_DATA_base1()->listdat
@@ -633,7 +696,7 @@ module_select_and_plot <- function(input, output, session, data) {
         if(class(listdat[[li]])=="list"){
           message("coucou 409")
           lapply(1:length(listdat[[li]]), function(li2){ 
-            output[[ paste("l", li, li2, sep="")]]<-DT::renderDataTable(datatable(listdat[[li]][[li2]], filter="top"))
+            output[[ paste("l", li, li2, sep="")]]<-DT::renderDataTable(datatable(listdat[[li]][[li2]], filter="top", rownames = ROWFT))
 
               list(
             h3( names(listdat[[li]])[li2]),
@@ -649,7 +712,7 @@ module_select_and_plot <- function(input, output, session, data) {
           #print(head(listdat[[li]]))
           message("coucou 424")
           
-          output[[ paste("l1", li, sep="") ]]<-DT::renderDataTable(datatable(data.frame(listdat[[li]]), filter="top"))
+          output[[ paste("l1", li, sep="") ]]<-DT::renderDataTable(datatable(data.frame(listdat[[li]]), filter="top", rownames = ROWFT))
           
           list(
             h3( names(listdat)[li]),
@@ -663,13 +726,18 @@ return(res)
       print(liou)
       
       return(liou)
+    #}
   })
     
   
   
   output$DATA_r<-renderUI({
+   # if(input$plottype!="txtr"){
     req(THE_DATA_DToutput())
     THE_DATA_DToutput()
+   # } else {
+      
+   # }
   })
   
   THE_DATA_forDownload<-reactive({
@@ -681,6 +749,9 @@ return(res)
     lapply(1:length(listdat), function(li){
       if(class(listdat[[li]])=="list"){
         lapply(1:length(listdat[[li]]), function(li2){ 
+          
+          if(isolate(input$plottype)!="txtr"){
+          
           data.frame(listdat[[li]][[li2]])->tempidf2
           print(tempidf2)
           tempidf2$SELECTION<-names(listdat[[li]])[li2]
@@ -690,13 +761,15 @@ return(res)
                             times = names(tempidf2)[names(tempidf2)!="SELECTION"], ids = row.names(tempidf2))
           names(tempidf2)[!names(tempidf2)%in%c("SELECTION", "time", "id")]<-"value"
           print(tempidf2)
-          
-          
+          } else {
+            listdat[[li]][[li2]]->tempidf2
+            tempidf2$`Pas de temps`<-isolate(input$PAStrate)
+          }
           return(tempidf2)
-
         })->souslist
         do.call("rbind", souslist)->df
       } else {
+        if(isolate(input$plottype)!="txtr"){
       data.frame(listdat[[li]])->df
         print(df)
         df$SELECTION<-names(listdat)[li]
@@ -706,9 +779,13 @@ return(res)
         names(df)[!names(df)%in%c("SELECTION", "time", "id")]<-"value"
         
         print(df)
-        
-        return(df)
+        } else {
+          df<-listdat[[li]]
+          df$`Pas de temps`<-isolate(input$PAStrate)
+          df$SELECTION<-names(listdat)[li]
+        }
       }
+        return(df)
     })->datadf
     do.call("rbind", datadf)->df
     df

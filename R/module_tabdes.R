@@ -67,7 +67,7 @@ module_tabdes <- function(input, output, session, data) {
   )
   )
   
-  listovars<-reactive({unique(unlist(lapply(data$DATA_COMP, function(dfx){
+  listovars<-reactive({unique(unlist(lapply(data$DATA_COMP(), function(dfx){
     lapply(1:ncol(dfx), function(j){
       if(class(dfx[ , j])%in%c("integer", "numeric")){
         names(dfx)[j]
@@ -91,21 +91,21 @@ module_tabdes <- function(input, output, session, data) {
     req(input$VARSSELECT)
     lapply(input$VARSSELECT, function(ni){
       
-      unilevel.ni<-unique(unlist(lapply(data$DATA_COMP, function(dfj){
+      unilevel.ni<-unique(unlist(lapply(data$DATA_COMP(), function(dfj){
         if(ni %in% names(dfj)){
         unique(dfj[ ,  ni])
         }
       })))
       
-      listtable.ni<-lapply(1:length(data$DATA_COMP), function(j){
-        if(ni %in% names(data$DATA_COMP[[j]])){
-          data$DATA_COMP[[j]]->dfj
+      listtable.ni<-lapply(1:length(data$DATA_COMP()), function(j){
+        if(ni %in% names(data$DATA_COMP()[[j]])){
+          data$DATA_COMP()[[j]]->dfj
           dfj[ , ni]<-factor(dfj[ , ni], levels = unilevel.ni)
           table(dfj[ , ni], exclude = NULL)->tab
           data.frame(tab)->dftab
           names(dftab)<-c("États", "Effectifs")
           dftab$Répartition<-round(dftab$Effectif/sum(dftab$Effectif)*100, 2)
-          dftab$DATE<-if(is.null(names(data$DATA_COMP))){j} else {names(data$DATA_COMP)[j]}
+          dftab$DATE<-if(is.null(names(data$DATA_COMP()))){j} else {names(data$DATA_COMP())[j]}
           dftab[order(dftab$Effectifs, decreasing = TRUE) , ]->dftab
           dftab$États<-as.character(dftab$États)
           dftab[(nrow(dftab)+1) , ]<-c("TOTAL", sum(dftab$Effectifs), sum(dftab$Répartition), unique(dftab$DATE))
@@ -142,8 +142,24 @@ module_tabdes <- function(input, output, session, data) {
           names(listoftabs())[ki]->DISPO
 
           #list(#h3(DISPO),
-               renderDT(datatable(df.ki,rownames = FALSE, filter = "top", caption = DISPO), #caption=unique(SELECTED_GLOVAR()),
-                        options=list(2, "desc"))
+               
+               output[[paste("bb",ki, sep="")]]<-renderDT(datatable(df.ki,rownames = FALSE, filter = "top", caption = DISPO), #caption=unique(SELECTED_GLOVAR()),
+                                                         options=list(2, "desc"))
+               paste0('DownTab',ki)->id.output.download.tab
+               output[[id.output.download.tab]] <- downloadHandler(
+                 filename = function() {
+                   paste0('TABLE_',DISPO, ".csv")
+                 },
+                 content = function(file){
+                   write.csv(x = df.ki, file,row.names=TRUE,
+                             fileEncoding = "UTF-8")
+                 }
+               )
+               res0<-list(
+                 DTOutput(ns(paste("bb",ki, sep=""))),
+                 downloadButton(outputId = ns(id.output.download.tab),"Télécharger")
+               )
+               return(res0)
           #)
           #list(DISPO,
           #     renderDT(df.ki, caption=SELECTED_GLOVAR()[[ki]])
@@ -175,7 +191,7 @@ module_tabdes <- function(input, output, session, data) {
   output$SELECTVAR_CON1<-renderUI({
     list(
     shiny::selectInput(inputId = ns("SELECTDATE1"), label = "Date (1) : ",
-                       choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "150%",
+                       choices = c("Pas de sélection",as.character( names(data$DATA_COMP()) )), multiple = FALSE, width = "150%",
                        selected=NULL),
     shiny::selectInput(inputId = ns("VARDATE1"), label = "Variable (1) : ",
                        choices = NULL, multiple = FALSE, width = "150%",
@@ -184,13 +200,13 @@ module_tabdes <- function(input, output, session, data) {
   })
   observe({
     req(input$SELECTDATE1)
-    updateSelectInput(session = session, inputId = "VARDATE1", choices = names(data$DATA_COMP[[input$SELECTDATE1]]))
+    updateSelectInput(session = session, inputId = "VARDATE1", choices = names(data$DATA_COMP()[[input$SELECTDATE1]]))
   })
   ###### VAR2 ######
   output$SELECTVAR_CON2<-renderUI({
     list(
       shiny::selectInput(inputId = ns("SELECTDATE2"), label = "Date (2) : ",
-                         choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "150%",
+                         choices = c("Pas de sélection",as.character( names(data$DATA_COMP()) )), multiple = FALSE, width = "150%",
                          selected=NULL),
       shiny::selectInput(inputId = ns("VARDATE2"), label = "Variable (2) : ",
                          choices = NULL, multiple = FALSE, width = "150%",
@@ -199,13 +215,13 @@ module_tabdes <- function(input, output, session, data) {
   })
   observe({
     req(input$SELECTDATE2)
-    updateSelectInput(session = session, inputId = "VARDATE2", choices = names(data$DATA_COMP[[input$SELECTDATE2]]))
+    updateSelectInput(session = session, inputId = "VARDATE2", choices = names(data$DATA_COMP()[[input$SELECTDATE2]]))
   })
   ###### VAR3 ######
   output$SELECTVAR_CON3<-renderUI({
     list(
       shiny::selectInput(inputId = ns("SELECTDATE3"), label = "Date (3) : ",
-                         choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "150%",
+                         choices = c("Pas de sélection",as.character( names(data$DATA_COMP()) )), multiple = FALSE, width = "150%",
                          selected="Pas de sélection"),
       shiny::selectInput(inputId = ns("VARDATE3"), label = "Variable (3) : ",
                          choices = NULL, multiple = FALSE, width = "150%",
@@ -214,7 +230,7 @@ module_tabdes <- function(input, output, session, data) {
   })
   observe({
     req(input$SELECTDATE3)
-    updateSelectInput(session = session, inputId = "VARDATE3", choices = names(data$DATA_COMP[[input$SELECTDATE3]]))
+    updateSelectInput(session = session, inputId = "VARDATE3", choices = names(data$DATA_COMP()[[input$SELECTDATE3]]))
   })
   
   #### TABLE JOINT ####
@@ -225,23 +241,46 @@ module_tabdes <- function(input, output, session, data) {
     if(input$SELECTDATE1!="Pas de sélection"&input$SELECTDATE2!="Pas de sélection"){
       if(input$SELECTDATE3=="Pas de sélection"){
         print("coucou215")
-        print(as.character(data$ID_VAR))
+        print(as.character(data$ID_VAR()))
         print("control.x")
-        print(as.character(data$ID_VAR)%in%names(data$DATA_COMP[[input$SELECTDATE1]]))
+        print(as.character(data$ID_VAR())%in%names(data$DATA_COMP()[[input$SELECTDATE1]]))
         print("control.y")
-        print(as.character(data$ID_VAR)%in%names(data$DATA_COMP[[input$SELECTDATE2]]))
+        print(as.character(data$ID_VAR())%in%names(data$DATA_COMP()[[input$SELECTDATE2]]))
         
-    table.joint(data1=data$DATA_COMP[[input$SELECTDATE1]], var1=input$VARDATE1, 
-                data2=data$DATA_COMP[[input$SELECTDATE2]], var2=input$VARDATE2, BY=as.character(data$ID_VAR), data3 = NULL, var3 = NULL,
+    table.joint(data1=data$DATA_COMP()[[input$SELECTDATE1]], var1=input$VARDATE1, 
+                data2=data$DATA_COMP()[[input$SELECTDATE2]], var2=input$VARDATE2, BY=as.character(data$ID_VAR()), data3 = NULL, var3 = NULL,
                 prop=perclog(), prop.margin=perctype())->tabj
       } else {
-        table.joint(data1=data$DATA_COMP[[input$SELECTDATE1]], var1=input$VARDATE1, 
-                    data2=data$DATA_COMP[[input$SELECTDATE2]], var2=input$VARDATE2, BY=as.character(data$ID_VAR), 
-                    data3 = data$DATA_COMP[[input$SELECTDATE3]], var3 = input$VARDATE3, prop=perclog(), prop.margin=perctype())->tabj
+        table.joint(data1=data$DATA_COMP()[[input$SELECTDATE1]], var1=input$VARDATE1, 
+                    data2=data$DATA_COMP()[[input$SELECTDATE2]], var2=input$VARDATE2, BY=as.character(data$ID_VAR()), 
+                    data3 = data$DATA_COMP()[[input$SELECTDATE3]], var3 = input$VARDATE3, prop=perclog(), prop.margin=perctype())->tabj
       }
     } else {tabj<-NULL}
 return(tabj)    
   })->tabs
+  
+  
+  # output$dt <- renderUI({
+  #   req(LISTTRATE())
+  #   return(lapply(1:length(LISTTRATE()), function(i) {
+  #     tagList(fluidRow(align="center",textOutput(paste0('Text_TRAJTRATE', i))),
+  #             dataTableOutput(paste0('TRAJTRATE', i)),
+  #             column(2,downloadButton(paste0('DownloadTabTrans',i),"Télécharger")),
+  #             column(10,hidden(p(id=paste0("texteTransition",i),paste0("Si l'application n'est pas ouverte dans un navigateur internet, il faut ajouter manuellement l'extension du fichier (",input$TypeTrans," ). Pour ouvrir l'application avec un navigateur internet, il faut mettre Run External avant de lancer l'application ou appuyer sur Open in Browser en haut de l'application."))))
+  #     )
+  #   }))
+  # })
+  # 
+  # paste0('DownloadTabTrans',i)->id.output.download
+  # output[[id.output.download]] <- downloadHandler(
+  #   filename = function() {
+  #     paste0('Transition_',colnames(DATAs()$SEQ_OBJ)[i],'_',colnames(DATAs()$SEQ_OBJ)[i+PASTRAJ()], input$TypeTrans)
+  #   },
+  #   content = function(file){
+  #     write.table(xx,file,sep = input$sepcol,row.names=TRUE,col.names = NA,dec = input$dec , fileEncoding = input$endoding)
+  #   }
+  # )
+  
   
   output$TABCONOUT<-renderUI({
     req(tabs())
@@ -252,9 +291,22 @@ return(tabj)
       lapply(1:length(tabs()), function(ti){
         output[[paste("aa",ti, sep="")]]<-DT::renderDataTable(DT::datatable(data = as.data.frame.array(tabs()[[ti]]), 
                                                                             rownames = TRUE))
+        paste0('DownloadTabTrans',i)->id.output.download
+        output[[id.output.download]] <- downloadHandler(
+          filename = function() {
+            paste0('TABLE_CONTINGENCE_',names(tabs())[[ti]], ".csv")
+          },
+          content = function(file){
+            write.csv(x = as.data.frame.array(tabs()[[ti]]), file,row.names=TRUE,
+                        fileEncoding = "UTF-8")
+          }
+        )
+        
+        
        res0<-list(
           h4(names(tabs())[[ti]]),
-        DTOutput(ns(paste("aa",ti, sep="")))
+        DTOutput(ns(paste("aa",ti, sep=""))),
+        downloadButton(outputId = ns(paste0('DownloadTabTrans',i)),"Télécharger")
         )
        return(res0)
       })
@@ -264,7 +316,29 @@ return(tabj)
       
       output$aa<-DT::renderDataTable(DT::datatable(data = as.data.frame.array(tabs()), 
                                                    rownames = TRUE))
-      DTOutput(ns("aa"))
+      
+      
+      paste0('DownloadTabTrans',1)->id.output.download
+      output[[id.output.download]] <- downloadHandler(
+        filename = function() {
+          paste0('TABLE_CONTINGENCE', '.csv')
+        },
+        content = function(file){
+          write.csv(x = as.data.frame.array(tabs()), 
+                    file,
+                    row.names=TRUE,
+                    fileEncoding = "UTF-8")
+        }
+      )
+      
+      
+      res0<-list(
+        DTOutput(ns("aa")),
+        downloadButton(outputId = ns(paste0('DownloadTabTrans',1)),"Télécharger")
+      )
+      return(res0)
+      
+      
     }
 
   })

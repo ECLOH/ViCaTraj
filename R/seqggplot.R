@@ -4,7 +4,8 @@
 seqggplot<-function(TYPE="d", 
                     objseq = actcal.seq, groupes=NULL, 
                     merge_mods, col.selected=c("1", "2"), 
-                    pmin.sup=0.05 , str.subs=NULL, SORTV=NULL){
+                    pmin.sup=0.05 , str.subs=NULL, SORTV=NULL, 
+                    PAS.temps=NULL, TIME.varying=FALSE, Pourc.eff=FALSE, Sens=FALSE){
   
   if(TYPE=="flux"&length(col.selected)==1){
     stop("ATTENTION : veuillez sélectionner au moins deux moments pour le calcul du graphique de flux")
@@ -14,7 +15,8 @@ seqggplot<-function(TYPE="d",
     #p<-
       seqggplot.internal(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=groupes, 
                          merge_mods.r1 = merge_mods, col_selected.r1=col.selected, 
-                         pmin.sup1 = pmin.sup, STR.SUBS.1 = str.subs, SORTV1=SORTV)
+                         pmin.sup1 = pmin.sup, STR.SUBS.1 = str.subs, SORTV1=SORTV, 
+                         PAS.temps1=PAS.temps, TIME.varying1=TIME.varying, Pourc.eff1=Pourc.eff, Sens1=Sens)
   } else {
     if(class(objseq)=="list"){
      # p<-

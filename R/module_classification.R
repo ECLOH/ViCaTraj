@@ -175,7 +175,7 @@ module_classification <- function(input, output, session, data) {
           width = 4,
           list(
             shiny::selectInput(inputId = ns("SELECTDATE1"), label = "Date (1) : ",
-                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
+                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP()) )), multiple = FALSE, width = "100%",
                                selected=NULL),
             shiny::selectInput(inputId = ns("VARDATE1"), label = "Variable (1) : ",
                                choices = NULL, multiple = FALSE, width = "100%",
@@ -186,7 +186,7 @@ module_classification <- function(input, output, session, data) {
           width = 4,
           list(
             shiny::selectInput(inputId = ns("SELECTDATE2"), label = "Date (2) : ",
-                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
+                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP()) )), multiple = FALSE, width = "100%",
                                selected=NULL),
             shiny::selectInput(inputId = ns("VARDATE2"), label = "Variable (2) : ",
                                choices = NULL, multiple = FALSE, width = "100%",
@@ -197,7 +197,7 @@ module_classification <- function(input, output, session, data) {
           width = 4,
           list(
             shiny::selectInput(inputId = ns("SELECTDATE3"), label = "Date (3) : ",
-                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP) )), multiple = FALSE, width = "100%",
+                               choices = c("Pas de sélection",as.character( names(data$DATA_COMP()) )), multiple = FALSE, width = "100%",
                                selected=NULL),
             shiny::selectInput(inputId = ns("VARDATE3"), label = "Variable (3) : ",
                                choices = NULL, multiple = FALSE, width = "100%",
@@ -211,7 +211,7 @@ module_classification <- function(input, output, session, data) {
   observe({
     if(!is.null(input$SELECTDATE1)){
       if(input$SELECTDATE1!="Pas de sélection"){
-        names(data$DATA_COMP[[input$SELECTDATE1]])->NAMES1
+        names(data$DATA_COMP()[[input$SELECTDATE1]])->NAMES1
         updateSelectInput(session = session, inputId = "VARDATE1",choices = NAMES1)
         
       }
@@ -221,7 +221,7 @@ module_classification <- function(input, output, session, data) {
   observe({
       if(!is.null(input$SELECTDATE2)){
       if(input$SELECTDATE2!="Pas de sélection"){
-        names(data$DATA_COMP[[input$SELECTDATE2]])->NAMES2
+        names(data$DATA_COMP()[[input$SELECTDATE2]])->NAMES2
         updateSelectInput(session = session, inputId = "VARDATE2",choices = NAMES2)
         
       }
@@ -231,7 +231,7 @@ module_classification <- function(input, output, session, data) {
   observe({
     if(!is.null(input$SELECTDATE3)){
       if(input$SELECTDATE3!="Pas de sélection"){
-        names(data$DATA_COMP[[input$SELECTDATE3]])->NAMES3
+        names(data$DATA_COMP()[[input$SELECTDATE3]])->NAMES3
         updateSelectInput(session = session, inputId = "VARDATE3",choices = NAMES3)
         
       }
@@ -253,9 +253,9 @@ module_classification <- function(input, output, session, data) {
 #      } else { 
       print(vali)
       print(names(data))
-      print(names(data$DATA_COMP))
-      print(names(data$DATA_COMP[[1]]))
-      print(head(data$DATA_COMP[[1]]))
+      print(names(data$DATA_COMP()))
+      print(names(data$DATA_COMP()[[1]]))
+      print(head(data$DATA_COMP()[[1]]))
       
       lapply(X = 1:3, FUN = function(i){
         dati[i]->dat.i
@@ -264,15 +264,15 @@ module_classification <- function(input, output, session, data) {
         if(!is.null(dat.i)){
           if(dat.i!="Pas de sélection"){
             message("coucou 221")
-            print(data$DATA_COMP[[dat.i]][ , vali[i] ])
-            as.character(data$DATA_COMP[[dat.i]][ , vali[i] ])->res
+            print(data$DATA_COMP()[[dat.i]][ , vali[i] ])
+            as.character(data$DATA_COMP()[[dat.i]][ , vali[i] ])->res
             return(res)
           } else {
             print("Walou!")
-            #print(class(data$DATA_COMP[[1]]))
-            #print(data$DATA_COMP[[dat.i]])
+            #print(class(data$DATA_COMP()[[1]]))
+            #print(data$DATA_COMP()[[dat.i]])
             
-            rep("1", times=nrow(data$DATA_COMP[[1]]))
+            rep("1", times=nrow(data$DATA_COMP()[[1]]))
           }
         }
       })->list.var.sample
@@ -302,32 +302,32 @@ module_classification <- function(input, output, session, data) {
   trajs.forclass<-reactive({
       if(input$selection_rows=="Sample"){
           REPRESENTED_SAMPLE(interact.var = selected_react(), 
-                             SIZE = input$sample_prop*nrow( data$SEQ_OBJ ), id.var=row.names(data$SEQ_OBJ))->vec.sample
+                             SIZE = input$sample_prop*nrow( data$SEQ_OBJ() ), id.var=row.names(data$SEQ_OBJ()))->vec.sample
         print(vec.sample)
-        seqdef(data$SEQ_OBJ[row.names(data$SEQ_OBJ)%in%vec.sample , ], 
-               left = data$CODAGE_MANQUANT$LEFT,#input$TEXT_LEFT, 
-               right = data$CODAGE_MANQUANT$RIGHT,#input$TEXT_RIGHT, 
-               gaps = data$CODAGE_MANQUANT$GAP,#input$TEXT_GAP, nr = "RMA",
-               id = row.names( data$SEQ_OBJ[row.names(data$SEQ_OBJ)%in%vec.sample , ] ))->trajsforclass
+        seqdef(data$SEQ_OBJ()[row.names(data$SEQ_OBJ())%in%vec.sample , ], 
+               left = data$CODAGE_MANQUANT()$LEFT,#input$TEXT_LEFT, 
+               right = data$CODAGE_MANQUANT()$RIGHT,#input$TEXT_RIGHT, 
+               gaps = data$CODAGE_MANQUANT()$GAP,#input$TEXT_GAP, nr = "RMA",
+               id = row.names( data$SEQ_OBJ()[row.names(data$SEQ_OBJ())%in%vec.sample , ] ))->trajsforclass
         
       } else {
         if(input$selection_rows=="unique.traj"){
           #### unique.traj ####
-          #rev(wesanderson::wes_palette(name = "Darjeeling1", n = length(alphabet(data$SEQ_OBJ)), type = "continuous"))->cpal.seq
-          #cpal(seqdata = data$SEQ_OBJ)<-cpal.seq
-          seqtab(data$SEQ_OBJ, idxs = 0, format = "STS")->unique.trajs
+          #rev(wesanderson::wes_palette(name = "Darjeeling1", n = length(alphabet(data$SEQ_OBJ())), type = "continuous"))->cpal.seq
+          #cpal(seqdata = data$SEQ_OBJ())<-cpal.seq
+          seqtab(data$SEQ_OBJ(), idxs = 0, format = "STS")->unique.trajs
           data.frame(unique.trajs)->unique.trajs.df
           
           seqdef(data = unique.trajs.df, weights = attributes(unique.trajs)$freq$Percent, 
-                 #gaps = data$CODAGE_MANQUANT$GAP,
-                 #right = data$CODAGE_MANQUANT$RIGHT,
-                 #left = data$CODAGE_MANQUANT$LEFT, 
-                 nr = attributes(data$SEQ_OBJ)$nr)->trajsforclass
-          print(length(attributes(data$SEQ_OBJ)$cpal))
-          cpal(seqdata = trajsforclass)<-attributes(data$SEQ_OBJ)$cpal
+                 #gaps = data$CODAGE_MANQUANT()$GAP,
+                 #right = data$CODAGE_MANQUANT()$RIGHT,
+                 #left = data$CODAGE_MANQUANT()$LEFT, 
+                 nr = attributes(data$SEQ_OBJ())$nr)->trajsforclass
+          print(length(attributes(data$SEQ_OBJ())$cpal))
+          cpal(seqdata = trajsforclass)<-attributes(data$SEQ_OBJ())$cpal
         } else {
           if(input$selection_rows=="all"){
-            data$SEQ_OBJ->trajsforclass
+            data$SEQ_OBJ()->trajsforclass
           }
         }
       }
@@ -347,7 +347,7 @@ module_classification <- function(input, output, session, data) {
     DT::datatable(df)
     } else {
       if(input$selection_rows=="unique.traj"){
-        seqtab(data$SEQ_OBJ, idxs = 0, format = "STS")->unique.trajs
+        seqtab(data$SEQ_OBJ(), idxs = 0, format = "STS")->unique.trajs
         data.frame(unique.trajs)->unique.trajs.df
         DT::datatable(unique.trajs.df)
         
@@ -358,10 +358,10 @@ module_classification <- function(input, output, session, data) {
   ####
   #### NOMBRE DE TRAJECTOIRES: TOTAL ET  SELECTIONNEES  ####
   NB_TRAJS<-shiny::reactive({
-    nrow(data$SEQ_OBJ)
+    nrow(data$SEQ_OBJ())
   })
   unique.trajs<-shiny::reactive({
-    seqtab(data$SEQ_OBJ[ , ], idxs = 0, format = "STS")
+    seqtab(data$SEQ_OBJ()[ , ], idxs = 0, format = "STS")
   })
   
   NB_UNIQUE_TRAJS<-shiny::reactive({
@@ -407,7 +407,7 @@ module_classification <- function(input, output, session, data) {
         renderPrint({list.attr[[li]]})
       )
     })
-    #summary(data$SEQ_OBJ)
+    #summary(data$SEQ_OBJ())
   })
   
   #### COST AND DIST ####
@@ -693,12 +693,12 @@ module_classification <- function(input, output, session, data) {
   DATA_COMPc<-eventReactive(eventExpr = input$calculDist,{
     
     if(input$selection_rows=="Sample"){
-      lapply(data$DATA_COMP, function(dat.i){
-        subset(dat.i, dat.i[ , data$ID_VAR]%in%row.names(trajs.forclass()))
+      lapply(data$DATA_COMP(), function(dat.i){
+        subset(dat.i, dat.i[ , data$ID_VAR()]%in%row.names(trajs.forclass()))
       })->DATA_COMPc
       return(DATA_COMPc)
     } else  {
-    return(data$DATA_COMP)
+    return(data$DATA_COMP())
     }
     
   })
@@ -722,7 +722,7 @@ module_classification <- function(input, output, session, data) {
       dataclusts$ID<-row.names(dataclusts)
       
       lapply(X = DATA_COMPc(), function(x){
-        base::merge(x, dataclusts[ , c("ID", "Clustering")], by.x=data$ID_VAR, by.y="ID", all.x=TRUE)
+        base::merge(x, dataclusts[ , c("ID", "Clustering")], by.x=data$ID_VAR(), by.y="ID", all.x=TRUE)
       })->DATA_COMPc2
       #return(
       #lapply(X = DATA_COMPc(), function(x){data_cluster(tabl_ind = indicateur, data = x, nb_groupe = input$nb_cluster)   })->DATA_COMPc2
@@ -741,14 +741,14 @@ module_classification <- function(input, output, session, data) {
           data.frame("ID"=row.names(trajs.forclass()), "Clustering"=clusterCAH.class)->df
           
           lapply(X = DATA_COMPc(), function(x){
-            merge(x, df, by.x=data$ID_VAR, by.y="ID", all.x=TRUE)
+            merge(x, df, by.x=data$ID_VAR(), by.y="ID", all.x=TRUE)
           })->DATA_COMPc2
           
         } else {
           if(input$selection_rows=="all"){
-            data.frame("ID"=row.names(data$SEQ_OBJ), "Clustering"=clusterCAH.class)->df
+            data.frame("ID"=row.names(data$SEQ_OBJ()), "Clustering"=clusterCAH.class)->df
             lapply(X = DATA_COMPc(), function(x){
-              merge(x, df, by.x=data$ID_VAR, by.y="ID")
+              merge(x, df, by.x=data$ID_VAR(), by.y="ID")
             })->DATA_COMPc2
             
           } else {
@@ -757,13 +757,13 @@ module_classification <- function(input, output, session, data) {
               data.frame("ID"= sapply(1:nrow(unique.trajs()), function(i){paste(unique.trajs()[i , ], collapse = "-")}), 
                          "Clustering"=clusterCAH.class)->df
               
-              data.frame("IDVAR"=row.names(data$SEQ_OBJ), 
-                         "ID"=sapply(1:nrow(data$SEQ_OBJ), function(i){paste(data$SEQ_OBJ[i , ], collapse = "-")})
+              data.frame("IDVAR"=row.names(data$SEQ_OBJ()), 
+                         "ID"=sapply(1:nrow(data$SEQ_OBJ()), function(i){paste(data$SEQ_OBJ()[i , ], collapse = "-")})
               )->df2
               
               merge(df2, df, by.x="ID", by.y="ID")->df3
               lapply(X = DATA_COMPc(), function(x){
-                merge(x, df3, by.x=data$ID_VAR, by.y="IDVAR")
+                merge(x, df3, by.x=data$ID_VAR(), by.y="IDVAR")
               })->DATA_COMPc2
               
             }
@@ -792,7 +792,7 @@ module_classification <- function(input, output, session, data) {
     if(input$selection_rows=="Sample"){
       trajs.forclass()
     } else {
-      data$SEQ_OBJ
+      data$SEQ_OBJ()
     }
   })
   
@@ -827,9 +827,9 @@ module_classification <- function(input, output, session, data) {
   return(
     list("SEQ_OBJ"=reactive({trajs.forclass.output()}), 
          "DATA_COMP"=reactive({dataCluster()}), 
-         "TYPE_SOURCE"=reactive({data$TYPE_SOURCE}), 
-         "CODAGE_MANQUANT"=reactive({data$CODAGE_MANQUANT}),
-         "ID_VAR"=reactive({data$ID_VAR})
+         "TYPE_SOURCE"=reactive({data$TYPE_SOURCE()}), 
+         "CODAGE_MANQUANT"=reactive({data$CODAGE_MANQUANT()}),
+         "ID_VAR"=reactive({data$ID_VAR()})
     )
   )
   

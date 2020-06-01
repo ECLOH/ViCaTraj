@@ -47,9 +47,9 @@ shiny::tabPanel(title = "tab5",
                 tabsetPanel(
                     
 shiny::tabPanel(title = "tab51", 
-                module_classification_UI(id = "id5")),
+               module_classification_UI(id = "id5")),
 shiny::tabPanel(title = "tab2:clust",
-                module_select_and_plot2_UI(id = "id25")),
+               module_select_and_plot2_UI(id = "id25")),
 shiny::tabPanel(title = "tab3:clust",
                 module_tabdes_UI(id = "id35"))
 )
@@ -61,28 +61,27 @@ shiny::tabPanel(title = "tab3:clust",
 server <- function(input, output, session) {
 
     callModule(module = module_data, id = "id1")->DATAs
-    output$control_class_comp<-renderPrint({class(DATAs()$DATA_COMP)})
-    output$control_length_comp<-renderPrint({length(DATAs()$DATA_COMP)})
-    output$control_head_comp<-renderDT({DATAs()$DATA_COMP[[1]]})
-    output$control_ID<-renderPrint({DATAs()$ID_VAR})
-    output$control_ID2<-renderPrint({class(DATAs()$ID_VAR)})
-    output$control_ID3<-renderPrint({length(DATAs()$ID_VAR)})
+    #output$control_class_comp<-renderPrint({class(DATAs()$DATA_COMP)})
+    #output$control_length_comp<-renderPrint({length(DATAs()$DATA_COMP)})
+    #output$control_head_comp<-renderDT({DATAs()$DATA_COMP[[1]]})
+    #output$control_ID<-renderPrint({DATAs()$ID_VAR})
+    #output$control_ID2<-renderPrint({class(DATAs()$ID_VAR)})
+    #output$control_ID3<-renderPrint({length(DATAs()$ID_VAR)})
+    #observe({print(DATAs()$ID_VAR)})
     
-    observe({print(DATAs()$ID_VAR)})
+    callModule(module = module_select_and_plot2, data = DATAs, id = "id2")
     
-    callModule(module = module_select_and_plot, data = DATAs(), id = "id2")
-    
-    callModule(module = module_tabdes, data = DATAs(), id = "id3")
+    callModule(module = module_tabdes, data = DATAs, id = "id3")
     
     #DATA.CLASSIF<-reactiveValues()
     
-    callModule(module = module_classification, data=DATAs(), id = "id5")->DATAs.c#DATA.CLASSIF$DATAs.c
+    callModule(module = module_classification, data=DATAs, id = "id5")->DATAs.c#DATA.CLASSIF$DATAs.c
     
     #observe({
     #observeEvent(input$reactKlass , {
         #input$reactKlass
         
-    callModule(module = module_select_and_plot2, data = DATAs.c, #reactive(DATA.CLASSIF$DATAs.c), 
+   callModule(module = module_select_and_plot2, data = DATAs.c, #reactive(DATA.CLASSIF$DATAs.c), 
                    id = "id25")
    #     })
     #})

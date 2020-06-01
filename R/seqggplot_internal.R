@@ -2,7 +2,16 @@
 
 seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL, 
                              col_selected.r1=col.selected, merge_mods.r1, 
-                             pmin.sup1=0.05, STR.SUBS.1=NULL, SORTV1=NULL){
+                             pmin.sup1=0.05, STR.SUBS.1=NULL, SORTV1=NULL, 
+                             PAS.temps1=PAS.temps, TIME.varying1=TIME.varying, Pourc.eff1=Pourc.eff, Sens1=Sens){
+  
+  if(TYPE.r1=="txtr"){
+  if(!is.null(Sens1)){
+  if(Sens1==TRUE){
+    objseq.r1<-objseq.r1[ , ncol(objseq.r1):1]
+  }}}
+  
+  
   library(dplyr)
   attributes(objseq.r1)$cpal->col.i
   names(col.i)<-attributes(objseq.r1)$alphabet
@@ -10,12 +19,23 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
   attributes(objseq.r1)$names->name_time
   attributes(objseq.r1)$alphabet->labels_order
   
+  
   if(is.null(grup_var.r1)){
-  DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1, arrondi=2, pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1)->dats
+    if(TYPE.r1!="txtr"){
+  DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1, arrondi=2, pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1, 
+                    PAS.temps=PAS.temps1, TIME.varying=TIME.varying1, Pourc.eff=Pourc.eff1, Sens=Sens1)->dats
+    } else {
+    seqtrate(seqdata = objseq.r1, time.varying = TIME.varying1, lag = PAS.temps1 , count = Pourc.eff1 )->tr.tx
+    data.frame(as.table(tr.tx))->dfres
+    names(dfres)[names(dfres)=="Var1"]<-"Départ"
+    names(dfres)[names(dfres)=="Var2"]<-"Arrivée"
+    names(dfres)[names(dfres)=="Var3"]<-"Date.départ"
+    dfres->dats
+    }
   as.data.frame(dats)->dats
   dats$level<-"Ensemble"
   dats$ID<-row.names(dats)
-  } else {
+    } else {
     if(is.factor(grup_var.r1)){
       grup_var.r1<-as.character(grup_var.r1)
     }
@@ -23,15 +43,24 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
     lapply(1:length(unique(grup_var.r1)), FUN = function(i){
       objseq.r1[grup_var.r1==unique(grup_var.r1)[i] , ]->objseq.r1.i
       objseq.r1.i[!is.na(objseq.r1.i[ , 1]) , ]->objseq.r1.i
-      DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1.i, arrondi=2,pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1, col.selected = col_selected.r1)->dats
+      
+      if(TYPE.r1!="txtr"){
+        
+        DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1.i, arrondi=2,pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1, col.selected = col_selected.r1, 
+                          PAS.temps=PAS.temps1, TIME.varying=TIME.varying1, Pourc.eff=Pourc.eff1, Sens=Sens1)->dats
+      } else {
+        seqtrate(seqdata = objseq.r1.i, time.varying = TIME.varying1, lag = PAS.temps1 , count = Pourc.eff1 )->tr.tx
+        data.frame(as.table(tr.tx))->dfres
+        names(dfres)[names(dfres)=="Var1"]<-"Départ"
+        names(dfres)[names(dfres)=="Var2"]<-"Arrivée"
+        names(dfres)[names(dfres)=="Var3"]<-"Date.départ"
+        dfres->dats
+        
+      }
       as.data.frame(dats)->dats
       dats$level<-unique(grup_var.r1)[i]
       dats$ID<-row.names(dats)
-      
       return(dats)
-      
-      
-      
     })->lidat
     do.call("rbind", lidat)->dats
     #}
@@ -109,7 +138,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
       geom_bar(stat = "identity" )+
       #geom_label_repel(aes(label=VAR), stat="identity", position=position_stack(vjust = 0.5), size=3)+
       scale_fill_manual(values = col.i, name="États : ")+
-      theme_excel()+
+      theme_excel(base_size = 18)+
       xlab(label = "")+ylab(label = "")+
       theme(axis.title = element_blank(), axis.text.x =  element_text(angle = 45) )+#,legend.text = element_text(size=2) )+
       facet_wrap(.~level)
@@ -133,7 +162,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
         geom_bar(stat = "identity" )+
         geom_label(aes(label=Mean), stat="identity", size=3, colour=gray(0.2), nudge_y = 0.1*(max(ggdats$Mean)-min(ggdats$Mean)), show.legend = FALSE)+
         scale_fill_manual(values = col.i, name="États : ")+
-        theme_excel()+
+        theme_excel(base_size = 18)+
         xlab(label = "")+ylab(label = "")+
         theme(axis.title = element_blank() , axis.text.x =  element_text(angle = 45))+#, legend.text = element_text(size=2))+
         facet_wrap(.~level)
@@ -187,7 +216,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
           #geom_label(aes(label=paste(round(value*100, 1), "%", sep = "")), size=1,
           #           nudge_y = 0.1, alpha=0.7, show.legend = FALSE, colour=gray(0.3))+
           scale_fill_manual(values = col.i, name="États : ")+
-          theme_excel()+
+          theme_excel(base_size = 18)+
           xlab(label = "")+ylab(label = "")+
           theme(axis.title = element_blank() , axis.text.x =  element_text(angle = 45, hjust = 1))+#, legend.text = element_text(size=2))+
           facet_wrap(.~level)
@@ -212,7 +241,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
                 geom_text(aes(label=paste(round(as.numeric(Support),2), "%", sep="")),
                            hjust=-1, colour=gray(0.3), size=5/size.effect)+
                 scale_fill_manual(values = colpal)+
-                theme_hc()+
+                theme_hc(base_size = 18)+
                 xlab('')+
                 theme(legend.position = "none", axis.text.x = element_text(size=9, angle=90, hjust=1,vjust = 0.3),
                       axis.title.x = element_blank(),
@@ -223,10 +252,58 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
               return(gg)
               
           } else {
+            if(TYPE.r1=="txtr"){
+              
+              
+              
+              log(length(unique(dats$level)))->size.effect
+              if(size.effect==0){size.effect<-1}
+              if(Pourc.eff1==TRUE){
+                dats$LABS<-dats$Freq
+              } else {
+                dats$LABS<-paste(round(dats$Freq*100, 1), "%", sep="")
+              }
+
+              gp<-ggplot(data = dats, aes(x=Arrivée, y=Départ, 
+                                      #colour=Freq, 
+                                      fill=Freq))+
+                #geom_point(shape=21, size=18, alpha=0.6)+
+                geom_raster(alpha=0.7, interpolate = FALSE)+
+                
+                geom_text(aes(label=LABS), 
+                          family="Calibri Light", size=4.75/size.effect)+
+                scale_colour_distiller(palette = "Greys", direction = -1)+
+                scale_fill_viridis_c(direction = -1)+
+                theme_light(base_family = "Calibri Light", base_size = 18)+
+                theme(legend.position = "none", axis.title.y = element_text(angle = 0, vjust = 0.5))+
+                scale_x_discrete(position = "top", labels = function(x) { 
+                  gsub(pattern ="[->", replacement = "", x = x , fixed = TRUE)->res
+                  gsub(pattern ="]", replacement = "", x = res, fixed = TRUE )->res
+                  return(res)
+                }) +
+                scale_y_discrete(position = "left", 
+                                 limits = rev(levels(dats$Départ)),
+                                 labels = function(x) { 
+                                   gsub(pattern ="->]", replacement = "", x = x , fixed = TRUE)->res
+                                   gsub(pattern ="[", replacement = "", x = res, fixed = TRUE )->res
+                                   return(res)
+                                 }) +
+                ylab(sprintf("Départ \u279C"))+xlab(sprintf("\u279C Arrivée"))
+                #,legend.text = element_text(size=2) )+
+                if(TIME.varying1==TRUE){
+                  gp<-gp+facet_grid(rows = vars(Date.départ), cols = vars(level))
+                } else {
+                  gp<-gp+facet_wrap(.~level)
+                }
+              
+            } else {
+            
+            
     seqplot(seqdata =  objseq.r1, type=TYPE.r1, group = grup_var.r1, sortv=SORTV1)
             p <- recordPlot()
             plot.new() 
             p 
+          }
           }
         }
     }}
