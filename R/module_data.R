@@ -17,7 +17,6 @@ module_data_UI <- function(id){#label = "CSV file") {
            hr(),
            #### SUB-PANEL: PARAMETRAGE ####
            tabsetPanel(id = "tabpan",
-                       
                        #tabPanel("TEST",
                       #          numericInput(inputId = ns("numinput"), label = "numeric input test", value = 5, min = 1 ,max = 10),
                       #          uiOutput(ns("ui_server_created")),
@@ -26,9 +25,11 @@ module_data_UI <- function(id){#label = "CSV file") {
                       # ),
                        
                        tabPanel(title = "Import et formattage des données : ",
+                                verticalLayout(fluid=TRUE, 
+                                               
                                 #### CHARGEMENT FICHIER ####
-                                sidebarPanel(
-                                  h3("Chargement du fichier"), 
+                                wellPanel(style = "background: #DCDCDC",
+                                          fluidRow(h3("Chargement du fichier"), 
                                   width = 12,
                                   shiny::column(width = 6,
                                                 shiny::selectInput(inputId = ns("DataType"), label = "Choix du type de données", 
@@ -88,8 +89,10 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   #hr()
                                                   #shiny::textOutput("CONTROLDATA"))
                                                 )
-                                  )),
-                                  sidebarPanel( h3("Format des données"), 
+                                  ))),
+                                wellPanel(style = "background: #DCDCDC",
+                                          fluidRow(h3("Format des données"), 
+                                  #sidebarPanel( h3("Format des données"), 
                                                 width = 12,
                                                 #### condition = "input.DataType == 'fichier'"  ####
                                                 
@@ -113,14 +116,16 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   #shiny::column(width = 6, "Noms des data.frame sélectionnés : "),  
                                                   #shiny::column(width = 6, textOutput(ns("SLIDERTEXT")))
                                                 )
-                                  ),
+                                  )),
+                                wellPanel(style = "background: #DCDCDC",
+                                          fluidRow(h3("Identifiant des individus"), 
                                 column(width = 12, 
                                   conditionalPanel(
                                     #condition = "input.DataType == 'objet'||input.DataType == 'objseq'",
                                     condition = paste0(
                                       "input['", ns("DataType"), "'] == 'objet'||input['", ns("DataType"), "'] == 'objseq'||input['", ns("DataType"), "'] == 'fichier'"),
                                     #column(12, 
-                                    sidebarPanel( h3("Identifiant des individus"), width = 12,
+                                    #sidebarPanel( h3("Identifiant des individus"), width = 12,
                                                   
                                     
                                     uiOutput(ns("UI_INDVAR_CHOOSE")),
@@ -135,7 +140,9 @@ module_data_UI <- function(id){#label = "CSV file") {
                                   ),
                                 
                                 #### AJOUT TIERS ####
-                                sidebarPanel( h3("Ajouts de variables issues d'un jeu de données tiers:"),width=12,
+                                wellPanel(style = "background: #DCDCDC",
+                                          fluidRow(h3("Ajout de variables issues d'un jeu de données tiers :"), 
+                                 width=12,
                                   shiny::checkboxInput(inputId = ns("AJOUT_TIERS_LOG"), 
                                                        label = "Ajout de variables issues d'un jeu de données tiers ?", 
                                                        value = FALSE),
@@ -160,7 +167,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                      inputId = ns("CleBase"), choices = NULL)
                                   )
                                   
-                                ),
+                                )),
                                               
                                 
                                 #hr(),
@@ -169,8 +176,10 @@ module_data_UI <- function(id){#label = "CSV file") {
                                 hr(),
                                 
                                 #### condition = "input.DataType == 'objet'"  ####
-                                sidebarPanel( h3("Sélection des individus:"), 
-                                              width = 12,
+                                wellPanel(style = "background: #DCDCDC",
+                                          fluidRow(h3("Sélection des individus :"), 
+                                #wellPanel(style = "background: blue"
+                                            width = 12,
                                               
                                               shiny::checkboxInput(inputId=ns("addCONDS"), label = "Ajouter des conditions ? ", value = FALSE),
                                               
@@ -219,9 +228,9 @@ module_data_UI <- function(id){#label = "CSV file") {
                                               #shiny::downloadButton(outputId = "downlist", label = "Enregistrer le jeu de données sur le disque (pour réutilisation ultérieure)")
                                               
                                               #)
-                                )
+                                ))
                                 
-                       ),
+                       ))),
                        #### Construction des trajectoires ####
                        tabPanel(title = " Paramétrage des trajectoires ",
                                 #),
@@ -1488,10 +1497,12 @@ message("pb seq 360")
         if(length(SUBSETTED_LIST())>1){
           updateSelectInput(session = session, inputId = "timecol", choices = mycolumns, label = "Choisir la variable commune aux data.frame utilisée pour construire les trajectoires:")
         list(
-          shiny::selectInput(inputId = ns("PICKDATE1"), label = "Debut:",
-                             choices = names.pick, multiple = FALSE),
-          shiny::selectInput(inputId = ns("PICKDATE1"), label = "Fin:",
-                             choices = names.pick, multiple = FALSE, selected = names.pick[length(names.pick)] ))->the.ui
+          shiny::selectInput(inputId = ns("PICKDATE1.deb"), label = "Debut des trajectoires :",
+                             choices = names.pick, multiple = FALSE, selected = names.pick[1]),
+          shiny::selectInput(inputId = ns("PICKDATE1.fin"), label = "Fin des trajectoires :",
+                             choices = names.pick, multiple = FALSE, selected = names.pick[length(names.pick)] ),
+          shiny::numericInput(inputId = ns("PAS_TEMPS_TRAJ"), label = "Pas de temps pour les trajectoires : ", 
+                              value = 1, min = 1, step = 1, width = '100%'))->the.ui
         } else {
           if(length(SUBSETTED_LIST())==1){
             updateSelectInput(session = session, inputId = "timecol", 
@@ -1615,6 +1626,7 @@ message("pb seq 360")
     DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
     } else {
       if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
+        
         DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq#grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
       }
     }
@@ -1657,6 +1669,10 @@ message("pb seq 360")
           
          # DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
           DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq
+          
+          
+          dataforseq[ , seq(which(names(dataforseq)==input$PICKDATE1.deb), which(names(dataforseq)==input$PICKDATE1.fin), by = input$PAS_TEMPS_TRAJ)]->dataforseq
+          
         
           dataforseq[]<-lapply(dataforseq, as.character)
           for(miss.i in missing_codes()){
@@ -1723,7 +1739,7 @@ message("pb seq 360")
   
   output$DES_TRAJ_OBJ<-renderUI({
     ns <- session$ns
-    h3(paste("nrow : ",  dim( data.seq() )[1], " | ncol : ", dim( data.seq() )[2]), sep="")
+    h5(paste("nombre d'individus (lignes) : ",  dim( data.seq() )[1], " | longueur des trajectoires (colonnes) : ", dim( data.seq() )[2]), sep="")
     #summary(data.seq())
   })
   
@@ -1849,12 +1865,13 @@ message("pb seq 360")
   )
   
   
-  return(reactive({
-    list("SEQ_OBJ"=data.seq(), 
-         "DATA_COMP"=data_for_res2(), 
-         "TYPE_SOURCE"=input$DataType, 
-         "CODAGE_MANQUANT"=list("GAP"=input$TEXT_GAP, "RIGHT"=input$TEXT_RIGHT, "LEFT"=input$TEXT_LEFT),
-         "ID_VAR"=as.character(input$INDVAR)
+  return(#reactive({
+    list("SEQ_OBJ"=reactive({data.seq()}), 
+         "DATA_COMP"=reactive({data_for_res2()}), 
+         "TYPE_SOURCE"=reactive({input$DataType}), 
+         "CODAGE_MANQUANT"=reactive({list("GAP"=input$TEXT_GAP, "RIGHT"=input$TEXT_RIGHT, "LEFT"=input$TEXT_LEFT)}),
+         "ID_VAR"=reactive({as.character(input$INDVAR)})
     )
-  }))
+  #})
+  )
 }
