@@ -71,24 +71,25 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                   ),
                                     #### PANEL: STATISTIQUES ####
                                     tabPanel("Statistiques descriptives",
-                                             tabsetPanel(
+                                             #tabsetPanel(
                                                #### SUB-PANEL: transition ####
-                                               tabPanel(title = "Taux de transition ( et taux de sortie ) ",
-                                                        useShinyjs(),
-                                                        shiny::numericInput(inputId = "PAStrate", label = "Pas de temps pour le calcul des taux de transition",value = 1, min = 1, max = 36, step = 1),
-                                                        shiny::checkboxInput(inputId = "TYPEtrate", label = "Les taux de transitions varient-ils avec le temps?",value = FALSE),
-                                                        shiny::radioButtons(inputId = "TypeValeur", label = "Afficher en pourcentage ou en effetif",choices=c("Effectif","Pourcentage"),selected = "Pourcentage"),
-                                                        shiny::radioButtons(inputId = "DebArr",label="Transitions en partant : ",choices = c("Du début"="deb","De la fin"="fin"),selected = "deb"),
-                                                        shiny::radioButtons(inputId = "TypeTrans",label="Extension des fichiers : ",choices = c(".csv",".txt"),selected = ".csv"),
-                                                        textOutput("infotrate"),
-                                                        uiOutput("dt")
-                                                        #dataTableOutput('TRAJS_TRATE')
-                                                        
-                                               ),
+                                               # tabPanel(title = "Taux de transition ( et taux de sortie ) ",
+                                               #          useShinyjs(),
+                                               #          shiny::numericInput(inputId = "PAStrate", label = "Pas de temps pour le calcul des taux de transition",value = 1, min = 1, max = 36, step = 1),
+                                               #          shiny::checkboxInput(inputId = "TYPEtrate", label = "Les taux de transitions varient-ils avec le temps?",value = FALSE),
+                                               #          shiny::radioButtons(inputId = "TypeValeur", label = "Afficher en pourcentage ou en effetif",choices=c("Effectif","Pourcentage"),selected = "Pourcentage"),
+                                               #          shiny::radioButtons(inputId = "DebArr",label="Transitions en partant : ",choices = c("Du début"="deb","De la fin"="fin"),selected = "deb"),
+                                               #          shiny::radioButtons(inputId = "TypeTrans",label="Extension des fichiers : ",choices = c(".csv",".txt"),selected = ".csv"),
+                                               #          textOutput("infotrate"),
+                                               #          uiOutput("dt")
+                                               #          #dataTableOutput('TRAJS_TRATE')
+                                               #          
+                                               # ),
                                                #### SUB-PANEL: représentation ####
-                                               tabPanel(title = "Représentation des trajectoires",
+                                               tabPanel(title = "Indicateurs statistiques",
                                                         module_select_and_plot_UI(id = "id2")
                                                
+                                               #),
                                                ),
                                              
                         #### SUB-PANEL: tables ####
@@ -96,7 +97,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                  module_tabdes_UI(id = "id3")
                                  
                         )
-                                    )
+                                    
                                     ),
               #### PANEL: classif ####
               
