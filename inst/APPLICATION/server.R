@@ -66,7 +66,7 @@ server <- function(input, output, session) {
   #observe({
   callModule(module = module_select_and_plot2, data = DATAs.c, #reactive(DATA.CLASSIF$DATAs.c), 
              id = "id25")
-  callModule(module = module_tabdes2, data = DATAs.c, id = "id35")
+  callModule(module = module_tabdes, data = DATAs.c, id = "id35")
   
  # observe({
 #    input$reactKlass

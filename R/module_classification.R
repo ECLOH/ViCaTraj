@@ -301,6 +301,7 @@ module_classification <- function(input, output, session, data) {
   
   trajs.forclass<-reactive({
       if(input$selection_rows=="Sample"){
+        req(input$sample_prop)
           REPRESENTED_SAMPLE(interact.var = selected_react(), 
                              SIZE = input$sample_prop*nrow( data$SEQ_OBJ() ), id.var=row.names(data$SEQ_OBJ()))->vec.sample
         print(vec.sample)

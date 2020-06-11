@@ -110,7 +110,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                shiny::tabPanel(title = "Représentation des trajectoires (groupes)",
                                                                                module_select_and_plot2_UI(id = "id25")),
                                                                shiny::tabPanel(title = "Tables et tables de contingence (groupes)",
-                                                                               module_tabdes2_UI(id = "id35"))
+                                                                               module_tabdes_UI(id = "id35"))
                                                              )
                                              )
 )
