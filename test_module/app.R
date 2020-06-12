@@ -12,17 +12,17 @@ library(shinycssloaders)
 library(shinyWidgets)
 library(ViCaTraj)
 library(DT)
-source('C:/Users/elie/Desktop/ViCaTraj/R/module_select_and_plot.R', encoding = 'UTF-8')
-source('C:/Users/elie/Desktop/ViCaTraj/R/module_select_and_plot2.R', encoding = 'UTF-8')
+source('/home/mrie/Bureau/GIT_paquets/ViCaTraj/R/module_select_and_plot.R', encoding = 'UTF-8')
+source('/home/mrie/Bureau/GIT_paquets/ViCaTraj/R/module_select_and_plot2.R', encoding = 'UTF-8')
 
-source('C:/Users/elie/Desktop/ViCaTraj/R/module_data.R', encoding = 'UTF-8')
-source('C:/Users/elie/Desktop/ViCaTraj/R/module_tabdes.R', encoding = 'UTF-8')
+source('/home/mrie/Bureau/GIT_paquets/ViCaTraj/R/module_data.R', encoding = 'UTF-8')
+source('/home/mrie/Bureau/GIT_paquets/ViCaTraj/R/module_tabdes.R', encoding = 'UTF-8')
 
-source('C:/Users/elie/Desktop/ViCaTraj/R/module_classification.R', encoding = 'UTF-8')
+source('/home/mrie/Bureau/GIT_paquets/ViCaTraj/R/module_classification.R', encoding = 'UTF-8')
 
 
-source('C:/Users/elie/Desktop/ViCaTraj/R/seqggplot_internal.R', encoding = 'UTF-8')
-source('C:/Users/elie/Desktop/ViCaTraj/R/seqggplot.R', encoding = 'UTF-8')
+source('/home/mrie/Bureau/GIT_paquets/ViCaTraj/R/seqggplot_internal.R', encoding = 'UTF-8')
+source('/home/mrie/Bureau/GIT_paquets/ViCaTraj/R/seqggplot.R', encoding = 'UTF-8')
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(

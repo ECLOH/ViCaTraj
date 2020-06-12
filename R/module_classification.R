@@ -248,6 +248,7 @@ module_classification <- function(input, output, session, data) {
     if(input$selection_rows=="Sample"){
       dati<-c(input$SELECTDATE1, input$SELECTDATE2, input$SELECTDATE3)
       vali<-c(input$VARDATE1, input$VARDATE2, input$VARDATE3)
+      print(paste("a", length(dati), "b", length(vali)))
 #      if(length(unique(dati))==1&unique(dati)=="Pas de sélection"){
 #        NULL
 #      } else { 
@@ -263,10 +264,18 @@ module_classification <- function(input, output, session, data) {
         print(vali[i])
         if(!is.null(dat.i)){
           if(dat.i!="Pas de sélection"){
+            if(vali[i]%in%names(data$DATA_COMP()[[dat.i]])){
             message("coucou 221")
             print(data$DATA_COMP()[[dat.i]][ , vali[i] ])
             as.character(data$DATA_COMP()[[dat.i]][ , vali[i] ])->res
             return(res)
+            } else {
+              print("Walou!")
+              #print(class(data$DATA_COMP()[[1]]))
+              #print(data$DATA_COMP()[[dat.i]])
+              
+              rep("1", times=nrow(data$DATA_COMP()[[1]]))
+            }
           } else {
             print("Walou!")
             #print(class(data$DATA_COMP()[[1]]))
