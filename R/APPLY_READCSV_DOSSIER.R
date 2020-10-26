@@ -30,7 +30,9 @@ APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/F
     message(paste(i, "/", length(vec.csv.files), "---------------",  sep=" "))
     message(paste("FROM :",  listi))
     message("...")
-    read.csv(file = listi, header = TRUE, encoding = "UTF-8", stringsAsFactors = FALSE)->data.i
+    data.table::fread(file = listi, 
+                      header = TRUE, encoding = "UTF-8", stringsAsFactors = FALSE)->data.i
+    #read.csv(file = listi, header = TRUE, encoding = "UTF-8", stringsAsFactors = FALSE)->data.i
     #### AJOUT DE DATE ####
     message("DATE...")
     unlist(strsplit(x = unique(data.i$FICHIER_DESTINATION), split = c("."),  fixed = TRUE))[3]->DATE

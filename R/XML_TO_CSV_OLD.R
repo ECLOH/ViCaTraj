@@ -61,7 +61,8 @@ XML_TO_CSV<-function(chemin.xml="rsa.RSABEM.00122018.A0110442.xml/rsa.RSABEM.001
   message("....fait")
   if(save.csv==TRUE){
     message("Ecriture du csv")
-    write.csv(x = final.df, file = chemin.destination)
+    #write.csv(x = final.df, file = chemin.destination)
+    data.table::fwrite(x = final.df, file = chemin.destination)
     message("....fait")
     message(paste("Fichier créé: ", chemin.destination))
   }
