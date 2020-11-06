@@ -28,11 +28,16 @@ library(forcats)
 library(ggthemes)
 library(tibble)
 options(shiny.maxRequestSize=700*1024^2)
+jscode <- "shinyjs.refresh = function() { history.go(0); }"
 
 #### UI ####
 
-ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
+ui <- shinyUI(navbarPage(title = HTML("<a href=\"javascript:history.go(0)\" style='color: white;' >ViCaTraj <img src='LOGO_REFRESH_clair.png' style='width:40px;height:40px;'> </a>"), id="page", collapsible=TRUE, inverse=FALSE,
                          theme=shinytheme("sandstone"),#fluidPage(theme = shinytheme("flatly"),
+                         #div(style = "position:absolute;right:1em;", 
+                        #     actionButton('load_inputs', 'Load inputs'),
+                        #     actionButton('save_inputs', 'Save inputs')
+                        # ),
                          tabPanel("Présentation", 
                                   tags$div(
                                     tags$p("Cette application vise à faciliter la manipulation de données de trajectoires à partir du logiciel de traitement statistique 'R'. Elle permet aux personnes qui ne sont pas familières de ce langage de pouvoir utiliser un certain nombre de fonctions particulièrement utiles pour la manipulation de données de trajectoires."), 
@@ -113,6 +118,7 @@ ui <- shinyUI(navbarPage('ViCaTraj', id="page", collapsible=TRUE, inverse=FALSE,
                                                                                module_tabdes_UI(id = "id35"))
                                                              )
                                              )
+              
 )
 )
                          

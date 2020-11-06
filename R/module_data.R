@@ -34,6 +34,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                   shiny::column(width = 6,
                                                 shiny::selectInput(inputId = ns("DataType"), label = "Choix du type de données", 
                                                                    choices = c("Un objet RData contenant de multiples data.frame"="objet", 
+                                                                               "Un objet SQL contenant de multiples data.frame"="SQL",
                                                                                "Un objet RData contenant un objet seqdata"="objseq",
                                                                                "Un fichier .csv unique contenant les données"="fichier" 
                                                                    ), 
@@ -46,9 +47,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                 
                                                 conditionalPanel(
                                                   condition = paste0("input['", ns("DataType"), "'] == 'fichier'"),
-                                                  #condition = "input.DataType == 'fichier'",
-                                                  
-                                                  
+                                                  #condition = "input.DataType == 'fichier'"
                                                   shiny::selectInput(inputId=ns("sepcol"), label= "Separateur de colonnes", 
                                                                      choices=c("Virgule" = ",","Point-Virgule" = ";","Tabulation" = "\t"), selected=","),
                                                   shiny::selectInput(inputId=ns("dec"), label= "Séparateur décimal", 
@@ -72,6 +71,17 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                   helpText("INFO: pour des raisons de sécurité il n'est pas possible de charger directement un dossier dans un navigateur web. Vous pouvez utiliser la fonction LIST_MULTIPLE_CSV du package ViCaTraj pour créer l'objet RData à partir de mulitples fichiers .csv"),
                                                   fileInput(inputId=ns("LIST_SOURCE_BIG_DF"), 
                                                             label="Sélectionner l'objet .RData contenant les multiples data.frame", 
+                                                            multiple = FALSE, accept = NULL, width = NULL)
+                                                  
+                                                  #hr()
+                                                  #shiny::textOutput("CONTROLDATA"))
+                                                ),
+                                                conditionalPanel(
+                                                  #condition = "input.DataType == 'objet'",
+                                                  condition = paste0("input['", ns("DataType"), "'] == 'SQL'"),
+                                                  helpText("INFO: pour des raisons de sécurité il n'est pas possible de charger directement un dossier dans un navigateur web. Vous pouvez utiliser la fonction 'A VENIR' du package ViCaTraj pour créer l'objet .sqlite à partir de mulitples fichiers .csv"),
+                                                  fileInput(inputId=ns("SOURCE_SQLITE"), 
+                                                            label="Sélectionner l'objet .sqlite contenant les multiples data.frame", 
                                                             multiple = FALSE, accept = NULL, width = NULL)
                                                   
                                                   #hr()
@@ -1679,12 +1689,21 @@ message("pb seq 360")
             dataforseq[dataforseq==miss.i]<-NA
           }
           
-          seqdef(id = DR_POUR_SEQ_OBJ()[ , input$INDVAR], 
-                 data = dataforseq,
-                 gaps = input$TEXT_GAP,
-                 right = input$TEXT_RIGHT,
-                 left = input$TEXT_LEFT,nr = "RMA", missing=NA
-          )->s
+          s<-seqdef_modgap(data = dataforseq,
+                           cpal = NULL,
+                           id = DR_POUR_SEQ_OBJ()[,input$INDVAR],
+                           gaps = input$TEXT_GAP,
+                           right = input$TEXT_RIGHT,
+                           left = input$TEXT_LEFT,
+                           missing=NA,
+                           nr = "RMA", 
+                           minimal.gap = input$criterNb, regle.pour.faux.gap = "after")
+          
+          #seqdef(id = DR_POUR_SEQ_OBJ()[ , input$INDVAR], 
+          #       data = dataforseq,
+          #       gaps = input$TEXT_GAP,
+          #       right = input$TEXT_RIGHT,
+          #       left = input$TEXT_LEFT,nr = "RMA", missing=NA)->s
         } else {s<-NULL}
       } else {
         #### SI OBJSEQ####
