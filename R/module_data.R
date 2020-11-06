@@ -265,7 +265,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                        label = "Etats présents dans les données et considérés comme des états manquants dans les trajectoires", 
                                                        choices = NULL, selected = NULL, multiple = TRUE),
                                     helpText("Les états considérés comme manquants seront supprimés des trajectoires et remplacés par le codage prévu pour les valeurs manquantes"),
-                                    shiny::numericInput(inputId = ns("criterNb"), label = "Critère de sortie : nombre de mois consécutifs",value = 1, min = 1, max = 36, step = 1),
+                                    shiny::numericInput(inputId = ns("criterNb"), label = "Critère de sortie : nombre de périodes consécutives",value = 1, min = 1, max = 36, step = 1),
                                     uiOutput(ns("CONTROL_DUPLICATED_ID"))
                                   ))
                        ),
