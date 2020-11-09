@@ -34,7 +34,7 @@ module_data_UI <- function(id){#label = "CSV file") {
                                   shiny::column(width = 6,
                                                 shiny::selectInput(inputId = ns("DataType"), label = "Choix du type de données", 
                                                                    choices = c("Un objet RData contenant de multiples data.frame"="objet", 
-                                                                               "Un objet SQL contenant de multiples data.frame"="SQL",
+                                                                               #"Un objet SQL contenant de multiples data.frame"="SQL",
                                                                                "Un objet RData contenant un objet seqdata"="objseq",
                                                                                "Un fichier .csv unique contenant les données"="fichier" 
                                                                    ), 
