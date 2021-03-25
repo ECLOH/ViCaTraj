@@ -1724,7 +1724,7 @@ message("pb seq 360")
     }
     
     if (!is.null(s)){
-    if( sum(is.na(attributes(s)$cpal))==length(attributes(s)$alphabet) ){
+    if( is.null(attributes(s)$cpal)|sum(is.na(attributes(s)$cpal))==length(attributes(s)$alphabet) ){
       library(wesanderson)
       cpal(s)<-wes_palette(name = "Darjeeling1", 
                            n = length(attributes(s)$alphabet), 
