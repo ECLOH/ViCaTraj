@@ -29,7 +29,7 @@ Trois types de fichiers peuvent être chargés dans l'application :
 
 1. un fichier .csv avec des données au format 'wide' : une colonne par variable et par date, et à la suite une colonne par variable complémentaire.    
 
-   | VARIABLE_IDENTIFIANT | RSA_1 | RSA_2  | RSA_3 | Mois_ ... | SEXE | COMMUNE_HABITATION | ...  |
+   | VARIABLE_IDENTIFIANT | RSA_1 | RSA_2  | RSA_3 | RSA_... | SEXE | COMMUNE_HABITATION | ...  |
    | -------------------- | ----- | ------ | ----- | --------- | ---- | ------------------ | ---- |
    | 1                    | RSA   | RSA    | RSA   | ...       | M    | Paris              | ...  |
    | 2                    | NA    | RSA    | RSA   | ...       | F    | Lyon               | ...  |
