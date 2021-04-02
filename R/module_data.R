@@ -367,6 +367,10 @@ module_data <- function(input, output, session) {
         names(data)<-"Table.unique"
       }
     }
+    data<-lapply(data, function(x){
+      names(x)<-make.names(names = names(x))%>%gsub(pattern = ".", replacement = "_", fixed = TRUE)
+      return(x)
+    })
     return(data)
   })
   
@@ -412,6 +416,10 @@ message("pb seq 360")
       message("pb seq 363")    
       res<-df.pour.seq
     }
+    res<-lapply(res, function(x){
+      names(x)<-make.names(names = names(x))%>%gsub(pattern = ".", replacement = "_", fixed = TRUE)
+      return(x)
+      })
     return(res)
   })
   

@@ -1,5 +1,3 @@
-#' @author Elie
-#' @description  ...
 #' @title La fonction "APPLY_READCSV_DOSSIER"
 #' @param emplacement.dossier emplacement du dossier. Sans "/" à la fin. 
 #' @param pattern.extension pattern qui indique l'extension dans les fichiers
@@ -8,8 +6,8 @@
 #' @param variable_identification_fichiers éventuelle variable dans les data.frames de la liste_existante qui donne les fichiers source. Non obligatoire.
 #' @param seq.dates pour éviter que la fonction cré les noms des data.frames ajoutés à partir de leur nom de fichier, on peut spécifier une séquence de date : c("date d'origine", "date d'arrivée", interval de temps), au format suivant : c("01/01/2020", "01/08/2020", "month"). Format de date : "%d/%m/%Y" et interval accepeté par la fonction seq.Date()
 #' @param vec.correspondance.names ECRASE 'variable_identification_fichiers' et "seq.dates". Vecteur nommé avec les fichiers à aller chercher (à ajouter), présents dans 'emplacement.dossier' et nommé avec le nom qu'on souhaite leur attribuer dans le datalist final. 
-#' @param combine_new si TRUE alors retourne une liste déjà combinée (contient liste_existante et les nouveaux data.frame). Si FALSE ne retourne que la liste des nouveaux data.frames (utile si on veut économiser de la mémoire). On peut faire ensuite: c(liste_existante, nouelle_liste)
-#' @return liste de data.frame
+#' @param combine_new si TRUE alors retourne une liste déjà combinée (contient liste_existante et les nouveaux data.frame). Si FALSE ne retourne que la liste des nouveaux data.frames (utile si on veut économiser de la mémoire). On peut faire ensuite: c(liste_existante, nouvelle_liste)
+#' @param data.RSA si TRUE, applique des opérations spécifiques au traitement des données RSA (DATE, RSA_simple). Sinon, data.RSA=FALSE
 #' @export
 APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/FICHIERS_XML_CSV", 
                                 pattern.extension=".csv", 
@@ -19,8 +17,8 @@ APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/F
                                 vec.correspondance.names=c("D2017-01-01"="rsa.RSABEM.00012017.B0403042.csv"),
                               #  common.pattern=TRUE, 
                                 seq.dates=c("01/01/2018","01/01/2019","month"), 
-                              combine_new=TRUE){
-
+                              combine_new=TRUE, data.RSA=TRUE){
+  Sys.time()->depart
   ####
   list.files(emplacement.dossier)->fichiers
   lapply(fichiers, function(file.name){
@@ -69,6 +67,7 @@ APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/F
   
   
   ####
+  if(data.RSA==TRUE){
   df.RSA.value<-data.frame("TEXT"=c("0"="Nouvelle demande en attente de décision CG pour ouverture du droit",
                                     "1"="Droit refusé", 
                                     "2"="Droit ouvert et versable",
@@ -76,6 +75,7 @@ APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/F
                                     "4"="Droit ouvert mais versement suspendu (le montant du droit n'est pas calculable)",
                                     "5"="Droit clos",
                                     "6"="Droit clos sur mois antérieur ayant eu un contrôle dans le mois de référence pour une période antérieure"), "MODALITE"=as.character(0:6))
+  }
   ###
   donnees.mois<-lapply(1:length(list.csv.files), FUN = function(i){
     list.csv.files[[i]]->listi
@@ -86,8 +86,9 @@ APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/F
     if(!grepl(pattern = emplacement.dossier, x = listi, fixed = TRUE)){
       listi<-paste0(emplacement.dossier, "/", listi)
     }
-    data.table::fread(listi, stringsAsFactors = FALSE)->data.i
+    data.table::fread(listi, stringsAsFactors = FALSE, check.names=TRUE)->data.i
     #read.csv(file = listi, header = TRUE, encoding = "UTF-8", stringsAsFactors = FALSE)->data.i
+    if(data.RSA==TRUE){
     #### AJOUT DE DATE ####
     message("DATE...")
     unlist(strsplit(x = unique(data.i$FICHIER_DESTINATION), split = c("."),  fixed = TRUE))[3]->DATE
@@ -126,6 +127,7 @@ APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/F
         return(res)
       }
     })->data.i$ETATDOSRSA_TEXT
+    }
     as.data.frame(data.i)->data.i
     return(data.i)
   })
@@ -154,5 +156,10 @@ APPLY_READCSV_DOSSIER<-function(emplacement.dossier="K:/X_APPLIS/EvaluationRSA/F
   if(combine_new==TRUE&!is.null(liste_existante)){
     c(liste_existante, donnees.mois)->donnees.mois
   }
+  Sys.time()->arrivee
+  arrivee-depart->duree
+  message(paste0("Temps de travail:", round(time_length(x = duree, unit = "minutes"),3), "mn"))
+  
+
   return(donnees.mois)
 }

@@ -11,7 +11,8 @@ module_tabdes_UI <- function(id){#label = "CSV file") {
   tabsetPanel(type = "pills",
               tabPanel("Tri à plat : ",
                        uiOutput(ns("SELECTVAR_OUPTUT")),
-                       #textOutput(ns("LISTOFTABLES")),
+                       shiny::actionButton(inputId = ns("Constr_tab"), 
+                                           label = "Mettre à jour les tables"),
                        uiOutput(ns("LISTOF_DT")) %>% withSpinner(color="#0dc5c1")
               ),
               tabPanel("Tables de contingences",
@@ -29,6 +30,8 @@ module_tabdes_UI <- function(id){#label = "CSV file") {
                        
                        shiny::selectInput(inputId = ns("PROP_INPUT"), label = "Afficher des pourcentages?", multiple = FALSE, selected = "Pas de pourcentages",
                                           choices = c("Pas de pourcentages", "Pourcentages en ligne", "Pourcentages en colonne")),
+                       shiny::actionButton(inputId = ns("Constr_tabcon"), 
+                                           label = "Mettre à jour la table de contingence"),
                        uiOutput(ns("TABCONOUT"))  %>% withSpinner(color="#0dc5c1")#,
                        # CONTROL textOutput("a1")#,
                        #uiOutput("LISTTABLESCONTINGENCE")
@@ -87,7 +90,7 @@ module_tabdes <- function(input, output, session, data) {
     shiny::selectInput(inputId = ns("VARSSELECT"),choices = listovars(),selected = NULL, multiple = TRUE, label="Sélection des variables  : ")
   })
   
-  listoftabs<-reactive({
+  listoftabs<-eventReactive(input$Constr_tab , {
     req(input$VARSSELECT)
     lapply(input$VARSSELECT, function(ni){
       
@@ -237,7 +240,7 @@ module_tabdes <- function(input, output, session, data) {
   perclog<-reactive({input$PROP_INPUT!="Pas de pourcentages"})
   perctype<-reactive({if(input$PROP_INPUT=="Pourcentages en ligne"){1} else {if(input$PROP_INPUT=="Pourcentages en colonne"){2}} })
   
-  reactive({
+  eventReactive(input$Constr_tabcon , {
     if(input$SELECTDATE1!="Pas de sélection"&input$SELECTDATE2!="Pas de sélection"){
       if(input$SELECTDATE3=="Pas de sélection"){
         print("coucou215")

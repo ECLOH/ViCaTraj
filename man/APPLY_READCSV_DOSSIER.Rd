@@ -12,7 +12,8 @@ APPLY_READCSV_DOSSIER(
   variable_identification_fichiers = "FICHIER_DESTINATION",
   vec.correspondance.names = c(`D2017-01-01` = "rsa.RSABEM.00012017.B0403042.csv"),
   seq.dates = c("01/01/2018", "01/01/2019", "month"),
-  combine_new = TRUE
+  combine_new = TRUE,
+  data.RSA = TRUE
 )
 }
 \arguments{
@@ -30,14 +31,10 @@ APPLY_READCSV_DOSSIER(
 
 \item{seq.dates}{pour éviter que la fonction cré les noms des data.frames ajoutés à partir de leur nom de fichier, on peut spécifier une séquence de date : c("date d'origine", "date d'arrivée", interval de temps), au format suivant : c("01/01/2020", "01/08/2020", "month"). Format de date : "%d/%m/%Y" et interval accepeté par la fonction seq.Date()}
 
-\item{combine_new}{si TRUE alors retourne une liste déjà combinée (contient liste_existante et les nouveaux data.frame). Si FALSE ne retourne que la liste des nouveaux data.frames (utile si on veut économiser de la mémoire). On peut faire ensuite: c(liste_existante, nouelle_liste)}
-}
-\value{
-liste de data.frame
+\item{combine_new}{si TRUE alors retourne une liste déjà combinée (contient liste_existante et les nouveaux data.frame). Si FALSE ne retourne que la liste des nouveaux data.frames (utile si on veut économiser de la mémoire). On peut faire ensuite: c(liste_existante, nouvelle_liste)}
+
+\item{data.RSA}{si TRUE, applique des opérations spécifiques au traitement des données RSA (DATE, RSA_simple). Sinon, data.RSA=FALSE}
 }
 \description{
-...
-}
-\author{
-Elie
+La fonction "APPLY_READCSV_DOSSIER"
 }
