@@ -5,9 +5,12 @@ L'application permet dans un premier temps de construire des trajectoires à par
 
 Trois types de fichiers peuvent être chargés dans l'application :
 
-un fichier .csv avec des données au format 'wide' : une colonne par variable et par date, et à la suite une colonne par variable complémentaire.
-un fichier .Rdata comportant une liste ('list()') avec un objet 'trajectoire' créé par la fonction seqdef() et une data.frrame comportant des données complémentaires. Dans ce cas, les noms de ligne (row.names()) des trajectoires doivent correspondre avec une colonne de variable d'identifiant individuel dans le data.frame.
-un fichier .Rdata comportant une liste ('list()') avec pour chaque date (chaque mois, chaque année, chaque jour, etc) un data.frame avec les valeurs correspondantes. Dans ce cas, les trajectoires pourront être générées à partir de n'importe quel nom de variable commun aux différentes dates.
+ - un fichier .csv avec des données au format 'wide' : une colonne par variable et par date, et à la suite une colonne par variable complémentaire.    
+ 
+ - un fichier .Rdata comportant une liste (`list()`) avec un objet 'trajectoire' créé par la fonction `seqdef()` et une data.frame comportant des données complémentaires. Dans ce cas, les noms de ligne (`row.names()`) des trajectoires doivent correspondre avec une colonne de variable d'identifiant individuel dans le data.frame.    
+ 
+ - un fichier .Rdata comportant une liste ('list()') avec pour chaque date (chaque mois, chaque année, chaque jour, etc) un data.frame avec les valeurs correspondantes. Dans ce cas, les trajectoires pourront être générées à partir de n'importe quel nom de variable commun aux différentes dates.  
+ 
 A partir de ces différentes sources, certaines possibilités de sélection d'individus sont offertes. Chaque sélection constituée dans l'application et qui a donné lieu à la constitution de trajectoires peut être enregistrée localement et réutilisée.
 
 2. Indicateurs statistiques :
