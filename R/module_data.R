@@ -976,14 +976,14 @@ message("pb seq 360")
     #                         use.names = FALSE))
     if(class(the.df())=="data.frame"){
     selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
-                choices = c("absence", names(the.df())), multiple = FALSE)
+                choices = c(names(the.df()), "absence"), multiple = FALSE)
     } else {
       if(class(the.df())=="list"){
         
         unique(unlist(Reduce(intersect,lapply(the.df(), names))))->naminun
         
         selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
-                    choices = c("absence", naminun), multiple = FALSE)
+                    choices = c(naminun, "absence"), multiple = FALSE)
       }
     }
   })
