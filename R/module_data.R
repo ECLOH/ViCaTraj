@@ -976,21 +976,28 @@ message("pb seq 360")
     #                         use.names = FALSE))
     if(class(the.df())=="data.frame"){
     selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
-                choices = names(the.df()), multiple = FALSE)
+                choices = c("absence", names(the.df())), multiple = FALSE)
     } else {
       if(class(the.df())=="list"){
         
         unique(unlist(Reduce(intersect,lapply(the.df(), names))))->naminun
         
         selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
-                    choices =naminun, multiple = FALSE)
+                    choices = c("absence", naminun), multiple = FALSE)
       }
     }
   })
   
   THE_VAR<-reactive({
     #req( the.df() )
+
     req( input$VAR_FOR_SELECT)
+    
+    if(input$VAR_FOR_SELECT=="absence"){
+      print('absence 2')
+      "absence"->the.var
+    } else {
+    
     if(class(the.df())=="list"){
       if(sum(sapply(the.df(), FUN = function(di){!input$VAR_FOR_SELECT%in%names(di)}))==0){
         lapply(the.df(), function(di){
@@ -1001,9 +1008,8 @@ message("pb seq 360")
     } else {
       if(class(the.df())=="data.frame"){
         the.df()[ , input$VAR_FOR_SELECT]->the.var
-        
       }
-      
+    }
     }
     
     the.var
@@ -1015,13 +1021,20 @@ message("pb seq 360")
     
     message("COUCOU 625")
     print(THE_VAR())
+    if(THE_VAR()=="absence"){
+      print("absence 3")
+      "absence"->CLASS_VAR
+      choisy<-"absence"
+    } else {
     if( class(THE_VAR() )=="list" ){
       class(THE_VAR()[[1]])->CLASS_VAR
     } else {
     class(THE_VAR())->CLASS_VAR
     }
+      choisy<- c("factor", "character", "numeric", "Date", "integer")
+    }
     shiny::selectInput(inputId = ns("classSelect"), label = "Contrôle de la classe", 
-                       choices =  c("factor", "character", "numeric", "Date", "integer"), 
+                       choices =  choisy, 
                        selected = CLASS_VAR)
   })
   
@@ -1035,6 +1048,11 @@ message("pb seq 360")
     } else {
       THE_VAR()->vars
     }
+    
+    if(input$classSelect=="absence"){
+      print("absence 4")
+      NULL
+    } else {
     
     if(input$classSelect%in%c("numeric", "integer")){
       
@@ -1082,6 +1100,7 @@ message("pb seq 360")
           }
         }
       }
+    }
     }
   })
   
@@ -1146,7 +1165,11 @@ message("pb seq 360")
     datmax<-NA
     req(input$classSelect)
     
-    if(input$classSelect=="factor"){
+    if(input$classSelect=="absence"){
+      print("absence 5")
+     "absence"->choix
+    } else {
+      if(input$classSelect=="factor"){
       
       paste("'", paste(isolate(input$FactSelect), collapse = "','"), "'", sep="")->choix
       paste("c(", choix, ")" )->factor_levels
@@ -1169,6 +1192,7 @@ message("pb seq 360")
           }
         }
       }
+    }
     }
     isolate(input$DATE_FOR_SELECT)->datesse
     if(length(datesse)>1){
@@ -1231,6 +1255,10 @@ message("pb seq 360")
     data_of_subset <-  values$DF_subset_initial
     
     string_for_sub<-sapply(1:nrow(data_of_subset), function(i){
+      if(data_of_subset$VARIABLE[i]=="absence"){
+        print("absence 5")
+        "absence"
+      } else {
       if(grepl(pattern = ",", fixed = TRUE, x = data_of_subset$DATE[i])){
         eval(parse(text = data_of_subset$DATE[i]))->vecda
         
@@ -1275,8 +1303,6 @@ message("pb seq 360")
             }
           }
         }), collapse="&")
-        
-        
       } else {
       paste("BIGLIST2()$", data_of_subset$DATE[i], sep="" )->dfvar
       if(data_of_subset$TYPE[i]=="factor"){
@@ -1337,6 +1363,7 @@ message("pb seq 360")
         }
       }
       }
+      }
     })
     
     data.frame("PAQUET"=data_of_subset$PAQUET, DATE=data_of_subset$DATE, "string_for_sub"=string_for_sub, 
@@ -1380,6 +1407,35 @@ message("pb seq 360")
           print(STRING_FOR_SUB()$DATE[i])
           print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST2()))
           
+          if(STRING_FOR_SUB()$string_for_sub[i]=="absence"){
+            print("absence 1")
+            if(grepl(pattern = ",", x = STRING_FOR_SUB()$DATE[i], fixed = TRUE)){
+              sapply(names(BIGLIST2()), function(dat.i){
+                regexpr(pattern = dat.i, text = STRING_FOR_SUB()$DATE[i], fixed = TRUE)->datinfo
+                substr(STRING_FOR_SUB()$DATE[i], start = datinfo[1], stop = ((datinfo[1]+ attributes(datinfo)$match.length)-1) )->thedat
+                thedat
+              })->thedat
+              id.remove<-unlist(lapply(thedat, function(di){
+                BIGLIST2()[[di]][ , INDVAR()]
+              }), use.names = FALSE)
+              res.abs<-unlist(lapply( BIGLIST2(), function(x){x[ , INDVAR()]}))[!unlist(lapply( BIGLIST2(), function(x){x[ , INDVAR()]}))%in%id.remove]
+            } else {
+              res.abs<-unlist(
+                lapply(
+                  BIGLIST2(), function(x){
+                    x[ , INDVAR()]
+                    }
+                  )
+                )[!unlist(
+                  lapply(
+                    BIGLIST2(), function(x){
+                      x[ , INDVAR()]
+                      }
+                    )
+                  )%in%BIGLIST2()[[STRING_FOR_SUB()$DATE[i]]][ , INDVAR()]]
+            }
+            return(res.abs)
+          } else {
           if(grepl(pattern = ",", x = STRING_FOR_SUB()$DATE[i], fixed = TRUE)){
             as.character(STRING_FOR_SUB()$string_for_sub[i])->multidatesub
             strsplit(x = multidatesub, split = "&", fixed = TRUE)[[1]]->multconditionsdates
@@ -1405,9 +1461,10 @@ message("pb seq 360")
               }
               sapply(thedat, function(di){
                 subset(BIGLIST2()[[di]], 
-                       eval(parse(text = cond.i )) )[ , INDVAR()]->res.di
+                       eval(parse(text = cond.i )))[ , INDVAR()]->res.di
                 res.di
               })->resdi
+              
               resdi[lengths(resdi) != 0]->resdi
               Reduce(intersect, resdi)->res
               message("close 1154")
@@ -1433,8 +1490,7 @@ message("pb seq 360")
             subset(BIGLIST2()[[STRING_FOR_SUB()$DATE[i]]], 
                    eval(parse(text = as.character(STRING_FOR_SUB()$string_for_sub[i]) )) )[ , INDVAR()]
           }
-          
-
+          }
         }
       })
       #names(list.of.inf.by.cond)<-
