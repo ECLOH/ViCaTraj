@@ -394,7 +394,7 @@ module_data <- function(input, output, session) {
   CLASS_LIST_OBJSEQ<-reactive({
     req( LIST_OBJSEQ())
     lapply(LIST_OBJSEQ(), class)->class.listSEQ
-    print(class.listSEQ)
+    #print(class.listSEQ)
     lapply(class.listSEQ, function(xi){sum(grepl(pattern = "stslist", x = xi))})->li2
     li2
   })
@@ -500,7 +500,7 @@ message("pb seq 360")
     req(input$DataType)
     if(input$DataType=="fichier"){
       req(data())
-      print(head(data()[[1]]))
+      #print(head(data()[[1]]))
       return(data())
     } else {
       if(input$DataType=="objseq"){
@@ -557,8 +557,8 @@ message("pb seq 360")
   
   
   output$CONTROLNAMES<-renderText({
-    print("coucou 315")
-    print(names(BIGLIST1() ))
+    #print("coucou 315")
+    #print(names(BIGLIST1() ))
     return(print(names(BIGLIST1() )))
     })
   
@@ -573,7 +573,7 @@ message("pb seq 360")
       top<-1
     }
     seq(from=base, to = top, by=input$PAS_TEMPS_BIGDATA)->SEQ
-    print( names(BIGLIST1())[SEQ]  )
+    #print( names(BIGLIST1())[SEQ]  )
   })
 
   
@@ -631,7 +631,7 @@ message("pb seq 360")
             names(bi)
           })->lina
           unique(unlist(lina))->glona
-          print(glona)
+          #print(glona)
           message<-h5("Renseignez la variable dans les données complémentaires qui correspond à l'attribut row.names de l'objet seqdata")
         } else {
           if(input$DataType=="fichier"){
@@ -785,7 +785,7 @@ message("pb seq 360")
         }
       } else {
         message("CHERCHEZ l'ERREUR 1")
-        print(BIGLIST1.COMP())
+        #print(BIGLIST1.COMP())
         return(BIGLIST1.COMP())
         message("CHERCHEZ l'ERREUR 1")
         
@@ -809,14 +809,14 @@ message("pb seq 360")
     data.frame(lapply(BIGLIST1(), nrow))->df1
     data.frame(lapply(BIGLIST2(), nrow))->df2
     message("control 597")
-    print(control_dupli_na())
+    #print(control_dupli_na())
     control_dupli_na()->dfnadoub
     row.names(dfnadoub)<-dfnadoub$DATE
     names(dfnadoub)[names(dfnadoub)=="NA_values"]<-"Nb de NA dans variable d'ID"
     names(dfnadoub)[names(dfnadoub)=="Duplicated"]<-"Nb de doublons dans variable d'ID"
     data.frame(t(dfnadoub), stringsAsFactors = FALSE)->dfnadoub
     message("coucou 588")
-    print(dfnadoub)
+    #print(dfnadoub)
     
     message(names(dfnadoub))
     message(names(df1))
@@ -854,19 +854,19 @@ message("pb seq 360")
     
     
     
-    print("COUCOU 456")
-    print("req(input$addvar) : ")
-    print(input$addvar)
-    print("end")
+    #print("COUCOU 456")
+    #print("req(input$addvar) : ")
+    #print(input$addvar)
+    #print("end")
     if(!is.null(input$addvar)){
     if(input$addvar==TRUE){
       
       req(input$MERGEORIGINVAR, input$MERGEADDVAR)
       if((input$MERGEORIGINVAR!=""&input$MERGEADDVAR!="")|(!is.null(input$MERGEORIGINVAR)&!is.null(input$MERGEADDVAR))){
-        print("COUCOU 460")
+        #print("COUCOU 460")
         
-        print(input$MERGEORIGINVAR)
-        print(input$MERGEADDVAR)
+        #print(input$MERGEORIGINVAR)
+        #print(input$MERGEADDVAR)
         req(ADDDATA())
         
         if(length(input$DATE_FOR_SELECT)>1){
@@ -881,24 +881,24 @@ message("pb seq 360")
         }
         
       } else {
-        print("COUCOU 465")
+        #print("COUCOU 465")
         
         tempdf->tempdf2
       }
     } else {
       if(input$addvar==FALSE){
         tempdf->tempdf2
-        print("COUCOU 470")
+        #print("COUCOU 470")
       }
     }
     } else {
       tempdf->tempdf2
-      print("COUCOU 470")
+      #print("COUCOU 470")
     }
     
-    #print("tempdf2")
-    #print(tempdf2)
-    print("COUCOU 485")
+    ##print("tempdf2")
+    ##print(tempdf2)
+    #print("COUCOU 485")
     return(tempdf2)
     
   })->the.df
@@ -907,7 +907,7 @@ message("pb seq 360")
   
   output$ADDDATA_CSV<-renderUI({
     ns <- session$ns
-    print(input$addvar)
+    #print(input$addvar)
     if(!is.null(input$addvar)){
     if(input$addvar==TRUE){
       #req(input$addvar)
@@ -960,7 +960,7 @@ message("pb seq 360")
       input$DATE_FOR_SELECT[1]->dats
     }
     BIGLIST2()[[dats]]->tempdf
-    print(names(tempdf))
+    #print(names(tempdf))
     updateSelectInput(session=session, inputId = "MERGEORIGINVAR", choices = names(tempdf), selected=NULL)
   })
   
@@ -971,7 +971,7 @@ message("pb seq 360")
     ns <- session$ns
     #req(the.df())
     #print(head(the.df()))
-    print("on est là")
+    #print("on est là")
     #mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = list_csv(), FUN = names))), 
     #                         use.names = FALSE))
     if(class(the.df())=="data.frame"){
@@ -994,7 +994,7 @@ message("pb seq 360")
     req( input$VAR_FOR_SELECT)
     
     if(input$VAR_FOR_SELECT=="absence"){
-      print('absence 2')
+      #print('absence 2')
       "absence"->the.var
     } else {
     
@@ -1020,9 +1020,9 @@ message("pb seq 360")
     req(THE_VAR() )
     
     message("COUCOU 625")
-    print(THE_VAR())
+    #print(THE_VAR())
     if(THE_VAR()=="absence"){
-      print("absence 3")
+      #print("absence 3")
       "absence"->CLASS_VAR
       choisy<-"absence"
     } else {
@@ -1050,7 +1050,7 @@ message("pb seq 360")
     }
     
     if(input$classSelect=="absence"){
-      print("absence 4")
+      #print("absence 4")
       NULL
     } else {
     
@@ -1115,8 +1115,8 @@ message("pb seq 360")
       THE_VAR()->vars
     }
     
-    print(vars)
-    print(as.character(input$DATEformat))
+    #print(vars)
+    #print(as.character(input$DATEformat))
     if(class(vars)=="Date"){
       vars->THE_VAR_DATE
     } else {
@@ -1128,12 +1128,12 @@ message("pb seq 360")
         }
       }
     }
-    print(THE_VAR_DATE)
-    print(class(THE_VAR_DATE))
+    #print(THE_VAR_DATE)
+    #print(class(THE_VAR_DATE))
     min(THE_VAR_DATE, na.rm = TRUE)->mindate
-    print(mindate)
+    #print(mindate)
     max(THE_VAR_DATE, na.rm = TRUE)->maxdate
-    print(maxdate)
+    #print(maxdate)
     shiny::updateDateRangeInput(session = session, inputId = "DATE_RANGE", start = mindate, end=maxdate)
   })
   
@@ -1149,7 +1149,7 @@ message("pb seq 360")
     }
     
     vars[!is.na(vars)]->the.var2
-    print(head(the.var2, 20))
+    #print(head(the.var2, 20))
   })
   
   ##### ADD ROW #####
@@ -1166,7 +1166,7 @@ message("pb seq 360")
     req(input$classSelect)
     
     if(input$classSelect=="absence"){
-      print("absence 5")
+      #print("absence 5")
      "absence"->choix
     } else {
       if(input$classSelect=="factor"){
@@ -1181,7 +1181,7 @@ message("pb seq 360")
         if(input$classSelect=="Date"){
           isolate(input$DATE_RANGE)->choix
           message("choix date")
-          print(choix)
+          #print(choix)
           as.character(choix[1])->datmin
           as.character(choix[2])->datmax
         } else {
@@ -1220,8 +1220,8 @@ message("pb seq 360")
               # )
                
     )->vecto 
-    print("vecto")
-    print(vecto)
+    #print("vecto")
+    #print(vecto)
     
     isolate(values$DF_subset_initial <- rbind(values$DF_subset_initial , vecto))
     
@@ -1256,7 +1256,7 @@ message("pb seq 360")
     
     string_for_sub<-sapply(1:nrow(data_of_subset), function(i){
       if(data_of_subset$VARIABLE[i]=="absence"){
-        print("absence 5")
+        #print("absence 5")
         "absence"
       } else {
       if(grepl(pattern = ",", fixed = TRUE, x = data_of_subset$DATE[i])){
@@ -1381,7 +1381,7 @@ message("pb seq 360")
     
     if(input$addCONDS==TRUE){
       req(STRING_FOR_SUB() )
-      print(STRING_FOR_SUB())
+      #print(STRING_FOR_SUB())
       if(nrow(STRING_FOR_SUB())<2&STRING_FOR_SUB()$string_for_sub[1]=="nosub"){
         message("COUCOU 790")
         lapply(BIGLIST2(), function(bil){
@@ -1399,16 +1399,16 @@ message("pb seq 360")
         } else {
           
           message("coucou 1084")
-          print(STRING_FOR_SUB())
+          #print(STRING_FOR_SUB())
           message("coucou 1086")
-          print(names(BIGLIST2()))
+          #print(names(BIGLIST2()))
           message("coucou 1088")
           
-          print(STRING_FOR_SUB()$DATE[i])
-          print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST2()))
+          #print(STRING_FOR_SUB()$DATE[i])
+          #print(STRING_FOR_SUB()$DATE[i]%in%names(BIGLIST2()))
           
           if(STRING_FOR_SUB()$string_for_sub[i]=="absence"){
-            print("absence 1")
+            #print("absence 1")
             if(grepl(pattern = ",", x = STRING_FOR_SUB()$DATE[i], fixed = TRUE)){
               sapply(names(BIGLIST2()), function(dat.i){
                 regexpr(pattern = dat.i, text = STRING_FOR_SUB()$DATE[i], fixed = TRUE)->datinfo
@@ -1469,13 +1469,13 @@ message("pb seq 360")
               Reduce(intersect, resdi)->res
               message("close 1154")
               message("cond.i")
-              print(cond.i)
+              #print(cond.i)
               message("thedat")
-              print(thedat)
+              #print(thedat)
               message("resdi")
-              print(resdi)
+              #print(resdi)
               message("res")
-              print(res)
+              #print(res)
               return(res)
               
               
@@ -1495,7 +1495,7 @@ message("pb seq 360")
       })
       #names(list.of.inf.by.cond)<-
       
-      print(list.of.inf.by.cond)
+      #print(list.of.inf.by.cond)
       message("COUCOU 809")
       
       output$CONTROL_LIST.OF.INF<-renderText({unlist(list.of.inf.by.cond)})
@@ -1505,7 +1505,7 @@ message("pb seq 360")
         unique(unlist(list.of.inf.by.cond[indexes.pi]))
       })->ind.by.paq
       ind.by.paq[lengths(ind.by.paq) != 0]->ind.by.paq
-      print(ind.by.paq)
+      #print(ind.by.paq)
       message("COUCOU 819")
       
       Reduce(intersect, ind.by.paq)->ind.all.paq
@@ -1567,7 +1567,7 @@ message("pb seq 360")
         message("coucou1279")
         mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = SUBSETTED_LIST(), FUN = names))),
                                  use.names = FALSE))
-        print(mycolumns)
+        #print(mycolumns)
         if(length(SUBSETTED_LIST())>1){
           updateSelectInput(session = session, inputId = "timecol", choices = mycolumns, label = "Choisir la variable commune aux data.frame utilisée pour construire les trajectoires:")
         list(
@@ -1609,31 +1609,41 @@ message("pb seq 360")
       Reduce(function(x, y) merge(x, y, by.x=names(x)[grepl(pattern = input$INDVAR, x = names(x), ignore.case = FALSE)], 
                                   by.y=names(y)[grepl(pattern = input$INDVAR, x = names(y), ignore.case = FALSE)], 
                                   all=TRUE), DATAlist.sampled.simple)->df_RSA.sampled
-      print(head(df_RSA.sampled))
+      #print(head(df_RSA.sampled))
       
       
       
       names(df_RSA.sampled)<-c(input$INDVAR, names(SUBSETTED_LIST()))# c(input$INDVAR, paste(1:(ncol(df_RSA.sampled)-1), "_VAR"))
-      
+      print("-------------------------------------------")
+      print("control error 1618")
+      print(dim(df_RSA.sampled))
       print(head(df_RSA.sampled))
-      
-      print(names(df_RSA.sampled))
-      print(names(df_RSA.sampled))
-      
+      print("-------------------------------------------")
       
       merge(df_RSA.sampled, 
-            SUBSETTED_LIST()[[1]][ , !grepl(pattern = input$timecol, x = names(SUBSETTED_LIST()[[1]]))], 
+            SUBSETTED_LIST()[sapply(SUBSETTED_LIST(), function(x){dim(x)[1]})>1][[1]][ , !grepl(pattern = input$timecol, x = names(SUBSETTED_LIST()[[1]]))], 
             by.x = input$INDVAR, 
-            by.y =  names( SUBSETTED_LIST()[[1]] )[grepl(pattern = input$INDVAR, x=names(SUBSETTED_LIST()[[1]]), fixed = TRUE)][1])->df_RSA.sampled2
+            by.y =  names( SUBSETTED_LIST()[sapply(SUBSETTED_LIST(), function(x){dim(x)[1]})>1][[1]] )[grepl(pattern = input$INDVAR, x=names(SUBSETTED_LIST()[sapply(SUBSETTED_LIST(), function(x){dim(x)[1]})>1][[1]]), fixed = TRUE)][1])->df_RSA.sampled2
+      
+      print("%%%%%%%%%%")
+      print(dim(SUBSETTED_LIST()[[1]]))
+      print("%%%%%%%%%%")
+      
+      print("-------------------------------------------")
+      print("control error 1630")
+      print(dim(df_RSA.sampled2))
+      print(head(df_RSA.sampled2))
+      print("-------------------------------------------")
+      
       
       df_RSA.sampled2->df.pour.seq
       
-      print("THE DATA")
-      print(head(df_RSA.sampled2))
-      print("INDVAR")
-      print(input$INDVAR)
-      print("grepl input$timecol")
-      print(head(df_RSA.sampled[ , grepl(pattern = input$timecol, x=names(df_RSA.sampled))]))
+      #print("THE DATA")
+      #print(head(df_RSA.sampled2))
+      #print("INDVAR")
+      #print(input$INDVAR)
+      #print("grepl input$timecol")
+      #print(head(df_RSA.sampled[ , grepl(pattern = input$timecol, x=names(df_RSA.sampled))]))
       
       df.pour.seq
     } else {
@@ -1641,7 +1651,7 @@ message("pb seq 360")
         req(SUBSETTED_LIST())
         req(input$timecol)
         message("COUCOU 1242")
-        print(input$timecol)
+        #print(input$timecol)
         
         if (length(input$timecol)<2){
           showModal(modalDialog(
@@ -1652,10 +1662,10 @@ message("pb seq 360")
         }
         else {
         message("coucou 1259")
-          print(head(SUBSETTED_LIST()[["Table.unique"]]))
+          #print(head(SUBSETTED_LIST()[["Table.unique"]]))
         SUBSETTED_LIST()[["Table.unique"]][ , c(input$INDVAR,  input$timecol)]->df.pour.seq
         message("coucou 1261")
-          print(head(df.pour.seq))
+          #print(head(df.pour.seq))
           return(df.pour.seq)
         }
       }
@@ -1701,10 +1711,13 @@ message("pb seq 360")
     } else {
       if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
         
-        DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq#grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
+        DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq
+        
       }
     }
-    
+    print("######################################")
+    print("error control 1708")
+    print(dataforseq)
     updateNumericInput(session = session, inputId = "criterNb", max = (ncol(dataforseq)-1))
   })
   
@@ -1737,11 +1750,18 @@ message("pb seq 360")
         DR_POUR_SEQ_OBJ()->df.pour.seq
         
         
-        print(DR_POUR_SEQ_OBJ()[ , input$INDVAR][duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR])])
+        #print(DR_POUR_SEQ_OBJ()[ , input$INDVAR][duplicated(DR_POUR_SEQ_OBJ()[ , input$INDVAR])])
         
         if(!is.null(DR_POUR_SEQ_OBJ())){
           
          # DR_POUR_SEQ_OBJ()[ , grepl("_VAR", x = names(DR_POUR_SEQ_OBJ()))&names(DR_POUR_SEQ_OBJ())!=input$INDVAR]->dataforseq
+          print("control error 1745")
+          print("######################")
+          print(DR_POUR_SEQ_OBJ())
+          print("######################")
+          print(length(SUBSETTED_LIST()))
+          print("######################")
+          
           DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq
           
           
@@ -1750,6 +1770,9 @@ message("pb seq 360")
         
           dataforseq[]<-lapply(dataforseq, as.character)
           for(miss.i in missing_codes()){
+            #### ERROR ####
+            print("control error 1754")
+            print(dataforseq)
             dataforseq[dataforseq==miss.i]<-NA
           }
           
@@ -1829,7 +1852,7 @@ message("pb seq 360")
   output$ATTR_TRAJ_OBJ<-renderUI({
     ns <- session$ns
     attributes(data.seq() )->list.attr
-    print(list.attr)
+    #print(list.attr)
     list.attr[names(list.attr)!="row.names"]->list.attr
     lapply(1:length(list.attr), function(li){
       list(
@@ -1897,8 +1920,8 @@ message("pb seq 360")
       x[ , input$INDVAR]->indpresents
       
       row.names(data.seq())[!row.names(data.seq())%in%indpresents]->notpresents
-      print(indpresents)
-      print(notpresents)
+      #print(indpresents)
+      #print(notpresents)
       
       if(length(notpresents)>0){
         data.frame(
