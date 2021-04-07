@@ -32,7 +32,8 @@ jscode <- "shinyjs.refresh = function() { history.go(0); }"
 
 #### UI ####
 
-ui <- shinyUI(navbarPage(title = HTML("<a href=\"javascript:history.go(0)\" style='color: white;' >ViCaTraj <img src='LOGO_REFRESH_clair.png' style='width:40px;height:40px;'> </a>"), id="page", collapsible=TRUE, inverse=FALSE,
+ui <- shinyUI(navbarPage(windowTitle = "ViCaTraj",
+                         title = HTML("<a href=\"javascript:history.go(0)\" style='color: white;' >ViCaTraj <img src='LOGO_REFRESH_clair.png' style='width:40px;height:40px;'> </a>"), id="page", collapsible=TRUE, inverse=FALSE,
                          theme=shinytheme("sandstone"),#fluidPage(theme = shinytheme("flatly"),
                          #div(style = "position:absolute;right:1em;", 
                         #     actionButton('load_inputs', 'Load inputs'),
