@@ -541,7 +541,9 @@ message("pb seq 360")
             if(input$PAS_TEMPS_BIGDATA==""){bypas<-1} else {bypas<-input$PAS_TEMPS_BIGDATA}
             if(!is.numeric(bypas)|bypas<=0){bypas<-1}
             } else {bypas<-1}
-            
+            if(FROM>TO){
+              bypas<-(-bypas)
+            }
             vecsel<-seq(FROM, TO, bypas) 
           }
             #}
@@ -582,6 +584,12 @@ message("pb seq 360")
     if(length(top)!=1){
       top<-1
     }
+    print("####################################")
+    print(base)
+    print(top)
+    print(input$PAS_TEMPS_BIGDATA)
+    print("####################################")
+    
     seq(from=base, to = top, by=input$PAS_TEMPS_BIGDATA)->SEQ
     #print( names(BIGLIST1())[SEQ]  )
   })
@@ -1789,8 +1797,14 @@ message("pb seq 360")
           
           DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq
           
+          deb<-which(names(dataforseq)==input$PICKDATE1.deb)
+          fin<-which(names(dataforseq)==input$PICKDATE1.fin)
+          myby<- input$PAS_TEMPS_TRAJ
+          if(deb>fin){
+            myby<-(-myby)
+          }
           
-          dataforseq[ , seq(which(names(dataforseq)==input$PICKDATE1.deb), which(names(dataforseq)==input$PICKDATE1.fin), by = input$PAS_TEMPS_TRAJ)]->dataforseq
+          dataforseq[ , seq(deb, fin, by = myby)]->dataforseq
           
         
           dataforseq[]<-lapply(dataforseq, as.character)
