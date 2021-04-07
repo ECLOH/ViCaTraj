@@ -19,8 +19,6 @@ module_select_and_plot2(input, output, session, data)
 \item{output}{internal}
 
 \item{session}{internal}
-
-\item{data.comp}{}
 }
 \description{
 server function

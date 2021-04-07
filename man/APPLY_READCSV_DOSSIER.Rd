@@ -23,13 +23,13 @@ APPLY_READCSV_DOSSIER(
 
 \item{autre.pattern}{autre pattern qui permettra de filtrer les fichiers}
 
-\item{liste_existante}{une liste existe-t-elle déjà? Si non null, alors la fonction va essayer d'identifier les mois non pris en compte dans la liste, lire les fichiers correspondants et les insérer.}
+\item{liste_existante}{une liste existe-t-elle déjà? Si non null, alors la fonction va essayer d'identifier les mois non pris en compte dans la liste, lire les fichiers correspondants et les insérer}
 
 \item{variable_identification_fichiers}{éventuelle variable dans les data.frames de la liste_existante qui donne les fichiers source. Non obligatoire.}
 
 \item{vec.correspondance.names}{ECRASE 'variable_identification_fichiers' et "seq.dates". Vecteur nommé avec les fichiers à aller chercher (à ajouter), présents dans 'emplacement.dossier' et nommé avec le nom qu'on souhaite leur attribuer dans le datalist final.}
 
-\item{seq.dates}{pour éviter que la fonction cré les noms des data.frames ajoutés à partir de leur nom de fichier, on peut spécifier une séquence de date : c("date d'origine", "date d'arrivée", interval de temps), au format suivant : c("01/01/2020", "01/08/2020", "month"). Format de date : "%d/%m/%Y" et interval accepeté par la fonction seq.Date()}
+\item{seq.dates}{pour éviter que la fonction crée les noms des data.frames ajoutés à partir de leur nom de fichier, on peut spécifier une séquence de date : c("date d'origine", "date d'arrivée", interval de temps), au format suivant : c("01/01/2020", "01/08/2020", "month"). Format de date : "%d/%m/%Y" et interval accepeté par la fonction seq.Date()}
 
 \item{combine_new}{si TRUE alors retourne une liste déjà combinée (contient liste_existante et les nouveaux data.frame). Si FALSE ne retourne que la liste des nouveaux data.frames (utile si on veut économiser de la mémoire). On peut faire ensuite: c(liste_existante, nouvelle_liste)}
 

@@ -1,6 +1,5 @@
 #' @title   select_and_plot
 #' @description  A shiny Module qui permet de sélectionner des données et de représenter les trajectoires
-#'
 #' @param id shiny id
 #' @param label fileInput label
 #' @importFrom stringr str_detect
@@ -91,7 +90,6 @@ module_select_and_plot2_UI <- function(id){#label = "CSV file") {
 #' @param session internal
 #' @param obj.seq
 #' @param data.comp
-#'
 #' @importFrom utils read.csv
 #' @importFrom glue glue
 #' @export

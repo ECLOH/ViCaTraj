@@ -1,6 +1,5 @@
 #' @title   type de file, select of ind and data
 #' @description  A shiny Module that imports data, select them and export as output: data.for.seq, data.comp
-#'
 #' @param id shiny id
 #' @param label fileInput label
 #' @importFrom stringr str_detect
@@ -202,30 +201,41 @@ module_data_UI <- function(id){#label = "CSV file") {
                                                 sidebarPanel( #h3("Sélection des individus:"), 
                                                   width = 12,
                                                   hr(),
+                                                  shiny::column(width = 6,
                                                   #shiny::column(width=6, 
                                                   uiOutput(ns("UI_PAQUET_SELECT")),
-                                                  helpText("INFO: "),
-                                                  helpText("toutes les conditions ajoutées dans le même paquet ne sont pas additives (utilisation de l'opérateur logique 'ou' ('|')."),
-                                                  helpText("toutes les conditions ajoutées dans des paquets différents sont additives (utilisation de l'opérateur logique 'et' entre les paquets de conditions ('&'))."),
-                                                  
+                                                  br(),
+                                                  helpText(" - toutes les conditions ajoutées dans le même paquet ne sont pas additives (utilisation de l'opérateur logique 'ou' ('|')."),
+                                                  helpText(" - toutes les conditions ajoutées dans des paquets différents sont additives (utilisation de l'opérateur logique 'et' entre les paquets de conditions ('&')).")
+                                                  ),
+                                                  shiny::column(width = 6,
                                                   shiny::uiOutput(ns("UI_DATE_SELECT")),
-                                                  helpText("ATTENTION : si vous sélectionnez plusieurs dates simultanément, ne seront retenus que les individus qui remplissent la condition pour TOUTES les dates sélectionnées."),
+                                                  br(),
+                                                  helpText(" - si vous sélectionnez plusieurs dates simultanément, ne seront retenus que les individus qui remplissent la condition pour TOUTES les dates sélectionnées.")),
                                                   
                                                   #shiny::checkboxInput(inputId = ns("addvar"), label = "Ajouter une variable d'un jeu de donnée tiers?", value = FALSE),
-                                                  
+                                                  shiny::column(12, 
                                                   shiny::uiOutput(ns("ADDDATA_CSV")),
-                                                  
                                                   uiOutput(ns("UI_VAR_SELECT")),#), 
                                                   #shiny::column(width=12, 
                                                   uiOutput(ns("UI_CLASS_SELECT")),#),
-                                                  uiOutput(ns("UI_MOD_SELECT")),
+                                                  uiOutput(ns("UI_MOD_SELECT"))
+                                                  ),
                                                   hr(),
+                                                  hr(),
+                                                  shiny::column(width = 12,
                                                   
                                                   actionButton(inputId=ns("addROW"), label = "Ajouter la condition"),
+                                                  
                                                   #),
-                                                  actionButton(inputId = ns('delROW'), label = "Supprimer les conditions sélectionnées"),
+                                                  actionButton(inputId = ns('delROW'), label = "Supprimer les conditions sélectionnées")),
+                                                  br(),
+                                                  shiny::column(width = 12,
+                                                                br(),
                                                   DT::DTOutput(ns("TABLE_POUR_SELECTION"))
-                                                )
+                                                  )
+                                                  )
+                                                
                                               )#,
                                               #### CONTROLS A AJOUTER ####
                                               #textOutput(ns("LENGTH_IND_SUBS")),
@@ -591,7 +601,7 @@ message("pb seq 360")
   ##### DEFINE INPUTS #####
   output$UI_PAQUET_SELECT<-renderUI({
     ns <- session$ns
-    shiny::numericInput(inputId=ns("PAQUET_FOR_SELECT"), value=1, label = "Paquet : ", min = 1, step = 1)
+    shiny::numericInput(inputId=ns("PAQUET_FOR_SELECT"), value=1, label = "Paquet : ", min = 1, step = 1, width = "20%")
   })
   
   output$UI_DATE_SELECT<-renderUI({
@@ -599,7 +609,7 @@ message("pb seq 360")
     #reactive({
     names(BIGLIST1())->names.pick
     shiny::selectInput(inputId = ns("DATE_FOR_SELECT"), label = "Date pour sélection:",
-                       choices = names.pick, multiple = TRUE)
+                       choices = names.pick, multiple = TRUE, width = "35%")
   })
   #### SELECT VAR et MODLITE ####
   
@@ -973,17 +983,31 @@ message("pb seq 360")
     #print(head(the.df()))
     #print("on est là")
     #mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = list_csv(), FUN = names))), 
-    #                         use.names = FALSE))
+    #                         use.names = FALSE)
+    
     if(class(the.df())=="data.frame"){
+      
+      if(req(input$DataType)=="objet"){
+        the.choices<-c(names(the.df()), "Individus absents à date")
+      } else {
+        the.choices<-c(names(the.df()))
+      }
+      
     selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
-                choices = c(names(the.df()), "absence"), multiple = FALSE)
+                choices = the.choices, multiple = FALSE)
     } else {
       if(class(the.df())=="list"){
         
         unique(unlist(Reduce(intersect,lapply(the.df(), names))))->naminun
         
+        if(req(input$DataType)=="objet"){
+          the.choices<-c(naminun, "Individus absents à date")
+        } else {
+          the.choices<-c(naminun)
+        }
+        
         selectInput(inputId = ns("VAR_FOR_SELECT"), label = "Variable pour sélection", 
-                    choices = c(naminun, "absence"), multiple = FALSE)
+                    choices = the.choices, multiple = FALSE)
       }
     }
   })
@@ -993,7 +1017,7 @@ message("pb seq 360")
 
     req( input$VAR_FOR_SELECT)
     
-    if(input$VAR_FOR_SELECT=="absence"){
+    if(input$VAR_FOR_SELECT== "Individus absents à date"){
       #print('absence 2')
       "absence"->the.var
     } else {
@@ -1255,7 +1279,8 @@ message("pb seq 360")
     data_of_subset <-  values$DF_subset_initial
     
     string_for_sub<-sapply(1:nrow(data_of_subset), function(i){
-      if(data_of_subset$VARIABLE[i]=="absence"){
+      # HERE
+      if(data_of_subset$VARIABLE[i]=="Individus absents à date"){
         #print("absence 5")
         "absence"
       } else {
