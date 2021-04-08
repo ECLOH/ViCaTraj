@@ -61,13 +61,18 @@ ui <- shinyUI(navbarPage(windowTitle = "ViCaTraj",
                                     h4("3. Classification des trajectoires : "),
                                     tags$p("L'application permet aussi de générer des classes de trajectoires à partir de méthodes basiques (Optimal Matching et ses dérivés principalement). Néanmoins, pour une classification fine et pleinement paramétrable, il serais préférable d'utiliser directement les diverses fonctions existantes dans une interface R classique."),
                                     tags$hr(),
-                                    tags$h4("Licence et références :  "),
-                                    img(src='LICENCE_VICATRAJ.png', align = "left"),
-                                    tags$p("Application sous licence CC BY-NC-SA."),
-                                    tags$p("Adresse du code source : ", tags$a("https://github.com/ECLOH/ViCaTraj")),
+                                    tags$b("Licence et références :"),
+                                    #img(src='LICENCE_VICATRAJ.png', align = "left"),
+                                    tags$p("Le code de l'application est sous licence GNU General Public License v3.0"),tags$a("https://www.gnu.org/licenses/quick-guide-gplv3.html"), tags$p("Adresse du code source : ", tags$a("https://github.com/ECLOH/ViCaTraj")),
                                     tags$p("Application qui utilise massivement les fonctions incluses dans le package 'TraMineR'.  Voir pour les références et l'excellente documentation : ", tags$a("http://traminer.unige.ch/index.shtml")),
-                                    tags$p("Application générée grâce au logiciel 'R' et en particulier aux packages 'shiny' et 'ggplot' "),
-                                    tags$p()
+                                    tags$p("Application générée grâce au logiciel 'R' et en particulier aux packages 'shiny' et 'ggplot2'."),
+                                    hr(),
+                                    tags$b("Pincipaux contributeurs : "),
+                                    tags$p("- Elie Chosson (Mission Régionale d'Information sur l'Exclusion)"),
+                                    tags$p("- Luc-Olivier Hervé (Conseil Départemental de Loire-Atlantique et cour des comptes)"),
+                                    tags$p("- Mélanie Boscher (Conseil Départemental de Loire-Atlantique)"),
+                                    tags$p("- Avec le soutien du Conseil Départemental de l'Isère, en particulier de Yoann Morin")
+                                           
                                     
   
                                   )
