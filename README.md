@@ -99,3 +99,24 @@ L'application permet aussi de générer des classes de trajectoires à partir de
 Les groupes peuvent être enregistrés localement et réutilisés dans R  ou dans l'application. 
 
 Néanmoins, pour une classification fine et pleinement paramétrable, il serais préférable d'utiliser directement les diverses fonctions existantes dans une interface R classique.
+
+**Licence et références :**
+Le code de l'application est sous licence GNU General Public License v3.0
+https://www.gnu.org/licenses/quick-guide-gplv3.html
+
+Adresse du code source : https://github.com/ECLOH/ViCaTraj (vous pouvez contribuer!)
+
+Application générée grâce au logiciel 'R' et en particulier aux packages 'shiny' et 'ggplot2'.
+
+**Pincipaux contributeurs :**    
+
+- Elie Chosson (Mission Régionale d'Information sur l'Exclusion)    
+
+
+- Luc-Olivier Hervé (Conseil Départemental de Loire-Atlantique et cour des comptes)   
+
+
+- Mélanie Boscher (Conseil Départemental de Loire-Atlantique)   
+
+
+- Avec le soutien du Conseil Départemental de l'Isère, en particulier de Yoann Morin
