@@ -27,7 +27,7 @@ L'application permet dans un premier temps de construire des trajectoires à par
 
 Trois types de fichiers peuvent être chargés dans l'application :
 
-1. un fichier .csv avec des données au format 'wide' : une colonne par variable et par date, et à la suite une colonne par variable complémentaire.    
+1. un fichier .csv avec des données au format *'wide'* : une colonne par variable et par date, et à la suite une colonne par variable complémentaire.    
 
    | VARIABLE_IDENTIFIANT | RSA_1 | RSA_2  | RSA_3 | RSA_... | SEXE | COMMUNE_HABITATION | ...  |
    | -------------------- | ----- | ------ | ----- | --------- | ---- | ------------------ | ---- |
@@ -35,7 +35,8 @@ Trois types de fichiers peuvent être chargés dans l'application :
    | 2                    | NA    | RSA    | RSA   | ...       | F    | Lyon               | ...  |
    | 3                    | RSA   | Sortie | NA    | ...       | NA   | Grenoble           | ...  |
 
-2. un fichier .RData comportant une liste (`list()`) avec un objet 'trajectoire' créé par la fonction `seqdef()` et un data.frame comportant des données complémentaires. Dans ce cas, les noms de ligne (`row.names()`) des trajectoires doivent correspondre avec une colonne de variable d'identifiant individuel dans le data.frame (variable à spécifier dans l'application).    
+2. un fichier .RData comportant une liste (`list()`) avec un objet 'trajectoire' créé par la fonction `seqdef()` et un data.frame comportant des données complémentaires. 
+Dans ce cas, les noms de ligne (`row.names()`) des trajectoires doivent correspondre avec une variable d'identifiant individuel dans le data.frame (variable à spécifier dans l'application).    
 
    *Exemple de data.frame pour les données complémentaires :*
 
@@ -47,7 +48,7 @@ Trois types de fichiers peuvent être chargés dans l'application :
 
    
 
-3. un fichier .RData comportant une liste ('list()') avec pour chaque date (chaque mois, chaque année, chaque jour, etc) un data.frame avec les valeurs correspondantes. Dans ce cas, les trajectoires pourront être générées à partir de n'importe nom de variable commun aux différentes dates.  
+3. un fichier .RData comportant une liste ('list()') avec pour chaque date (chaque mois, chaque année, chaque jour, etc) un data.frame avec les valeurs correspondantes. Dans ce cas, les trajectoires pourront être générées à partir de n'importe quelle variable commune aux différentes dates.  
 
    *Exemple de liste de data.frames:*
 
@@ -69,11 +70,7 @@ Trois types de fichiers peuvent être chargés dans l'application :
 
    Les individus peuvent absents de certains tableaux de données pour certains mois, ou être présents avec  des valeurs manquantes (NA). 
 
-
-
-A partir de ces différentes sources, des possibilités de sélection d'individus sont offertes (sélection multi-critères sur tous les types de données). 
-
-Chaque sélection constituée dans l'application et qui a donné lieu à la constitution de trajectoires peut être enregistrée localement et réutilisée (dans R ou dans l'application).
+A partir de ces différentes sources, des possibilités de sélection d'individus sont offertes (sélection multi-critères sur tous les types de données ou pour une ou plusieurs dates). Chaque sélection constituée dans l'application et qui a donné lieu à la constitution de trajectoires peut être enregistrée localement et réutilisée (chargée dans la console R ou dans l'application).
 
 ### Note sur le format des données
 
