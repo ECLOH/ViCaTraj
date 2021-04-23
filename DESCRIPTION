@@ -2,8 +2,8 @@ Package: ViCaTraj
 Type: Package
 Title: Construction et visualisation de trajectoires
 Version: 0.1.0
-Depends: shiny, shinythemes, shinycssloaders, ggplot2, TraMineR, TraMineRextras, DT, RColorBrewer, wesanderson, xml2, fastcluster, formattable, ggalluvial, WeightedCluster, data.table
-Imports: shiny, shinythemes, shinycssloaders, ggplot2, TraMineR, TraMineRextras, DT, RColorBrewer, wesanderson, xml2, fastcluster, formattable, ggalluvial, WeightedCluster, data.table
+Depends: stats, dplyr, shiny, shinythemes, shinycssloaders, shinyWidgets, shinyBS, ggplot2, ggthemes, gridExtra, TraMineR, TraMineRextras, DT, RColorBrewer, wesanderson, xml2, readxl, fastcluster, cluster, formattable, ggalluvial, WeightedCluster, data.table, tibble, stringr, forcats 
+Imports: stats, dplyr, shiny, shinythemes, shinycssloaders, shinyWidgets, shinyBS, ggplot2, ggthemes, gridExtra, TraMineR, TraMineRextras, DT, RColorBrewer, wesanderson, xml2, readxl, fastcluster, cluster, formattable, ggalluvial, WeightedCluster, data.table, tibble, stringr, forcats
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
