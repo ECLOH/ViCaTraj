@@ -29,6 +29,7 @@ Imports:
     tidyr,
     tidyverse,
     TraMineR,
+    TraMineRextras,
     utils,
     WeightedCluster,
     wesanderson,
