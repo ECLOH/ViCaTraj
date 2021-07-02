@@ -2,7 +2,7 @@
 
 seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL, 
                              col_selected.r1=col.selected, merge_mods.r1, 
-                             pmin.sup1=0.05, STR.SUBS.1=NULL, SORTV1=NULL, 
+                             pmin.sup1=0.05, STR.SUBS.1=NULL, max.k1=1,SORTV1=NULL, 
                              PAS.temps1=PAS.temps, TIME.varying1=TIME.varying, Pourc.eff1=Pourc.eff, Sens1=Sens){
   
   if(TYPE.r1=="txtr"){
@@ -22,8 +22,63 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
   
   if(is.null(grup_var.r1)){
     if(TYPE.r1!="txtr"){
-  DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1, arrondi=2, pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1, 
+     # message("YOYO")
+  DONNEES_POUR_PLOT(TYPE=TYPE.r1, objseq = objseq.r1, arrondi=2, pmin.sup=pmin.sup1, STR.SUBS=STR.SUBS.1, max.k = max.k1,
                     PAS.temps=PAS.temps1, TIME.varying=TIME.varying1, Pourc.eff=Pourc.eff1, Sens=Sens1)->dats
+  
+  if(TYPE.r1=="sous.seq"){
+    message("debug1")
+    seqecreate(objseq.r1)->seqe2
+    if(is.null(STR.SUBS.1)){
+      seqefsub(seqe2,pmin.support =pmin.sup1,  #str.subseq = unique(dats$event), 
+               max.k = max.k1)->sub2
+    } else {
+      seqefsub(seqe2, str.subseq = STR.SUBS.1, max.k = max.k1, pmin.support =pmin.sup1)->sub2
+    }
+    print(sub2)
+    print(seqe2)
+    if(is.null(grup_var.r1)){
+      dats$CodeValue<-0
+    } else {
+      if(length(unique(grup_var.r1))>1){
+        seqecmpgroup(subseq = sub2, group = grup_var.r1, method = "bonferroni")->discr2
+        cbind("subseq"=as.character(discr2$subseq),  discr2$data)->datdiscr2
+        reshape(datdiscr2, direction = "long", varying = list(colnames(datdiscr2)[grepl("Resid.", colnames(datdiscr2), fixed = TRUE)]), 
+                times = colnames(datdiscr2)[grepl("Resid.", colnames(datdiscr2), fixed = TRUE)])->datdiscr2
+        datdiscr2$CodeValue<-sapply(1:nrow(datdiscr2), function(i){
+          if(datdiscr2$p.value[i]<0.1){
+            if(datdiscr2$p.value[i]>0.05){
+              1} else {
+                if(datdiscr2$p.value[i]>0.01){
+                  2} else {
+                    3
+                  }
+              }
+          } else {0}
+        })
+        datdiscr2$CodeValue<-sapply(1:nrow(datdiscr2), function(i){
+          if(datdiscr2[ , grepl("Resid.", colnames(datdiscr2), fixed = TRUE)][i]<0){
+            -datdiscr2$CodeValue[i]
+          } else {
+            datdiscr2$CodeValue[i]
+          }
+        })
+        datdiscr2$time<-gsub(pattern = "Resid.", replacement = "", fixed = TRUE, x = datdiscr2$time)
+        
+        if(length(intersect(dats$event, datdiscr2$subseq))==length(unique(dats$event))){
+          message("debug2")
+          
+          left_join(dats, datdiscr2[, c("subseq", "time", "CodeValue")], by=c("event"="subseq", "level"="time"))->dats
+        } else {
+          dats$CodeValue<-0
+        }
+      } else {
+        dats$CodeValue<-0
+      }
+    }
+  }
+  
+  
     } else {
     seqtrate(seqdata = objseq.r1, time.varying = TIME.varying1, lag = PAS.temps1 , count = Pourc.eff1 )->tr.tx
     data.frame(as.table(tr.tx))->dfres
@@ -63,23 +118,25 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
       return(dats)
     })->lidat
     do.call("rbind", lidat)->dats
-    #}
     
     if(TYPE.r1=="sous.seq"){
-      message("debug1")
+     # message("debug1")
       seqecreate(objseq.r1)->seqe2
       if(is.null(STR.SUBS.1)){
-      seqefsub(seqe2, str.subseq = unique(dats$event))->sub2
+      seqefsub(seqe2,pmin.support =pmin.sup1,  #str.subseq = unique(dats$event), 
+               max.k = max.k1)->sub2
       } else {
-        seqefsub(seqe2, str.subseq = STR.SUBS.1)->sub2
+        seqefsub(seqe2, str.subseq = STR.SUBS.1, max.k = max.k1, pmin.support =pmin.sup1)->sub2
       }
       print(sub2)
       print(seqe2)
+      
       if(is.null(grup_var.r1)){
         dats$CodeValue<-0
       } else {
       if(length(unique(grup_var.r1))>1){
-      seqecmpgroup(subseq = sub2, group = grup_var.r1)->discr2
+        message("DON'T YOU ROCK MY BOAT")
+      seqecmpgroup(subseq = sub2, group = grup_var.r1, method = "bonferroni")->discr2
       cbind("subseq"=as.character(discr2$subseq),  discr2$data)->datdiscr2
       reshape(datdiscr2, direction = "long", varying = list(colnames(datdiscr2)[grepl("Resid.", colnames(datdiscr2), fixed = TRUE)]), 
               times = colnames(datdiscr2)[grepl("Resid.", colnames(datdiscr2), fixed = TRUE)])->datdiscr2
@@ -236,6 +293,7 @@ seqggplot.internal<-function(objseq.r1 = objseq, TYPE.r1=TYPE, grup_var.r1=NULL,
             brewer.pal(name = "Spectral", n = 8)->colpal
             names(colpal)<-as.character(c(-3, -2, -1, 0, 1, 2, 3))
             factor(dats$CodeValue)->dats$CodeValue
+            dats<-filter(dats, !is.na(event))
               gg<-ggplot(data=dats,aes(x=event,y=Support, fill= CodeValue)) +
                 geom_bar(stat='identity',width=0.9)+
                 geom_text(aes(label=paste(round(as.numeric(Support),2), "%", sep="")),

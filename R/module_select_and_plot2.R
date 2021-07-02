@@ -504,7 +504,7 @@ module_select_and_plot2 <- function(input, output, session, data) {
     req(input$pminsup )
     req(input$nb_event)
     seqecreate(data = data$SEQ_OBJ())->sese
-    seqefsub(eseq = sese, pmin.support = input$pminsup )->sese.sub
+    seqefsub(eseq = sese, pmin.support = input$pminsup, max.k = input$nb_event)->sese.sub
     sese.sub$subseq[order(sese.sub$data$Count, decreasing = TRUE), ]->choices.sese
     shiny::updateSelectInput(session = session, inputId = "select_event", choices = choices.sese)
   })	
@@ -525,7 +525,7 @@ module_select_and_plot2 <- function(input, output, session, data) {
     if(input$plottype=="sous.seq"){
       list(
       shiny::numericInput(inputId = ns("nb_event"), 
-                         label = "Nombre maximum d'états pour caractériser les transitions:", min = 1, max = 5, value = 2),
+                         label = "Nombre maximum d'événements:", min = 1, max = 5, value = 2),
       shiny::numericInput(inputId = ns("pminsup"), 
                           label = "Support minimum :", min = 0, max = 0.95, value = 0.05, step = 0.05),
       shiny::selectInput(inputId = ns("select_event"), 
@@ -539,8 +539,7 @@ module_select_and_plot2 <- function(input, output, session, data) {
     req(input$pminsup )
     req(input$nb_event)
     seqecreate(data = data$SEQ_OBJ())->sese
-    seqefsub(eseq = sese, pmin.support = 0.01 )->sese.sub
-    
+    seqefsub(eseq = sese, pmin.support = 0.01, max.k = input$nb_event)->sese.sub
     shiny::updateNumericInput(session = session, inputId = "pminsup",max = max(sese.sub$data$Support))
   })
   
@@ -548,7 +547,7 @@ module_select_and_plot2 <- function(input, output, session, data) {
     req(input$pminsup )
     req(input$nb_event)
     seqecreate(data = data$SEQ_OBJ())->sese
-    seqefsub(eseq = sese, pmin.support = input$pminsup )->sese.sub
+    seqefsub(eseq = sese, pmin.support = input$pminsup, max.k = input$nb_event )->sese.sub
     sese.sub$subseq[order(sese.sub$data$Count, decreasing = TRUE), ]->choices.sese
     shiny::updateSelectInput(session = session, inputId = "select_event", choices = choices.sese)
   })
@@ -571,7 +570,7 @@ module_select_and_plot2 <- function(input, output, session, data) {
                    objseq = data$SEQ_OBJ(), 
                    groupes = isolate(the.grups()), 
                    merge_mods = isolate(input$merge_moda), 
-                   col.selected = isolate(input$select_col_time_flux), pmin.sup = isolate(input$pminsup), str.subs = isolate(input$select_event), 
+                   col.selected = isolate(input$select_col_time_flux), pmin.sup = isolate(input$pminsup), str.subs = isolate(input$select_event), max.k = isolate(input$nb_event),
                    SORTV=isolate(input$tapis_order))
       if(inherits(x = p, what = "ggplot")){
         if(length(input$theme_select)>0){
@@ -658,7 +657,8 @@ module_select_and_plot2 <- function(input, output, session, data) {
         data$SEQ_OBJ()[isolate(the.grups())==levi , ]->seqi
         seqi[!is.na(seqi[ , 1]) , ]->seqi
         DONNEES_POUR_PLOT(TYPE = isolate(input$plottype), objseq = seqi,
-                          pmin.sup=isolate(input$pminsup), STR.SUBS=isolate(input$select_event),isolate(input$select_col_time_flux),
+                          pmin.sup=isolate(input$pminsup), STR.SUBS=isolate(input$select_event),max.k = isolate(input$nb_event),
+                          col.selected = isolate(input$select_col_time_flux),
                           PAS.temps = isolate(input$PAStrate), TIME.varying =isolate(input$TYPEtrate) , 
                           Pourc.eff = isolate(input$TypeValeur), Sens = isolate(input$DebArr))
         

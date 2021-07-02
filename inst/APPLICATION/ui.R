@@ -98,7 +98,7 @@ ui <- shinyUI(navbarPage(windowTitle = "ViCaTraj",
                                                # ),
                                                #### SUB-PANEL: représentation ####
                                                tabPanel(title = "Indicateurs statistiques",
-                                                        module_select_and_plot_UI(id = "id2")
+                                                        module_select_and_plot2_UI(id = "id2")
                                                
                                                #),
                                                ),

@@ -35,15 +35,15 @@ module_classification_UI <- function(id){#label = "CSV file") {
                       h4("Type de distance :"),
                       shiny::selectInput(inputId = ns("type_distance"), 
                                          label = "", c("Edition de trajectoires"="edit", 
-                                                       "Attributs communs"="common_attributes", 
-                                                       "Distribution d'états"="distrib"), multiple = FALSE),
+                                                       "Attributs communs (à venir)"="common_attributes", 
+                                                       "Distribution d'états (à venir)"="distrib"), multiple = FALSE),
                       hr(),
                       conditionalPanel(condition = "input.type_distance=='edit'",ns = ns,
                                        h4("Paramètres des coûts :"),
                                        shiny::uiOutput(ns("InfobulleCout")),
                                        #method [seqcost(method = )]
                                        selectInput(inputId = ns("method_edit_cost"), label = NULL,
-                                                   choices = c("CONSTANT" , "TRATE", "FUTURE" , "FEATURES" , "INDELS", "INDELSLOG"),
+                                                   choices = c("CONSTANT" , "TRATE", "FUTURE" , "FEATURES (à venir)" , "INDELS", "INDELSLOG (à venir)"),
                                                    selected = "TRATE", multiple = FALSE),
                                        uiOutput(ns("SEQCOST_INPUTS")),# %>% withSpinner(color="#0dc5c1"),
                                        shiny::actionButton(inputId = ns("calculCouts"), label = "Calcul des couts"))
@@ -92,10 +92,10 @@ module_classification_UI <- function(id){#label = "CSV file") {
                        shiny::uiOutput("InfobulleClassif"),
                        # Quelle méthode voulez-vous utiliser pour regrouper les séquences ? partir de la matrice de dissemblance?
                        shiny::selectInput(inputId = ns("cluster_type"), label = NULL, 
-                                          choices = c("Hierarchical Clustering"="CAH", 
-                                                      "FAST Hierarchical Clustering"="fastCAH", 
-                                                      "Partitionning Around Medoid"="PAM",
-                                                      "Combinaison de la CAH et de PAM"="CAHPAM"), 
+                                          choices = c("Hierarchical Clustering [cluster::agnes()]"="CAH", 
+                                                      "FAST Hierarchical Clustering [fastcluster::hclust()]"="fastCAH", 
+                                                      "Partitionning Around Medoid (à venir)"="PAM",
+                                                      "Combinaison de la CAH et de PAM [cluster::agnes()]"="CAHPAM"), 
                                           selected = "CAHPAM", multiple = FALSE),
                        conditionalPanel(condition = "input.cluster_type=='CAH' | input.cluster_type=='CAHPAM'",ns=ns,
                                         shiny::uiOutput("InfobulleClassifCAH"),
@@ -429,7 +429,7 @@ module_classification <- function(input, output, session, data) {
     "cval"=shiny::numericInput(
                         label = "Coûts de substitution: rapport aux coûts indel (1)", 
                        inputId = ns("subst_ratio"), 
-                       min = 0.1, max = 5, step = 0.1, value = 2, width = "20%"),
+                       min = 0.1, max = 5, step = 0.1, value = 2),
     "time.varying"=shiny::checkboxInput(inputId=ns("time_varying_substitution_costs"), 
                                  label="Les taux de transitions sont-ils dépendants du temps?", 
                                  value = FALSE, width = NULL),
@@ -480,9 +480,10 @@ module_classification <- function(input, output, session, data) {
     req(SEQCOST())
     SEQCOST()$indel->the.indels
     if(length(the.indels)>1){
+      message("TAB.INDEL #########################")
       the.indels<-data.frame("Etats"=alphabet(trajs.forclass()), "Cout(s)_INDEL"=round(the.indels, 2))
       DT::renderDataTable(the.indels)->output$bb
-      dataTableOutput(outputId = ns("bb"), width = "80%")
+      dataTableOutput(outputId = ns("bb"))
     } else {
       renderText(as.character(the.indels))->output$bb
       textOutput(ns("bb"))

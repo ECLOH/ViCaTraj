@@ -350,7 +350,7 @@ module_data <- function(input, output, session) {
   })
   
   
-  BIGLIST.FIRST<-reactive({
+  BIGLIST.FIRST_niveau0<-reactive({
     if ( is.null(input$LIST_SOURCE_BIG_DF)) return(NULL)
     inFile <- input$LIST_SOURCE_BIG_DF
     file <- inFile$datapath
@@ -382,6 +382,15 @@ module_data <- function(input, output, session) {
       return(x)
     })
     return(data)
+  })
+  
+  BIGLIST.FIRST<-reactive({
+    req(BIGLIST.FIRST_niveau0())
+    if(class(BIGLIST.FIRST_niveau0())=="list"){
+      if(length(BIGLIST.FIRST_niveau0())>1){
+        return(BIGLIST.FIRST_niveau0())
+      } else return(NULL)
+    } else return(NULL)
   })
   
   #### CHARGEMENT DES DONNEES : list avec objet de class seqdata ####
@@ -433,6 +442,9 @@ message("pb seq 360")
     return(res)
   })
   
+  
+  
+  
   #### CHARGEMENT DES DONNEES : 1 seul fichier ####
   
   trajs <- reactiveValues(df = NULL, dataSource = NULL)
@@ -464,9 +476,8 @@ message("pb seq 360")
   
   data<-reactive({
     message("coucou 343")
-    if ( is.null(input$file1)) return(NULL)
-      if(input$DataType=="fichier"){ #### Chargement d'un seul fichier CSV ####
-      #if (input$rowname==TRUE && input$rownames_par!=""){
+      if(input$DataType=="fichier"){ 
+        if ( is.null(input$file1)) {return(NULL)} else {
         message("coucou 347")
         userData <- read.csv(file = input$file1$datapath, 
                              sep = input$sepcol, 
@@ -491,35 +502,63 @@ message("pb seq 360")
         
         
       list("Table.unique"=userData)->res
-      return(res)
+        }
     } else {
-      
+      if(input$DataType=="objet"){
+        req(BIGLIST.FIRST_niveau0())
+        if(class(BIGLIST.FIRST_niveau0())=="list"){
+          if(length(BIGLIST.FIRST_niveau0())==1&names(BIGLIST.FIRST_niveau0())=="Table.unique"){
+            res<-BIGLIST.FIRST_niveau0()
+          }
+        }
+      }
     }
-  })
+      return(res)
+})
   
   output$contenu<-shiny::renderDataTable({
     req(data())
     data()
   })
   
+  ### CONTROL TYPE OBJECT ####
+  
+  reactive({
+    req(input$DataType)
+    if(input$DataType=="fichier"){
+      return("data.unique")
+    } else {
+      if(input$DataType=="objet"){
+        req(BIGLIST.FIRST_niveau0())
+        if(length(BIGLIST.FIRST_niveau0())==1&names(BIGLIST.FIRST_niveau0())=="Table.unique"){
+          return("data.unique")
+        } else {return("list.df")}
+      } else {
+        if(input$DataType=="objseq"){
+          return("object.seq")
+        }
+      }
+    }
+  })->type.data.control
+  
   #### CHARGEMENT DES DONNEES : BIGLIST1() ####
   
   
   
   BIGLIST1<-reactive({
-    req(input$DataType)
-    if(input$DataType=="fichier"){
+    req(type.data.control())
+    if(type.data.control()=="data.unique"){
       req(data())
       #print(head(data()[[1]]))
       return(data())
     } else {
-      if(input$DataType=="objseq"){
+      if(type.data.control()=="object.seq"){
         req(OBJSEQ_COMPLEMENT())
         return(OBJSEQ_COMPLEMENT())
       } else {
         req(BIGLIST.FIRST())
         
-        if(input$DataType=="objet"){
+        if(type.data.control()=="list.df"){
           req(BIGLIST.FIRST())
           req(input$MINTIMEBIG)
           req(input$MAXTIMEBIG)
@@ -624,7 +663,7 @@ message("pb seq 360")
   
   output$UI_INDVAR_CHOOSE<-renderUI({
     ns <- session$ns
-      if(req(input$DataType)=="objet"){
+      if(req(type.data.control())=="list.df"){
         lapply(BIGLIST1(), function(bi){
           names(bi)
         })->lina
@@ -632,7 +671,7 @@ message("pb seq 360")
         message<-h5("Renseignez la variable dans les données qui identifie des individus uniques et qui sera utilisée comme paramètre 'id' de seqdata()")
         
       } else {
-        if(input$DataType=="objseq"){
+        if(type.data.control()=="object.seq"){
           #if( OBJSEQ_COMPLEMENT())
           #names( BIGLIST1()[[1]] )->glona
           message("ERROR 490")
@@ -652,7 +691,7 @@ message("pb seq 360")
           #print(glona)
           message<-h5("Renseignez la variable dans les données complémentaires qui correspond à l'attribut row.names de l'objet seqdata")
         } else {
-          if(input$DataType=="fichier"){
+          if(type.data.control()=="data.unique"){
             lapply(BIGLIST1(), function(bi){
               names(bi)
             })->lina
@@ -676,8 +715,8 @@ message("pb seq 360")
   control_dupli_na<-reactive({
     req(input$INDVAR)
     req(BIGLIST1())
-    #if(req(input$DataType)!="fichier"){
-      if(input$DataType=="objet"|input$DataType=="fichier"){
+    #if(req(type.data.control())!="fichier"){
+      if(type.data.control()=="list.df"|type.data.control()=="data.unique"){
         lapply(1:length(BIGLIST1()), function(i){
           req(input$INDVAR)
           #lapply(1:length(csv.list), FUN = function(i){
@@ -791,7 +830,7 @@ message("pb seq 360")
   BIGLIST2<-reactive({
     req( control_dupli_na() )
     req(input$INDVAR)
-    # if(input$DataType=="objet"|input$DataType=="fichier")#{
+    # if(type.data.control()=="list.df"|type.data.control()=="data.unique")#{
       if(class(control_dupli_na())=="data.frame"){
         req(input$deleteNA_DUPLI)
         if(input$deleteNA_DUPLI==TRUE){
@@ -995,7 +1034,7 @@ message("pb seq 360")
     
     if(class(the.df())=="data.frame"){
       
-      if(req(input$DataType)=="objet"){
+      if(req(type.data.control())=="list.df"){
         the.choices<-c(names(the.df()), "Individus absents à date")
       } else {
         the.choices<-c(names(the.df()))
@@ -1008,7 +1047,7 @@ message("pb seq 360")
         
         unique(unlist(Reduce(intersect,lapply(the.df(), names))))->naminun
         
-        if(req(input$DataType)=="objet"){
+        if(req(type.data.control())=="list.df"){
           the.choices<-c(naminun, "Individus absents à date")
         } else {
           the.choices<-c(naminun)
@@ -1591,11 +1630,11 @@ message("pb seq 360")
   ####  DATE DEBUT ET FIN POUR TRAJ ####
   output$DATA_UI<-shiny::renderUI({
     ns <- session$ns
-    #if(input$DataType=="fichier"){
+    #if(type.data.control()=="data.unique"){
     #  shiny::dateRangeInput(inputId = ns("date.range"), label = "Dates de début et de fin",
     #                        format = "mm-yyyy")->the.ui
     #} else {
-      if(input$DataType=="objet"|input$DataType=="fichier"){
+      if(type.data.control()=="list.df"|type.data.control()=="data.unique"){
         names(SUBSETTED_LIST())->names.pick
         message("coucou1279")
         mycolumns<-unique(unlist(Reduce(intersect,list(lapply(X = SUBSETTED_LIST(), FUN = names))),
@@ -1626,7 +1665,7 @@ message("pb seq 360")
   
   DR_POUR_SEQ_OBJ<-reactive({# eventExpr = input$ValidParametres,  {
     req(SUBSETTED_LIST())
-    if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
+    if(type.data.control()=="list.df"&length(SUBSETTED_LIST())>1){
       req(SUBSETTED_LIST())
       req(input$timecol)
       
@@ -1680,7 +1719,7 @@ message("pb seq 360")
       
       df.pour.seq
     } else {
-      if(input$DataType=="fichier"|(input$DataType=="objet"&length(SUBSETTED_LIST())==1)){
+      if(type.data.control()=="data.unique"|(type.data.control()=="list.df"&length(SUBSETTED_LIST())==1)){
         req(SUBSETTED_LIST())
         req(input$timecol)
         message("COUCOU 1242")
@@ -1707,7 +1746,7 @@ message("pb seq 360")
   })
   
   observe({
-    if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
+    if(type.data.control()=="list.df"&length(SUBSETTED_LIST())>1){
       lapply(BIGLIST2(), function(dt){
         dt[ , input$timecol]
       })->li.var
@@ -1739,10 +1778,10 @@ message("pb seq 360")
     req(input$timecol)
     
     
-    if(input$DataType=="fichier"|(input$DataType=="objet"&length(SUBSETTED_LIST())==1)){
+    if(type.data.control()=="data.unique"|(type.data.control()=="list.df"&length(SUBSETTED_LIST())==1)){
     DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
     } else {
-      if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
+      if(type.data.control()=="list.df"&length(SUBSETTED_LIST())>1){
         
         DR_POUR_SEQ_OBJ()[ , names(SUBSETTED_LIST())]->dataforseq
         
@@ -1757,7 +1796,7 @@ message("pb seq 360")
   data.seq<-eventReactive(eventExpr = input$ValidParametres, {
     
     #### SI FICHOER ####
-    if(input$DataType=="fichier"|(input$DataType=="objet"&length(SUBSETTED_LIST())==1)){
+    if(type.data.control()=="data.unique"|(type.data.control()=="list.df"&length(SUBSETTED_LIST())==1)){
         # updateNumericInput(session=session, inputId = "PAStrate",value=1) 
       DR_POUR_SEQ_OBJ()[,input$timecol]->dataforseq
       dataforseq[]<-lapply(dataforseq, as.character)
@@ -1778,7 +1817,7 @@ message("pb seq 360")
       } else {
       #### SI OBJET ####
       
-      if(input$DataType=="objet"&length(SUBSETTED_LIST())>1){
+      if(type.data.control()=="list.df"&length(SUBSETTED_LIST())>1){
         
         DR_POUR_SEQ_OBJ()->df.pour.seq
         
@@ -1833,7 +1872,7 @@ message("pb seq 360")
         } else {s<-NULL}
       } else {
         #### SI OBJSEQ####
-        if(input$DataType=="objseq"){
+        if(type.data.control()=="object.seq"){
           req(OBJSEQ())
           df.pour.seq<-OBJSEQ_COMPLEMENT()
           s<-OBJSEQ()
@@ -1865,11 +1904,11 @@ message("pb seq 360")
   
   INDVAR_UNI<-reactive({
     req(data.seq())
-    if(input$DataType=="objet"|input$DataType=="objseq"){
+    if(type.data.control()=="list.df"|type.data.control()=="object.seq"){
       req(input$INDVAR)
       input$INDVAR->idvar
     } else {
-      if(input$DataType=="fichier"){
+      if(type.data.control()=="data.unique"){
         req(input$rownames_par)
         input$rownames_par->idvar
       }
@@ -1909,13 +1948,13 @@ message("pb seq 360")
   
   data2<-reactive({
     #if(!exists("df_pour_class")&is.null(input$nb_cluster)){
-    if(input$DataType=="fichier"){ 
+    if(type.data.control()=="data.unique"){ 
       data()
     } else {
-      if(input$DataType=="objet"){ 
+      if(type.data.control()=="list.df"){ 
         DR_POUR_SEQ_OBJ()
       } else {
-        if(input$DataType=="objseq"){
+        if(type.data.control()=="object.seq"){
           OBJSEQ_COMPLEMENT()
         }
       }
@@ -1926,10 +1965,10 @@ message("pb seq 360")
   })
   
   reactive({
-    if(input$DataType=="objet"){
+    if(type.data.control()=="list.df"){
       SUBSETTED_LIST()
     } else {
-      if(input$DataType=="objseq"){
+      if(type.data.control()=="object.seq"){
         if(class(OBJSEQ_COMPLEMENT())=="data.frame"){
           list("DATE_UNIQUE"=OBJSEQ_COMPLEMENT())
         } else {
@@ -1938,7 +1977,7 @@ message("pb seq 360")
           }
         }
       } else {
-        if(input$DataType=="fichier"){
+        if(type.data.control()=="data.unique"){
           if(class(data2())=="data.frame"){
             list("DATE_UNIQUE"=data2())
           } else {

@@ -1,7 +1,7 @@
 #' @export
 
 DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2, 
-                                     col.selected.r1=NULL, pmin.sup1=0.05, STR.SUBS.1=NULL, 
+                                     col.selected.r1=NULL, pmin.sup1=0.05, STR.SUBS.1=NULL, max.k1=2,
                                      PAS.temps1=PAS.temps, TIME.varying1=TIME.varying, Pourc.eff1=Pourc.eff, Sens1=Sens){
   
   if(!is.null(col.selected.r1)){
@@ -58,7 +58,7 @@ DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2,
     ',
     "sous.seq", "seqecreate(objseq.r1)->seqe.obj;
     if(is.null(STR.SUBS.1)){
-        seqefsub(seqe.obj, pmin.support=pmin.sup1, str.subseq=STR.SUBS.1)->seqe.stat
+        seqefsub(seqe.obj, pmin.support=pmin.sup1, max.k = max.k1)->seqe.stat
         seqe.stat$data$Support<-round(seqe.stat$data$Support*100, 2)
     cbind('event'=as.character(seqe.stat$subseq), seqe.stat$data)->res
     } else {
@@ -66,7 +66,7 @@ DONNEES_POUR_PLOT.internal<-function(TYPE.r1=TYPE, objseq.r1=objseq, arrondi=2,
     STR.SUBS.1[str.control>0]->STR.SUBS.1.control
     STR.SUBS.1[str.control<1]->STR.SUBS.1.NOcontrol
     if(length(STR.SUBS.1.control)>0){
-      seqefsub(seqe.obj, pmin.support=pmin.sup1, str.subseq=STR.SUBS.1.control)->seqe.stat
+      seqefsub(seqe.obj, pmin.support=pmin.sup1, str.subseq=STR.SUBS.1.control, max.k = max.k1)->seqe.stat
     seqe.stat$data$Support<-round(seqe.stat$data$Support*100, 2)
     data.frame(cbind('event'=as.character(seqe.stat$subseq), seqe.stat$data), stringsAsFactors = FALSE)->restemp
     }
