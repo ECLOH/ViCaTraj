@@ -1,3 +1,4 @@
+#' @export
 EXAMPLES_DATA<-function(){
   library(TraMineR)
   data(biofam)
