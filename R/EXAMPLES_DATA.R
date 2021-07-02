@@ -13,7 +13,7 @@ EXAMPLES_DATA<-function(){
   #####
   biofam[!duplicated(biofam$idhous)&!is.na(biofam$idhous) , ]->datforseq
   seqdef(data = datforseq[ , namevar], id = datforseq$idhous)->SEQ
-  biofam->COMP
+  list("Table.unique"=biofam)->COMP
   list("SEQ"=SEQ, "COMP"=COMP)->EXAMPLE.OBJET.SEQ
   ####
   biofam->EXEMPLE.CSV.FILE

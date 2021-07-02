@@ -34,8 +34,8 @@ textOutput("control_ID2"),
 textOutput("control_ID3"),
 
 tabsetPanel(
-    shiny::tabPanel(title="README", 
-                    includeMarkdown("README.md")),
+    #shiny::tabPanel(title="README", 
+    #                includeMarkdown("README.md")),
     shiny::tabPanel(title = "tab1",
     module_data_UI(id = "id1")),
 shiny::tabPanel(title = "tab2",
