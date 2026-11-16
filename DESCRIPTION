@@ -1,32 +1,22 @@
 Type: Package
 Package: ViCaTraj
 Title: Construction et visualisation de trajectoires
-Version: 0.1.0
+Version: 2.0
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one
-    line)
+Description: This package provides a set of functions for:
+    - managing a longitudinal database in Parquet format    
+    - producing longitudinal statistics from a tidy, long-format dataset      
 License: What license is it under?
 Imports: 
     classInt,
     data.table,
     dplyr,
-    DT,
     fastcluster,
-    formattable,
-    ggalluvial,
     ggplot2,
     ggthemes,
-    glue,
-    plyr,
     RColorBrewer,
     readxl,
-    shiny,
-    shinyBS,
-    shinyjs,
-    shinyWidgets,
-    shinythemes,
-    shinycssloaders,
     stats,
     stringr,
     tidyr,
@@ -35,7 +25,6 @@ Imports:
     TraMineRextras,
     utils,
     WeightedCluster,
-    wesanderson,
     xml2
 Encoding: UTF-8
 LazyData: true
