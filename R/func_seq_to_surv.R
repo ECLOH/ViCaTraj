@@ -35,7 +35,7 @@
 #'   de fin à partir des temps observés.
 #'
 #' @return Un tableau contenant les observations recodées, notamment les
-#'   colonnes `RANK`, `EVENTS_STATES`, `period_SORTIE` et `FALSE_censor`,
+#'   colonnes `RANK`, `RCD_STATE`, `period_SORTIE` et `FALSE_censor`,
 #'   ainsi que les colonnes de début et de fin utilisées.
 #'
 #' @examples
@@ -69,7 +69,10 @@ func_recode_event <- function(
   event_col = TYPEGIR, # Colonne événement
   start_time = NULL, # Valeur de départ (ex: 2014)
   censor_time = NULL, # Valeur de censure (ex: 2026)
-  clean_na # pas de valeurs par défaut
+  clean_na, # pas de valeurs par défaut
+  gaps = "temporary exit",
+  right = "exit",
+  censure = "censoring"
 ) {
   require(dplyr)
   require(tidyr)
@@ -207,28 +210,29 @@ func_recode_event <- function(
     arrange({{ time_col }}, .by_group = T) |>
     mutate(RANK = row_number()) |>
     mutate(
-      EVENTS_STATES = case_when(
+      RCD_STATE = case_when(
         ({{ time_col }} > max(!!end_quo, na.rm = TRUE) &
-          {{ time_col }} < censor_time) ~ "SORTIE",
-          (clean_na == FALSE &  is.na({{ event_col }}) & {{ time_col }} < censor_time) ~ "SORTIE temporaire",
+          {{ time_col }} < censor_time) ~ right,
+          (clean_na == FALSE &  is.na({{ event_col }}) & {{ time_col }} < censor_time) ~ gaps,
         ({{ time_col }} > max(!!end_quo, na.rm = TRUE) &
-          {{ time_col }} == censor_time) ~ "CENSURE",
+          {{ time_col }} == censor_time) ~ censure,
         TRUE ~ {{ event_col }}
       )
     ) |>
     mutate(
       start_SORTIE = tidyr::replace_na(
-        grepl("SORTIE", EVENTS_STATES) & !grepl("SORTIE", lag(EVENTS_STATES)), # lag(EVENTS_STATES) != "SORTIE",
+        (RCD_STATE == right | RCD_STATE == gaps) & 
+          (lag(RCD_STATE)!=right&lag(RCD_STATE)!=gaps), # lag(RCD_STATE) != right,
         FALSE
       )
     ) |>
     mutate(period_SORTIE = cumsum(start_SORTIE)) |>
     mutate(
-      FALSE_censor = lag(EVENTS_STATES) == "SORTIE" &
-        EVENTS_STATES == "CENSURE"
+      FALSE_censor = lag(RCD_STATE) == right &
+        RCD_STATE == censure
     ) |>
     ungroup() |>
-    filter(!(FALSE_censor & EVENTS_STATES == "CENSURE")) |>
+    filter(!(FALSE_censor & RCD_STATE == censure)) |>
     collect() |>
     ungroup() |>
     select(
@@ -236,14 +240,14 @@ func_recode_event <- function(
       {{ time_col }},
       RANK,
       {{ event_col }},
-      EVENTS_STATES,
+      RCD_STATE,
       period_SORTIE,
       FALSE_censor,
       !!start_quo,
       !!end_quo
     )
   
-added_states <- unique(data_surv$EVENTS_STATES)[!unique(data_surv$EVENTS_STATES)%in% unique( data |> pull({{event_col}}))]
+added_states <- unique(data_surv$RCD_STATE)[!unique(data_surv$RCD_STATE)%in% unique( data |> pull({{event_col}}))]
   message(paste0("ADDED STATES : ", paste0(added_states, collapse = "|")))
   return(data_surv)
 }
@@ -284,7 +288,7 @@ data <- data |>
     arrange({{ rank_col }}, .by_group = T) |> # arrange par date
     mutate(
       start_EVENT = tidyr::replace_na(
-        {{rank_col}} > 0 & grepl(paste(events_look, collapse = "|"), {{events_var}}) & !grepl(paste(events_look, collapse = "|"), lag({{events_var}})), # lag(EVENTS_STATES) != "SORTIE",
+        {{rank_col}} > 0 & grepl(paste(events_look, collapse = "|"), {{events_var}}) & !grepl(paste(events_look, collapse = "|"), lag({{events_var}})), # lag(RCD_STATE) != "SORTIE",
         FALSE
       )
     ) |> # TRUE si match de events_loof sur la ligne, et pas de match de events_looks la ligne d'avant : QUI des NA ? 

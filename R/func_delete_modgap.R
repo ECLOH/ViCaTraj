@@ -80,6 +80,7 @@
 #' @importFrom dplyr %>%
 #' @importFrom tidyr expand replace_na
 #' @importFrom dtplyr lazy_dt
+#' @import data.table
 #' @export
 func_delete_modgap <- function(
   data = t.seqw,
@@ -95,6 +96,7 @@ func_delete_modgap <- function(
   setNA = TRUE,
   ... 
 ) {
+  require(data.table)
   require(dtplyr)
   var.chr <- deparse(substitute(var))
   ID.chr <- deparse(substitute(ID))

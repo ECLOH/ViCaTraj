@@ -13,7 +13,10 @@ func_recode_event(
   event_col = TYPEGIR,
   start_time = NULL,
   censor_time = NULL,
-  clean_na
+  clean_na,
+  gaps = "temporary exit",
+  right = "exit",
+  censure = "censoring"
 )
 }
 \arguments{
@@ -51,7 +54,7 @@ de fin à partir des temps observés.}
 }
 \value{
 Un tableau contenant les observations recodées, notamment les
-  colonnes `RANK`, `EVENTS_STATES`, `period_SORTIE` et `FALSE_censor`,
+  colonnes `RANK`, `RCD_STATE`, `period_SORTIE` et `FALSE_censor`,
   ainsi que les colonnes de début et de fin utilisées.
 }
 \description{

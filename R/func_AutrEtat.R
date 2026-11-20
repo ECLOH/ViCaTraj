@@ -5,14 +5,14 @@
 #' @param data Un dataframe contenant les données de trajectoire.
 #' @param var_ID Colonne identifiant les individus (non quoté).
 #' @param var_time Colonne de temps/date (non quoté).
-#' @param var_etat_start Colonne d'état initial. Si NULL, créée à partir de var_etat au time_ctrl.
-#' @param var_etat Colonne d'état (non quoté).
+#' @param var_start Colonne d'état initial. Si NULL, créée à partir de var au time_ctrl.
+#' @param var Colonne d'état (non quoté).
 #' @param time_ctrl Point de contrôle (référence temporelle).
 #' @param time_view Type d'analyse : "all" (toute trajectoire), "before" (avant time_ctrl), "after" (après time_ctrl).
 #'
 #' @return Un dataframe avec colonnes :
-#'   - var_etat_start : état initial
-#'   - var_etat : état observé
+#'   - var_start : état initial
+#'   - var : état observé
 #'   - Ni : nombre d'individus
 #'   - Ni_total : total par état initial
 #'   - prop : proportion (Ni / Ni_total)
@@ -23,8 +23,8 @@
 #'     data = my_data,
 #'     var_ID = id,
 #'     var_time = date,
-#'     var_etat_start = NULL,
-#'     var_etat = status,
+#'     var_start = NULL,
+#'     var = status,
 #'     time_ctrl = as.Date("2023-01-01"),
 #'     time_view = "after"
 #'   )
@@ -35,8 +35,8 @@ func_AutrEtat <- function(
   data,
   var_ID,
   var_time,
-  var_etat_start,
-  var_etat,
+  var_start,
+  var,
   time_ctrl,
   time_view
 ) {
@@ -44,27 +44,27 @@ func_AutrEtat <- function(
     if (!time_view %in% c("all", "before", "after")) {
     stop("time_view must be 'all', 'before' or 'after'")
   }
-  var_etat_start_dp <- deparse(substitute(var_etat_start))
-  print(var_etat_start_dp)
+  var_start_dp <- deparse(substitute(var_start))
+  print(var_start_dp)
 
-  if (var_etat_start_dp == "") {
+  if (var_start_dp == "") {
     data_ctrl <- data |>
       ungroup() |>
       filter({{ var_time }} == time_ctrl) |>
       distinct() |>
-      mutate(created_var = {{ var_etat }}) |>
-      select({{ var_ID }}, created_var)
+      mutate(start_state = {{ var }}) |>
+      select({{ var_ID }}, start_state)
 
-    data <- data |> left_join(data_ctrl)
+    data <- data |> left_join(data_ctrl) |> suppressMessages()
 
-    var_etat_start <- quo(created_var)
+    var_start <- quo(start_state)
 
   } else {
-        var_etat_start <- enquo(var_etat_start)
+        var_start <- enquo(var_start)
   }
 
  statd_total <- data |>
-        group_by({{ var_etat_start }}) |>
+        group_by({{ var_start }}) |>
         summarise(Ni_total = n_distinct({{ var_ID }}))
 if(
   time_view == "all"
@@ -76,32 +76,33 @@ if(
 ){
     data <- data |> 
           filter({{var_time}} <= {{time_ctrl}})
-      message("Calculating over the entire trajectory, with ``time_ctr`` set to: ", time_ctrl)
+      message("Calculating over the backward trajectory, with ``time_ctr`` set to: ", time_ctrl)
   } else {
       data <- data |> 
           filter({{var_time}} >= {{time_ctrl}})
-      message("Calculating over the entire trajectory, with ``time_ctr`` set to: ", time_ctrl)
+      message("Calculating over the forward trajectory, with ``time_ctr`` set to: ", time_ctrl)
 }
 }
   
   res <- data |>
-    select({{ var_ID }}, {{ var_etat_start }}, {{ var_etat }}) |>
+    select({{ var_ID }}, {{ var_start }}, {{ var }}) |>
     ungroup() |>
     distinct() |>
-    group_by({{ var_etat_start }}, {{ var_etat }}) |>
+    group_by({{ var_start }}, {{ var }}) |>
     summarise(Ni = n_distinct({{ var_ID }})) |> 
     bind_rows(
 data |>
-  group_by({{ var_etat_start }}, {{ var_ID }}) |> 
-  summarise(N_etat = n_distinct({{ var_etat }})) |> 
+  group_by({{ var_start }}, {{ var_ID }}) |> 
+  summarise(N_etat = n_distinct({{ var }})) |> 
   filter(N_etat ==1) |> 
-  group_by({{ var_etat_start }}) |> 
+  group_by({{ var_start }}) |> 
   summarise(Ni = n_distinct({{ var_ID }})) |> 
-  mutate("{{var_etat}}" := "non concerné")
+  mutate("{{var}}" := "non concerné")
     ) |>     left_join(
      statd_total
     ) |>
-    mutate(prop = Ni / Ni_total)
+    mutate(prop = Ni / Ni_total) |> 
+    suppressMessages()
 
   return(res)
 }

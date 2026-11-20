@@ -4,15 +4,7 @@
 \alias{func_AutrEtat}
 \title{Analyse des transitions d'état}
 \usage{
-func_AutrEtat(
-  data,
-  var_ID,
-  var_time,
-  var_etat_start,
-  var_etat,
-  time_ctrl,
-  time_view
-)
+func_AutrEtat(data, var_ID, var_time, var_start, var, time_ctrl, time_view)
 }
 \arguments{
 \item{data}{Un dataframe contenant les données de trajectoire.}
@@ -21,9 +13,9 @@ func_AutrEtat(
 
 \item{var_time}{Colonne de temps/date (non quoté).}
 
-\item{var_etat_start}{Colonne d'état initial. Si NULL, créée à partir de var_etat au time_ctrl.}
+\item{var_start}{Colonne d'état initial. Si NULL, créée à partir de var au time_ctrl.}
 
-\item{var_etat}{Colonne d'état (non quoté).}
+\item{var}{Colonne d'état (non quoté).}
 
 \item{time_ctrl}{Point de contrôle (référence temporelle).}
 
@@ -31,8 +23,8 @@ func_AutrEtat(
 }
 \value{
 Un dataframe avec colonnes :
-  - var_etat_start : état initial
-  - var_etat : état observé
+  - var_start : état initial
+  - var : état observé
   - Ni : nombre d'individus
   - Ni_total : total par état initial
   - prop : proportion (Ni / Ni_total)
@@ -46,8 +38,8 @@ Calcule les proportions de transitions entre états à partir d'un point de cont
     data = my_data,
     var_ID = id,
     var_time = date,
-    var_etat_start = NULL,
-    var_etat = status,
+    var_start = NULL,
+    var = status,
     time_ctrl = as.Date("2023-01-01"),
     time_view = "after"
   )
