@@ -5,9 +5,15 @@
 #'
 #' Les transitions sont construites après tri des observations par `ID` et par
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #' le rang global. Le paramètre `time_step` indique combien de lignes
 #' observées à décaler à l’intérieur de chaque individu ; il ne garantit pas que
 #' la destination corresponde exactement à `time_step` rangs globaux plus tard.
+=======
+#' le rang global. Le paramètre `pas_temps` indique combien de lignes
+#' observées à décaler à l’intérieur de chaque individu ; il ne garantit pas que
+#' la destination corresponde exactement à `pas_temps` rangs globaux plus tard.
+>>>>>>> Stashed changes
 =======
 #' le rang global. Le paramètre `pas_temps` indique combien de lignes
 #' observées à décaler à l’intérieur de chaque individu ; il ne garantit pas que
@@ -30,7 +36,11 @@
 #' @param full_rank Nom non cité de la colonne contenant les rangs globaux.
 #'   Peut être `NULL`, dans ce cas les rangs sont calculés à partir de `date`.
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #' @param time_step Nombre de lignes suivantes à utiliser comme destination pour
+=======
+#' @param pas_temps Nombre de lignes suivantes à utiliser comme destination pour
+>>>>>>> Stashed changes
 =======
 #' @param pas_temps Nombre de lignes suivantes à utiliser comme destination pour
 >>>>>>> Stashed changes
@@ -60,7 +70,11 @@ func_txtran <- function(
   date,
   full_rank,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   time_step = 1,
+=======
+  pas_temps = 1,
+>>>>>>> Stashed changes
 =======
   pas_temps = 1,
 >>>>>>> Stashed changes
@@ -112,6 +126,7 @@ func_txtran <- function(
     dplyr::group_by({{ ID }}) |>
     dplyr::mutate(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       next_step = data.table::shift({{ var }}, type = "lead", n = time_step),
       next_rank = data.table::shift(
         !!rank_q,
@@ -122,6 +137,8 @@ func_txtran <- function(
     dplyr::ungroup() |> 
     dplyr::filter(!is.na(next_step)) |>
 =======
+=======
+>>>>>>> Stashed changes
       VAR_suivant = data.table::shift({{ var }}, type = "lead", n = pas_temps),
       RANK_suivant = data.table::shift(
         !!rank_q,
@@ -131,6 +148,9 @@ func_txtran <- function(
     ) |>
     dplyr::ungroup() |> 
     dplyr::filter(!is.na(VAR_suivant)) |>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     as_tibble()
 
@@ -140,7 +160,11 @@ func_txtran <- function(
     !!rank_q,
         {{ var }},
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         next_step,
+=======
+        VAR_suivant,
+>>>>>>> Stashed changes
 =======
         VAR_suivant,
 >>>>>>> Stashed changes
@@ -152,7 +176,11 @@ func_txtran <- function(
       left_join(
 res |>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
        dplyr::filter(!is.na(next_step)) |>
+=======
+       dplyr::filter(!is.na(VAR_suivant)) |>
+>>>>>>> Stashed changes
 =======
        dplyr::filter(!is.na(VAR_suivant)) |>
 >>>>>>> Stashed changes
@@ -171,7 +199,11 @@ res |>
       group_by(
         {{ var }},
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         next_step,
+=======
+        VAR_suivant,
+>>>>>>> Stashed changes
 =======
         VAR_suivant,
 >>>>>>> Stashed changes
@@ -183,7 +215,11 @@ res |>
       left_join(
 res |>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
        dplyr::filter(!is.na(next_step)) |>
+=======
+       dplyr::filter(!is.na(VAR_suivant)) |>
+>>>>>>> Stashed changes
 =======
        dplyr::filter(!is.na(VAR_suivant)) |>
 >>>>>>> Stashed changes

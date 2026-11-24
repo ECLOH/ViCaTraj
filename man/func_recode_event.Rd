@@ -55,7 +55,11 @@ de fin à partir des temps observés.}
 \value{
 Un tableau contenant les observations recodées, notamment les
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   colonnes `RANK`, `RCD_STATE`, `period_SORTIE` et `FALSE_censor`,
+=======
+  colonnes `RANK`, `EVENTS_STATES`, `period_SORTIE` et `FALSE_censor`,
+>>>>>>> Stashed changes
 =======
   colonnes `RANK`, `EVENTS_STATES`, `period_SORTIE` et `FALSE_censor`,
 >>>>>>> Stashed changes

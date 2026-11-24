@@ -36,7 +36,11 @@
 #'
 #' @return Un tableau contenant les observations recodées, notamment les
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #'   colonnes `RANK`, `RCD_STATE`, `period_SORTIE` et `FALSE_censor`,
+=======
+#'   colonnes `RANK`, `EVENTS_STATES`, `period_SORTIE` et `FALSE_censor`,
+>>>>>>> Stashed changes
 =======
 #'   colonnes `RANK`, `EVENTS_STATES`, `period_SORTIE` et `FALSE_censor`,
 >>>>>>> Stashed changes
@@ -302,7 +306,11 @@ data <- data |>
     mutate(
       start_EVENT = tidyr::replace_na(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         {{rank_col}} > 0 & grepl(paste(events_look, collapse = "|"), {{events_var}}) & !grepl(paste(events_look, collapse = "|"), lag({{events_var}})), # lag(RCD_STATE) != "SORTIE",
+=======
+        {{rank_col}} > 0 & grepl(paste(events_look, collapse = "|"), {{events_var}}) & !grepl(paste(events_look, collapse = "|"), lag({{events_var}})), # lag(EVENTS_STATES) != "SORTIE",
+>>>>>>> Stashed changes
 =======
         {{rank_col}} > 0 & grepl(paste(events_look, collapse = "|"), {{events_var}}) & !grepl(paste(events_look, collapse = "|"), lag({{events_var}})), # lag(EVENTS_STATES) != "SORTIE",
 >>>>>>> Stashed changes
