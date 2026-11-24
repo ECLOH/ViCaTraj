@@ -4,9 +4,15 @@
 #' chaque individu, puis résume les comptages et proportions de transitions.
 #'
 #' Les transitions sont construites après tri des observations par `ID` et par
+<<<<<<< Updated upstream
 #' le rang global. Le paramètre `time_step` indique combien de lignes
 #' observées à décaler à l’intérieur de chaque individu ; il ne garantit pas que
 #' la destination corresponde exactement à `time_step` rangs globaux plus tard.
+=======
+#' le rang global. Le paramètre `pas_temps` indique combien de lignes
+#' observées à décaler à l’intérieur de chaque individu ; il ne garantit pas que
+#' la destination corresponde exactement à `pas_temps` rangs globaux plus tard.
+>>>>>>> Stashed changes
 #'
 #' On peut utiliser soit `full_rank`, soit `date` pour définir l’ordre global.
 #' Si `full_rank` n’est pas fourni, les rangs sont calculés avec
@@ -23,7 +29,11 @@
 #'   `NULL` lorsque `full_rank` est fourni.
 #' @param full_rank Nom non cité de la colonne contenant les rangs globaux.
 #'   Peut être `NULL`, dans ce cas les rangs sont calculés à partir de `date`.
+<<<<<<< Updated upstream
 #' @param time_step Nombre de lignes suivantes à utiliser comme destination pour
+=======
+#' @param pas_temps Nombre de lignes suivantes à utiliser comme destination pour
+>>>>>>> Stashed changes
 #'   chaque individu. Par défaut : `1`.
 #' @param time_varying Si `TRUE`, calcule les proportions de transition
 #'   séparément pour chaque rang global et état d’origine. Si `FALSE`,
@@ -49,7 +59,11 @@ func_txtran <- function(
   var,
   date,
   full_rank,
+<<<<<<< Updated upstream
   time_step = 1,
+=======
+  pas_temps = 1,
+>>>>>>> Stashed changes
   time_varying = FALSE
 ) {
   message(
@@ -97,6 +111,7 @@ func_txtran <- function(
     dplyr::arrange({{ ID }}, !!rank_q) |>
     dplyr::group_by({{ ID }}) |>
     dplyr::mutate(
+<<<<<<< Updated upstream
       next_step = data.table::shift({{ var }}, type = "lead", n = time_step),
       next_rank = data.table::shift(
         !!rank_q,
@@ -106,6 +121,17 @@ func_txtran <- function(
     ) |>
     dplyr::ungroup() |> 
     dplyr::filter(!is.na(next_step)) |>
+=======
+      VAR_suivant = data.table::shift({{ var }}, type = "lead", n = pas_temps),
+      RANK_suivant = data.table::shift(
+        !!rank_q,
+        type = "lead",
+        n = pas_temps
+      )
+    ) |>
+    dplyr::ungroup() |> 
+    dplyr::filter(!is.na(VAR_suivant)) |>
+>>>>>>> Stashed changes
     as_tibble()
 
   if (time_varying) {
@@ -113,7 +139,11 @@ func_txtran <- function(
       group_by(
     !!rank_q,
         {{ var }},
+<<<<<<< Updated upstream
         next_step,
+=======
+        VAR_suivant,
+>>>>>>> Stashed changes
       ) |>
       dplyr::summarise(n = n(), n_i = n_distinct({{ ID }})) |>
       dplyr::group_by(!!rank_q, {{ var }}) |>
@@ -121,7 +151,11 @@ func_txtran <- function(
       ungroup() |>
       left_join(
 res |>
+<<<<<<< Updated upstream
        dplyr::filter(!is.na(next_step)) |>
+=======
+       dplyr::filter(!is.na(VAR_suivant)) |>
+>>>>>>> Stashed changes
        dplyr::group_by(
       !!rank_q,
          {{ var }}
@@ -136,7 +170,11 @@ res |>
     res_n <- res |>
       group_by(
         {{ var }},
+<<<<<<< Updated upstream
         next_step,
+=======
+        VAR_suivant,
+>>>>>>> Stashed changes
       ) |>
       dplyr::summarise(n = n(), n_i = n_distinct({{ ID }})) |>
       dplyr::group_by({{ var }}) |>
@@ -144,7 +182,11 @@ res |>
       ungroup() |>
       left_join(
 res |>
+<<<<<<< Updated upstream
        dplyr::filter(!is.na(next_step)) |>
+=======
+       dplyr::filter(!is.na(VAR_suivant)) |>
+>>>>>>> Stashed changes
        dplyr::group_by(
          {{ var }}
        ) |>

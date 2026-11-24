@@ -1,0 +1,11 @@
+col.rsa<-c("RSA" = "#ff3300",
+"Pas encore entré dans le RSA"="#ffff99",
+"SUSPENDU"="#ff6666",
+"Sortie du RSA" = "#3399ff",
+"Sortie du RSA temporaire"="#ff33cc",
+"Sortie temporaire"="#ff33cc",
+"Sortie durable" = "#3399ff",
+"Sortie / hors RSA" = "#3399ff",
+"Sortie"="#3399ff", 
+"Sorties" = "#3399ff",
+"Entrées"="#ff3300")

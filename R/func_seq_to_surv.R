@@ -35,7 +35,11 @@
 #'   de fin à partir des temps observés.
 #'
 #' @return Un tableau contenant les observations recodées, notamment les
+<<<<<<< Updated upstream
 #'   colonnes `RANK`, `RCD_STATE`, `period_SORTIE` et `FALSE_censor`,
+=======
+#'   colonnes `RANK`, `EVENTS_STATES`, `period_SORTIE` et `FALSE_censor`,
+>>>>>>> Stashed changes
 #'   ainsi que les colonnes de début et de fin utilisées.
 #'
 #' @examples
@@ -210,12 +214,21 @@ func_recode_event <- function(
     arrange({{ time_col }}, .by_group = T) |>
     mutate(RANK = row_number()) |>
     mutate(
+<<<<<<< Updated upstream
       RCD_STATE = case_when(
         ({{ time_col }} > max(!!end_quo, na.rm = TRUE) &
           {{ time_col }} < censor_time) ~ right,
           (clean_na == FALSE &  is.na({{ event_col }}) & {{ time_col }} < censor_time) ~ gaps,
         ({{ time_col }} > max(!!end_quo, na.rm = TRUE) &
           {{ time_col }} == censor_time) ~ censure,
+=======
+      EVENTS_STATES = case_when(
+        ({{ time_col }} > max(!!end_quo, na.rm = TRUE) &
+          {{ time_col }} < censor_time) ~ "SORTIE",
+          (clean_na == FALSE &  is.na({{ event_col }}) & {{ time_col }} < censor_time) ~ "SORTIE temporaire",
+        ({{ time_col }} > max(!!end_quo, na.rm = TRUE) &
+          {{ time_col }} == censor_time) ~ "CENSURE",
+>>>>>>> Stashed changes
         TRUE ~ {{ event_col }}
       )
     ) |>
@@ -288,7 +301,11 @@ data <- data |>
     arrange({{ rank_col }}, .by_group = T) |> # arrange par date
     mutate(
       start_EVENT = tidyr::replace_na(
+<<<<<<< Updated upstream
         {{rank_col}} > 0 & grepl(paste(events_look, collapse = "|"), {{events_var}}) & !grepl(paste(events_look, collapse = "|"), lag({{events_var}})), # lag(RCD_STATE) != "SORTIE",
+=======
+        {{rank_col}} > 0 & grepl(paste(events_look, collapse = "|"), {{events_var}}) & !grepl(paste(events_look, collapse = "|"), lag({{events_var}})), # lag(EVENTS_STATES) != "SORTIE",
+>>>>>>> Stashed changes
         FALSE
       )
     ) |> # TRUE si match de events_loof sur la ligne, et pas de match de events_looks la ligne d'avant : QUI des NA ? 
